@@ -1,13 +1,9 @@
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
 import {
-  getAuth,
   onAuthStateChanged,
   signInWithPopup,
   signOut,
-  GoogleAuthProvider,
 } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
 import {
-  getFirestore,
   doc,
   getDoc,
   collection,
@@ -21,26 +17,12 @@ import {
   deleteDoc,
 } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 import { ubbToHtml } from "/legacy/ubb.js";
+import { auth, db, provider, missingConfig } from "./firebase.js";
 
 function getParam(name) {
   const params = new URLSearchParams(location.search);
   return params.get(name);
 }
-
-// Configure Firebase (fill with your values or share a config loader)
-const firebaseConfig = {
-  apiKey: "YOUR_API_KEY",
-  authDomain: "YOUR_AUTH_DOMAIN",
-  projectId: "YOUR_PROJECT_ID",
-  storageBucket: "YOUR_BUCKET",
-  messagingSenderId: "YOUR_SENDER_ID",
-  appId: "YOUR_APP_ID",
-};
-
-const app = initializeApp(firebaseConfig);
-const auth = getAuth(app);
-const db = getFirestore(app);
-const provider = new GoogleAuthProvider();
 
 const els = {
   gameTitle: document.getElementById("gameTitle"),
@@ -59,6 +41,7 @@ const els = {
   toggleOpen: document.getElementById("toggleOpen"),
   toggleActive: document.getElementById("toggleActive"),
   nextDay: document.getElementById("nextDay"),
+  playerListLink: document.getElementById("playerListLink"),
 };
 
 onAuthStateChanged(auth, (user) => {
@@ -73,6 +56,10 @@ els.signOut.addEventListener("click", async () => signOut(auth));
 const gameId = getParam("g");
 if (!gameId) {
   els.gameTitle.textContent = "Missing game id";
+}
+
+if (els.playerListLink && gameId) {
+  els.playerListLink.href = `/legacy/playerlist.html?g=${encodeURIComponent(gameId)}`;
 }
 
 function wrapTbody(html) {
@@ -132,6 +119,12 @@ function postRow(post, alt) {
 }
 
 async function loadGame() {
+  if (missingConfig) {
+    els.gameTitle.textContent = "Firebase configuration required";
+    els.gameMeta.innerHTML = "";
+    els.postsContainer.innerHTML = "";
+    return;
+  }
   const gameRef = doc(db, "games", gameId);
   const gSnap = await getDoc(gameRef);
   if (!gSnap.exists()) {

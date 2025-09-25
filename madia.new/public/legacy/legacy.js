@@ -1,13 +1,9 @@
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
 import {
-  getAuth,
   onAuthStateChanged,
   signInWithPopup,
   signOut,
-  GoogleAuthProvider,
 } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
 import {
-  getFirestore,
   collection,
   doc,
   getDoc,
@@ -15,26 +11,9 @@ import {
   query,
   orderBy,
   limit,
-  where,
   onSnapshot,
-  collectionGroup,
 } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
-
-// Reuse root config by importing from /script.js if desired. Inline here for self-containment.
-// Replace with your own project config or share via a small loader.
-const firebaseConfig = {
-  apiKey: "YOUR_API_KEY",
-  authDomain: "YOUR_AUTH_DOMAIN",
-  projectId: "YOUR_PROJECT_ID",
-  storageBucket: "YOUR_BUCKET",
-  messagingSenderId: "YOUR_SENDER_ID",
-  appId: "YOUR_APP_ID",
-};
-
-const app = initializeApp(firebaseConfig);
-const auth = getAuth(app);
-const db = getFirestore(app);
-const provider = new GoogleAuthProvider();
+import { auth, db, provider, missingConfig } from "./firebase.js";
 
 const els = {
   gamesBody: document.getElementById("gamesBody"),
@@ -54,7 +33,11 @@ onAuthStateChanged(auth, async (user) => {
   if (user) {
     els.profileLink.href = `/legacy/member.html?u=${encodeURIComponent(user.uid)}`;
   }
-  watchGames();
+  if (!missingConfig) {
+    watchGames();
+  } else {
+    renderConfigWarning();
+  }
 });
 
 els.signIn.addEventListener("click", async () => {
@@ -189,10 +172,21 @@ async function decorateRow(game) {
   return gameRow(game, meta);
 }
 
-loadGames().catch((e) => {
+function renderConfigWarning() {
   const err = document.createElement("div");
   err.className = "smallfont";
   err.style.color = "#F9A906";
-  err.textContent = `Failed to load games: ${e.message}`;
+  err.style.padding = "12px";
+  err.style.textAlign = "left";
+  err.innerHTML = `
+    <strong>Firebase configuration required</strong><br />
+    Update <code>public/legacy/firebase.js</code> with your project's credentials to load games.
+  `;
   els.gamesBody.appendChild(err);
-});
+}
+
+if (!missingConfig) {
+  watchGames();
+} else {
+  renderConfigWarning();
+}
