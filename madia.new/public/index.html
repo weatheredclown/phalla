@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Madia Forum</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <header>
+      <h1>Madia</h1>
+      <p class="subtitle">Modern Firebase-powered forum and game lobby</p>
+      <div class="auth-controls">
+        <span id="authStatus">Not signed in</span>
+        <button id="signInButton">Sign in with Google</button>
+        <button id="signOutButton" class="secondary" hidden>Sign out</button>
+      </div>
+    </header>
+
+    <main>
+      <section class="panel" id="threadsPanel">
+        <div class="panel-header">
+          <h2>Active Threads</h2>
+          <button id="newThreadButton" class="primary">New thread</button>
+        </div>
+        <ul id="threadsList" class="list"></ul>
+      </section>
+
+      <section class="panel" id="threadViewPanel">
+        <div class="panel-header">
+          <h2 id="threadTitle">Select a thread</h2>
+          <div class="panel-actions">
+            <button id="refreshThread" class="secondary">Refresh</button>
+            <button id="deleteThread" class="danger" hidden>Delete thread</button>
+          </div>
+        </div>
+        <div id="threadMetadata" class="metadata"></div>
+        <ul id="postsList" class="list posts"></ul>
+        <form id="replyForm" class="form" hidden>
+          <textarea id="replyBody" rows="4" placeholder="Write your reply..."></textarea>
+          <button type="submit" class="primary">Post reply</button>
+        </form>
+      </section>
+
+      <section class="panel" id="gamePanel">
+        <div class="panel-header">
+          <h2>Game Dashboard</h2>
+          <button id="recordVoteButton" class="secondary">Record vote</button>
+        </div>
+        <table id="voteTable">
+          <thead>
+            <tr>
+              <th>Player</th>
+              <th>Votes</th>
+              <th>Notes</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </section>
+    </main>
+
+    <dialog id="threadDialog">
+      <form method="dialog" id="threadForm" class="form">
+        <h3>Create thread</h3>
+        <label>
+          Thread title
+          <input id="threadTitleInput" required />
+        </label>
+        <label>
+          Initial post
+          <textarea id="threadBodyInput" rows="5" required></textarea>
+        </label>
+        <menu class="dialog-actions">
+          <button value="cancel" class="secondary">Cancel</button>
+          <button value="default" class="primary">Create</button>
+        </menu>
+      </form>
+    </dialog>
+
+    <dialog id="voteDialog">
+      <form method="dialog" id="voteForm" class="form">
+        <h3>Record vote</h3>
+        <label>
+          Player name
+          <input id="votePlayerInput" required />
+        </label>
+        <label>
+          Vote count
+          <input id="voteCountInput" type="number" min="0" step="1" value="1" required />
+        </label>
+        <label>
+          Notes
+          <textarea id="voteNotesInput" rows="3"></textarea>
+        </label>
+        <menu class="dialog-actions">
+          <button value="cancel" class="secondary">Cancel</button>
+          <button value="default" class="primary">Save</button>
+        </menu>
+      </form>
+    </dialog>
+
+    <script type="module" src="script.js"></script>
+  </body>
+</html>
