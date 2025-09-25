@@ -96,6 +96,86 @@ if (missingConfig) {
 let currentUser = null;
 let selectedThreadId = null;
 let unsubscribePosts = null;
+let unsubscribeThreads = null;
+let unsubscribeVotes = null;
+
+function showThreadsMessage(message) {
+  if (!els.threadsList) return;
+  els.threadsList.innerHTML = "";
+  const li = document.createElement("li");
+  li.className = "empty-message";
+  li.textContent = message;
+  li.tabIndex = -1;
+  li.setAttribute("role", "status");
+  li.style.listStyle = "none";
+  li.style.cursor = "default";
+  els.threadsList.appendChild(li);
+}
+
+function showPostsMessage(message) {
+  if (!els.postsList) return;
+  els.postsList.innerHTML = "";
+  const li = document.createElement("li");
+  li.className = "empty-message";
+  li.textContent = message;
+  li.tabIndex = -1;
+  li.setAttribute("role", "status");
+  li.style.listStyle = "none";
+  li.style.cursor = "default";
+  els.postsList.appendChild(li);
+}
+
+function showVotesMessage(message) {
+  if (!els.voteTableBody) return;
+  els.voteTableBody.innerHTML = "";
+  const tr = document.createElement("tr");
+  tr.className = "table-empty";
+  const td = document.createElement("td");
+  td.colSpan = 3;
+  td.textContent = message;
+  td.setAttribute("role", "status");
+  td.style.padding = "1rem";
+  tr.appendChild(td);
+  els.voteTableBody.appendChild(tr);
+}
+
+function resetThreadSelection(message, postsMessage = "Select a thread to view posts.") {
+  selectedThreadId = null;
+  if (unsubscribePosts) {
+    unsubscribePosts();
+    unsubscribePosts = null;
+  }
+  els.threadTitle.textContent = message;
+  els.threadMetadata.textContent = "";
+  showPostsMessage(postsMessage);
+}
+
+function stopRealtimeSubscriptions({ showSignedOutState = false } = {}) {
+  if (unsubscribeThreads) {
+    unsubscribeThreads();
+    unsubscribeThreads = null;
+  }
+  if (unsubscribeVotes) {
+    unsubscribeVotes();
+    unsubscribeVotes = null;
+  }
+  if (unsubscribePosts) {
+    unsubscribePosts();
+    unsubscribePosts = null;
+  }
+  if (showSignedOutState) {
+    showThreadsMessage("Sign in to view threads.");
+    showVotesMessage("Sign in to see recorded votes.");
+    resetThreadSelection("Sign in to view a thread", "Sign in to view posts.");
+  }
+}
+
+function startRealtimeSubscriptions() {
+  if (missingConfig || !currentUser) return;
+  stopRealtimeSubscriptions();
+  unsubscribeThreads = watchThreads();
+  unsubscribeVotes = watchVotes();
+}
 
 function requireAuth(action) {
   return (...args) => {
@@ -133,6 +213,10 @@ function formatTimestamp(timestamp) {
 }
 
 async function selectThread(threadId) {
+  if (!currentUser) {
+    alert("Sign in to view threads.");
+    return;
+  }
   if (unsubscribePosts) {
     unsubscribePosts();
     unsubscribePosts = null;
@@ -145,7 +229,23 @@ async function selectThread(threadId) {
   els.replyForm.hidden = !currentUser;
 
   const threadRef = doc(db, "threads", threadId);
-  const snapshot = await getDoc(threadRef);
+  let snapshot;
+  try {
+    snapshot = await getDoc(threadRef);
+  } catch (error) {
+    console.error("Failed to load thread", error);
+    if (error.code === "permission-denied") {
+      showThreadsMessage("You do not have permission to view this thread.");
+      resetThreadSelection(
+        "Access denied",
+        "You do not have permission to view posts in this thread."
+      );
+      return;
+    }
+    alert("Unable to load thread. Try again later.");
+    resetThreadSelection("Select a thread");
+    return;
+  }
   if (!snapshot.exists()) {
     els.threadTitle.textContent = "Thread not found";
     return;
@@ -178,14 +278,30 @@ async function selectThread(threadId) {
 function watchThreads() {
   const threadsRef = collection(db, "threads");
   const threadsQuery = query(threadsRef, orderBy("createdAt", "desc"));
-  return onSnapshot(threadsQuery, (snapshot) => {
-    els.threadsList.innerHTML = "";
-    snapshot.forEach((docSnapshot) => {
-      const thread = docSnapshot.data();
-      const li = renderThread(docSnapshot.id, thread);
-      els.threadsList.appendChild(li);
-    });
-  });
+  showThreadsMessage("Loading threads…");
+  return onSnapshot(
+    threadsQuery,
+    (snapshot) => {
+      els.threadsList.innerHTML = "";
+      if (snapshot.empty) {
+        showThreadsMessage("No threads yet. Be the first to start one!");
+        return;
+      }
+      snapshot.forEach((docSnapshot) => {
+        const thread = docSnapshot.data();
+        const li = renderThread(docSnapshot.id, thread);
+        els.threadsList.appendChild(li);
+      });
+    },
+    (error) => {
+      console.error("Failed to watch threads", error);
+      if (error.code === "permission-denied") {
+        showThreadsMessage("You do not have permission to view threads.");
+        return;
+      }
+      showThreadsMessage("Unable to load threads. Please try again later.");
+    }
+  );
 }
 
 async function createThread(title, body) {
@@ -214,10 +330,7 @@ async function deleteCurrentThread() {
   const postsSnapshot = await getDocs(postsRef);
   await Promise.all(postsSnapshot.docs.map((docSnapshot) => deleteDoc(docSnapshot.ref)));
   await deleteDoc(doc(db, "threads", selectedThreadId));
-  selectedThreadId = null;
-  els.threadTitle.textContent = "Select a thread";
-  els.threadMetadata.textContent = "";
-  els.postsList.innerHTML = "";
+  resetThreadSelection("Select a thread");
 }
 
 async function submitReply(event) {
@@ -253,32 +366,45 @@ async function recordVote(player, votes, notes) {
 
 function watchVotes() {
   const voteRef = collection(db, "votes");
-  return onSnapshot(query(voteRef, orderBy("createdAt", "desc")), (snapshot) => {
-    els.voteTableBody.innerHTML = "";
-    snapshot.forEach((docSnapshot) => {
-      const vote = docSnapshot.data();
-      const tr = document.createElement("tr");
-      tr.innerHTML = `
-        <td>${vote.player}</td>
-        <td>${vote.votes}</td>
-        <td>
-          <div>${vote.notes || ""}</div>
-          <div class="post-meta">Recorded by ${vote.recordedByName || "Unknown"} · ${formatTimestamp(
-        vote.createdAt
-      )}</div>
-        </td>
-      `;
-      els.voteTableBody.appendChild(tr);
-    });
-  });
+  showVotesMessage("Loading votes…");
+  return onSnapshot(
+    query(voteRef, orderBy("createdAt", "desc")),
+    (snapshot) => {
+      els.voteTableBody.innerHTML = "";
+      if (snapshot.empty) {
+        showVotesMessage("No votes recorded yet.");
+        return;
+      }
+      snapshot.forEach((docSnapshot) => {
+        const vote = docSnapshot.data();
+        const tr = document.createElement("tr");
+        const recordedAt = formatTimestamp(vote.createdAt);
+        tr.innerHTML = `
+          <td>${vote.player}</td>
+          <td>${vote.votes}</td>
+          <td>
+            <div>${vote.notes || ""}</div>
+            <div class="post-meta">Recorded by ${vote.recordedByName || "Unknown"} · ${recordedAt}</div>
+          </td>
+        `;
+        els.voteTableBody.appendChild(tr);
+      });
+    },
+    (error) => {
+      console.error("Failed to watch votes", error);
+      if (error.code === "permission-denied") {
+        showVotesMessage("You do not have permission to view votes.");
+        return;
+      }
+      showVotesMessage("Unable to load votes. Please try again later.");
+    }
+  );
 }
 
-let unsubscribeThreads = null;
-let unsubscribeVotes = null;
-
 if (!missingConfig) {
-  unsubscribeThreads = watchThreads();
-  unsubscribeVotes = watchVotes();
+  showThreadsMessage("Sign in to load threads.");
+  showVotesMessage("Sign in to load votes.");
+  resetThreadSelection("Sign in to view a thread", "Sign in to view posts.");
 
   els.signInButton.addEventListener("click", () => {
     signInWithPopup(auth, provider).catch((error) => {
@@ -338,18 +464,21 @@ if (!missingConfig) {
       els.signInButton.hidden = true;
       els.signOutButton.hidden = false;
       els.replyForm.hidden = !selectedThreadId;
+      startRealtimeSubscriptions();
+      if (!selectedThreadId) {
+        resetThreadSelection("Select a thread");
+      }
     } else {
       els.authStatus.textContent = "Not signed in";
       els.signInButton.hidden = false;
       els.signOutButton.hidden = true;
       els.replyForm.hidden = true;
       els.deleteThread.hidden = true;
+      stopRealtimeSubscriptions({ showSignedOutState: true });
     }
   });
 
   window.addEventListener("beforeunload", () => {
-    unsubscribeThreads?.();
-    unsubscribePosts?.();
-    unsubscribeVotes?.();
+    stopRealtimeSubscriptions();
   });
 }

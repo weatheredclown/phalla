@@ -90,6 +90,24 @@ main {
   font-size: 1rem;
 }
 
+.list .empty-message,
+.posts .empty-message {
+  list-style: none;
+  text-align: center;
+  padding: 1.5rem 1rem;
+  border: 1px dashed var(--panel-border);
+  border-radius: 0.75rem;
+  background: rgba(15, 23, 42, 0.5);
+  color: var(--muted);
+  cursor: default;
+}
+
+.table-empty td {
+  text-align: center;
+  padding: 1rem;
+  color: var(--muted);
+}
+
 .panel-header {
   display: flex;
   align-items: center;
