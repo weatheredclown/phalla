@@ -25,6 +25,34 @@ const els = {
 let currentUser = null;
 let unsubscribeGames = null;
 
+function showGamesMessage(message) {
+  if (!els.gamesBody) return;
+  els.gamesBody.innerHTML = "";
+  const tr = document.createElement("tr");
+  tr.className = "alt1";
+  const td = document.createElement("td");
+  td.colSpan = 7;
+  td.style.textAlign = "center";
+  td.style.padding = "12px";
+  td.style.color = "#94a3b8";
+  td.textContent = message;
+  tr.appendChild(td);
+  els.gamesBody.appendChild(tr);
+}
+
+function stopWatchingGames({ signedOut = false } = {}) {
+  if (unsubscribeGames) {
+    unsubscribeGames();
+    unsubscribeGames = null;
+  }
+  if (els.gamesBody) {
+    els.gamesBody.innerHTML = "";
+  }
+  if (signedOut) {
+    showGamesMessage("Sign in to view games.");
+  }
+}
+
 onAuthStateChanged(auth, async (user) => {
   currentUser = user;
   els.signIn.style.display = user ? "none" : "inline-block";
@@ -33,10 +61,15 @@ onAuthStateChanged(auth, async (user) => {
   if (user) {
     els.profileLink.href = `/legacy/member.html?u=${encodeURIComponent(user.uid)}`;
   }
-  if (!missingConfig) {
+  if (missingConfig) {
+    stopWatchingGames();
+    renderConfigWarning();
+    return;
+  }
+  if (user) {
     watchGames();
   } else {
-    renderConfigWarning();
+    stopWatchingGames({ signedOut: true });
   }
 });
 
@@ -112,25 +145,40 @@ function gameRow(game, meta) {
 
 function watchGames() {
   if (unsubscribeGames) unsubscribeGames();
-  els.gamesBody.innerHTML = "";
+  showGamesMessage("Loading games…");
   const qGames = query(collection(db, "games"), orderBy("active", "desc"), orderBy("open", "desc"), orderBy("gamename"));
-  unsubscribeGames = onSnapshot(qGames, async (snap) => {
-    els.gamesBody.innerHTML = "";
-    const groups = { open: [], running: [], over: [] };
-    snap.forEach((docSnap) => {
-      const g = { id: docSnap.id, ...docSnap.data() };
-      if (g.active && (g.day || 0) === 0) groups.open.push(g);
-      else if (g.active) groups.running.push(g);
-      else groups.over.push(g);
-    });
+  unsubscribeGames = onSnapshot(
+    qGames,
+    async (snap) => {
+      els.gamesBody.innerHTML = "";
+      if (snap.empty) {
+        showGamesMessage("No games available yet.");
+        return;
+      }
+      const groups = { open: [], running: [], over: [] };
+      snap.forEach((docSnap) => {
+        const g = { id: docSnap.id, ...docSnap.data() };
+        if (g.active && (g.day || 0) === 0) groups.open.push(g);
+        else if (g.active) groups.running.push(g);
+        else groups.over.push(g);
+      });
 
-    if (groups.open.length) els.gamesBody.appendChild(sectionHeader("Open"));
-    for (const g of groups.open) els.gamesBody.appendChild(await decorateRow(g));
-    if (groups.running.length) els.gamesBody.appendChild(sectionHeader("Running"));
-    for (const g of groups.running) els.gamesBody.appendChild(await decorateRow(g));
-    if (groups.over.length) els.gamesBody.appendChild(sectionHeader("Game Over"));
-    for (const g of groups.over) els.gamesBody.appendChild(await decorateRow(g));
-  });
+      if (groups.open.length) els.gamesBody.appendChild(sectionHeader("Open"));
+      for (const g of groups.open) els.gamesBody.appendChild(await decorateRow(g));
+      if (groups.running.length) els.gamesBody.appendChild(sectionHeader("Running"));
+      for (const g of groups.running) els.gamesBody.appendChild(await decorateRow(g));
+      if (groups.over.length) els.gamesBody.appendChild(sectionHeader("Game Over"));
+      for (const g of groups.over) els.gamesBody.appendChild(await decorateRow(g));
+    },
+    (error) => {
+      console.error("Failed to watch games", error);
+      if (error.code === "permission-denied") {
+        showGamesMessage("You do not have permission to view games.");
+        return;
+      }
+      showGamesMessage("Unable to load games. Please try again later.");
+    }
+  );
 }
 
 async function decorateRow(game) {
