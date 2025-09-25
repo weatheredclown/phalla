@@ -13,13 +13,22 @@ import {
   limit,
   onSnapshot,
 } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+import { injectLegacyHeader } from "./header.js";
 import { auth, db, provider, missingConfig } from "./firebase.js";
+
+const header = injectLegacyHeader({
+  navHtml: `
+    <a href="#" id="siteSummaryLink">site summary</a>
+    <a href="/legacy/member.html" id="profileLink" style="display:none; margin-left:12px;">profile</a>
+  `,
+});
 
 const els = {
   gamesBody: document.getElementById("gamesBody"),
-  signIn: document.getElementById("signIn"),
-  signOut: document.getElementById("signOut"),
-  profileLink: document.getElementById("profileLink"),
+  signIn: header.signIn,
+  signOut: header.signOut,
+  profileLink: header.profileLink,
+  userName: header.userName,
 };
 
 let currentUser = null;
@@ -29,9 +38,14 @@ onAuthStateChanged(auth, async (user) => {
   currentUser = user;
   els.signIn.style.display = user ? "none" : "inline-block";
   els.signOut.style.display = user ? "inline-block" : "none";
-  els.profileLink.style.display = user ? "inline-block" : "none";
-  if (user) {
-    els.profileLink.href = `/legacy/member.html?u=${encodeURIComponent(user.uid)}`;
+  if (els.profileLink) {
+    els.profileLink.style.display = user ? "inline-block" : "none";
+    if (user) {
+      els.profileLink.href = `/legacy/member.html?u=${encodeURIComponent(user.uid)}`;
+    }
+  }
+  if (els.userName) {
+    els.userName.textContent = user ? `Welcome, ${user.displayName || ""}` : "";
   }
   if (!missingConfig) {
     watchGames();

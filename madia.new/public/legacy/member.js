@@ -1,5 +1,13 @@
 import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
 import {
+  getAuth,
+  onAuthStateChanged,
+  signInWithPopup,
+  signOut,
+  GoogleAuthProvider,
+} from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+import {
+  getFirestore,
   collection,
   collectionGroup,
   query,
@@ -11,12 +19,17 @@ import {
   setDoc,
   getDoc,
 } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+import { injectLegacyHeader } from "./header.js";
 import { auth, db, missingConfig } from "./firebase.js";
 
 function getParam(name) {
   const params = new URLSearchParams(location.search);
   return params.get(name);
 }
+
+const header = injectLegacyHeader({
+  navHtml: `<a href="/legacy/index.html">&laquo; back to games</a>`,
+});
 
 const els = {
   profileInfo: document.getElementById("profileInfo"),
@@ -26,6 +39,9 @@ const els = {
   gameName: document.getElementById("gameName"),
   gameDesc: document.getElementById("gameDesc"),
   createBtn: document.getElementById("createBtn"),
+  signIn: header.signIn,
+  signOut: header.signOut,
+  userName: header.userName,
 };
 
 let currentUser = null;
@@ -33,8 +49,21 @@ const viewedUid = getParam("u");
 
 onAuthStateChanged(auth, async (user) => {
   currentUser = user;
+  els.signIn.style.display = user ? "none" : "inline-block";
+  els.signOut.style.display = user ? "inline-block" : "none";
+  if (els.userName) {
+    els.userName.textContent = user ? user.displayName || "" : "";
+  }
   renderProfileHeader();
   await loadLists();
+});
+
+els.signIn.addEventListener("click", async () => {
+  await signInWithPopup(auth, provider);
+});
+
+els.signOut.addEventListener("click", async () => {
+  await signOut(auth);
 });
 
 function renderProfileHeader() {
