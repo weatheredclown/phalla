@@ -1,12 +1,5 @@
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
 import {
-  getAuth,
-  onAuthStateChanged,
-  signInWithPopup,
-  GoogleAuthProvider,
-} from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
-import {
-  getFirestore,
   collection,
   collectionGroup,
   query,
@@ -16,26 +9,14 @@ import {
   doc,
   serverTimestamp,
   setDoc,
+  getDoc,
 } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+import { auth, db, missingConfig } from "./firebase.js";
 
 function getParam(name) {
   const params = new URLSearchParams(location.search);
   return params.get(name);
 }
-
-const firebaseConfig = {
-  apiKey: "YOUR_API_KEY",
-  authDomain: "YOUR_AUTH_DOMAIN",
-  projectId: "YOUR_PROJECT_ID",
-  storageBucket: "YOUR_BUCKET",
-  messagingSenderId: "YOUR_SENDER_ID",
-  appId: "YOUR_APP_ID",
-};
-
-const app = initializeApp(firebaseConfig);
-const auth = getAuth(app);
-const db = getFirestore(app);
-const provider = new GoogleAuthProvider();
 
 const els = {
   profileInfo: document.getElementById("profileInfo"),
@@ -70,6 +51,11 @@ function renderProfileHeader() {
 }
 
 async function loadLists() {
+  if (missingConfig) {
+    els.gamesYouPlay.innerHTML = `<div class="smallfont" style="color:#F9A906;">Configure Firebase to load games.</div>`;
+    els.gamesYouOwn.innerHTML = `<div class="smallfont" style="color:#F9A906;">Configure Firebase to load games.</div>`;
+    return;
+  }
   els.gamesYouPlay.innerHTML = groupSectionSkeleton();
   els.gamesYouOwn.innerHTML = groupSectionSkeleton();
 
@@ -88,8 +74,12 @@ async function loadLists() {
   });
   const plays = [];
   for (const gid of gameIds) {
-    const d = await (await import("https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js")).getDoc(doc(db, "games", gid));
-    if (d.exists()) plays.push({ id: gid, ...d.data() });
+    try {
+      const d = await getDoc(doc(db, "games", gid));
+      if (d.exists()) plays.push({ id: gid, ...d.data() });
+    } catch (err) {
+      console.warn("Failed to load game", gid, err);
+    }
   }
   renderGrouped(els.gamesYouPlay, plays);
 }
@@ -113,7 +103,7 @@ function renderGrouped(container, games) {
   }
   for (const g of games.sort((a,b)=> (b.active - a.active) || ((b.open|0)-(a.open|0)) || String(a.gamename||"").localeCompare(String(b.gamename||"")))) {
     const a = document.createElement("div");
-    a.innerHTML = `<a href="/legacy/gamedisplay.html?g=${g.id}">${g.gamename || "(no name)"}</a>`;
+    a.innerHTML = `<a href="/legacy/game.html?g=${g.id}">${g.gamename || "(no name)"}</a>`;
     const bucket = g.active ? ((g.day||0)===0 ? open : running) : over;
     bucket.appendChild(a);
   }
