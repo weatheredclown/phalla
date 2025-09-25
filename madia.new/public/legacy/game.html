@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Game View (Legacy Skin)</title>
+    <link rel="stylesheet" href="/legacy/phalla.css" />
+  </head>
+  <body>
+    <div align="center">
+      <div class="page" style="width:98%; text-align:left">
+        <div style="padding:0px 10px 0px 10px">
+          <div style="margin:10px 0;">
+            <a href="/legacy/index.html">&laquo; back to games</a>
+            <span style="float:right" class="smallfont" id="authArea">
+              <span id="userName"></span>
+              <button id="signIn" class="button">Sign in</button>
+              <button id="signOut" class="button" style="display:none">Sign out</button>
+            </span>
+          </div>
+
+          <table class="tborder" cellpadding="4" cellspacing="1" border="0" width="100%" align="center">
+            <thead>
+              <tr align="center">
+                <td class="thead" width="100%" align="left" id="gameTitle">Loading...</td>
+                <td class="thead" width="175">Last Post</td>
+                <td class="thead">Players</td>
+                <td class="thead">Day</td>
+                <td class="thead">Open</td>
+              </tr>
+            </thead>
+            <tbody id="gameMeta"></tbody>
+          </table>
+
+          <div id="postsContainer" style="margin-top:10px;"></div>
+
+          <!-- Quick reply / actions -->
+          <div style="margin-top:12px;">
+            <div id="ownerControls" class="smallfont" style="display:none; margin-bottom:8px;">
+              <b>Owner Controls:</b>
+              <button id="toggleOpen" class="button">Toggle Open</button>
+              <button id="toggleActive" class="button">Toggle Active</button>
+              <button id="nextDay" class="button">Next Day</button>
+            </div>
+            <div class="smallfont" style="margin-bottom:8px;">
+              <button id="joinButton" class="button">Join Game</button>
+              <button id="leaveButton" class="button" style="display:none;">Leave Game</button>
+            </div>
+            <form id="replyForm" style="display:none;" onsubmit="return false;">
+              <table cellpadding="4" cellspacing="0" border="0" width="100%" class="tborder">
+                <tr>
+                  <td class="alt2">
+                    <div class="smallfont">Title</div>
+                    <input id="replyTitle" class="bginput" style="width:98%" />
+                    <div class="smallfont" style="margin-top:6px;">Message (UBB)</div>
+                    <textarea id="replyBody" class="bginput" rows="6" style="width:98%"></textarea>
+                    <div style="margin-top:8px;"><button id="postReply" class="button">Post Reply</button></div>
+                  </td>
+                </tr>
+              </table>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script type="module" src="/legacy/game.js"></script>
+  </body>
+  </html>

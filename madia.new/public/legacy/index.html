@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Play Mafia! (Legacy Skin)</title>
+    <link rel="stylesheet" href="/legacy/phalla.css" />
+  </head>
+  <body>
+    <!-- header/logo include equivalent -->
+    <div align="center">
+      <div class="page" style="width:98%; text-align:left">
+        <div style="padding:0px 10px 0px 10px">
+          <div style="margin:10px 0;">
+            <a href="#" id="siteSummaryLink">site summary</a>
+            <a href="/legacy/member.html" id="profileLink" style="margin-left:12px; display:none;">profile</a>
+            <span style="float:right" class="smallfont" id="authArea">
+              <button id="signIn" class="button">Sign in with Google</button>
+              <button id="signOut" class="button" style="display:none">Sign out</button>
+            </span>
+          </div>
+
+          <!-- Games table (games.asp look) -->
+          <table class="tborder" cellpadding="4" cellspacing="1" border="0" width="100%" align="center">
+            <thead>
+              <tr align="center">
+                <td class="thead">&nbsp;</td>
+                <td class="thead" width="100%" align="left">Game</td>
+                <td class="thead" width="175">Last Post</td>
+                <td class="thead">Posts</td>
+                <td class="thead">Players</td>
+                <td class="thead">Day</td>
+                <td class="thead">Open</td>
+              </tr>
+            </thead>
+            <tbody id="gamesBody">
+              <!-- Sections (Open/Running/Game Over) and rows injected by JS to mirror games.asp -->
+            </tbody>
+          </table>
+
+          
+        </div>
+      </div>
+    </div>
+
+    <script type="module" src="/legacy/legacy.js"></script>
+  </body>
+  </html>

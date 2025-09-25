@@ -1,0 +1,330 @@
+/* vBulletin 3 CSS For Style 'PA Style' (styleid: 2) */
+body
+{
+	background: #999999;
+	color: #FFFFFF;
+	font: 12px verdana, geneva, lucida, 'lucida grande', arial, helvetica, sans-serif;
+	margin: 0px 0px 0px 0px;
+	padding: 0px;
+}
+a:link, body_alink
+{
+	color: #FFFFFF;
+	text-decoration: underline;
+}
+a:visited, body_avisited
+{
+	color: #FFFFFF;
+	text-decoration: underline;
+}
+a:hover, a:active, body_ahover
+{
+	color: #F9A906;
+	text-decoration: none;
+}
+.page
+{
+	background: #999999;
+	color: #ffffff;
+}
+.page a:link, .page_alink
+{
+	color: #DEE2F2;
+}
+.page a:visited, .page_avisited
+{
+	color: #DEE2F2;
+}
+.page a:hover, .page a:active, .page_ahover
+{
+	color: #F9A906;
+}
+td, th, p, li
+{
+	font: 12px verdana, geneva, lucida, 'lucida grande', arial, helvetica, sans-serif;
+}
+.tborder
+{
+	background: #111111;
+	border: 0px solid #102740;
+}
+.tcat
+{
+	background: #324580;
+	color: #ffffff;
+	font: bold 12px verdana, geneva, lucida, 'lucida grande', arial, helvetica, sans-serif;
+}
+.tcat a:link, .tcat_alink
+{
+	color: #ffffff;
+	text-decoration: none;
+}
+.tcat a:visited, .tcat_avisited
+{
+	color: #ffffff;
+	text-decoration: none;
+}
+.tcat a:hover, .tcat a:active, .tcat_ahover
+{
+	color: #DEE2F2;
+	text-decoration: underline;
+}
+.thead
+{
+	font: 11px verdana, geneva, lucida, 'lucida grande', arial, helvetica, sans-serif;
+}
+.tfoot
+{
+	background: #102740;
+	color: #AAD7FF;
+}
+.tfoot a:link, .tfoot_alink
+{
+	color: #DEE2F2;
+}
+.tfoot a:visited, .tfoot_avisited
+{
+	color: #DEE2F2;
+}
+.tfoot a:hover, .tfoot a:active, .tfoot_ahover
+{
+	color: #AAD7FF;
+}
+.alt1, .alt1Active
+{
+	background: #092655;
+	color: #DAE1E3;
+}
+.alt1 a:link, .alt1_alink, .alt1Active a:link, .alt1Active_alink
+{
+	color: #DEE2F2;
+}
+.alt1 a:visited, .alt1_avisited, .alt1Active a:visited, .alt1Active_avisited
+{
+	color: #DEE2F2;
+}
+.alt1 a:hover, .alt1 a:active, .alt1_ahover, .alt1Active a:hover, .alt1Active a:active, .alt1Active_ahover
+{
+	color: #F9A906;
+}
+.alt2, .alt2Active
+{
+	background: #494949;
+	color: #ffffff;
+}
+.alt2 a:link, .alt2_alink, .alt2Active a:link, .alt2Active_alink
+{
+	color: #DEE2F2;
+}
+.alt2 a:visited, .alt2_avisited, .alt2Active a:visited, .alt2Active_avisited
+{
+	color: #DEE2F2;
+}
+.alt2 a:hover, .alt2 a:active, .alt2_ahover, .alt2Active a:hover, .alt2Active a:active, .alt2Active_ahover
+{
+	color: #F9A906;
+}
+td.inlinemod
+{
+	background: #FFFFCC;
+	color: #000000;
+}
+.wysiwyg
+{
+	background: #dadada;
+	color: #000000;
+	font: 12px verdana, geneva, lucida, 'lucida grande', arial, helvetica, sans-serif;
+}
+.wysiwyg a:link, .wysiwyg_alink
+{
+	color: #000000;
+}
+.wysiwyg a:visited, .wysiwyg_avisited
+{
+	color: #440044;
+}
+.wysiwyg a:hover, .wysiwyg a:active, .wysiwyg_ahover
+{
+	color: #F9A906;
+}
+textarea, .bginput
+{
+	background: #3B4970;
+	color: #ffffff;
+	font: 12px verdana, geneva, lucida, 'lucida grande', arial, helvetica, sans-serif;
+	border: 1px solid #6C78AB;
+}
+.button
+{
+	background: #5a5a5a;
+	color: #ffffff;
+	font: 11px verdana, geneva, lucida, 'lucida grande', arial, helvetica, sans-serif;
+	border-width:1px; border-right: 1px solid #FAB60C; border-bottom: 1px solid #FAB60C;
+}
+select
+{
+	font: 11px verdana, geneva, lucida, 'lucida grande', arial, helvetica, sans-serif;
+}
+option, optgroup
+{
+	font-size: 11px;
+	font-family: verdana, geneva, lucida, 'lucida grande', arial, helvetica, sans-serif;
+}
+.smallfont
+{
+	font: 11px verdana, geneva, lucida, 'lucida grande', arial, helvetica, sans-serif;
+}
+.time
+{
+	color: #ffffff;
+}
+.navbar
+{
+	color: #ffffff;
+	font: 11px verdana, geneva, lucida, 'lucida grande', arial, helvetica, sans-serif;
+}
+.navbar a:link, .navbar_alink
+{
+	color: #ffffff;
+}
+.navbar a:visited, .navbar_avisited
+{
+	color: #ffffff;
+}
+.navbar a:hover, .navbar a:active, .navbar_ahover
+{
+	color: #F9A906;
+}
+.highlight
+{
+	color: #AAD7FF;
+	font-weight: bold;
+}
+.fjsel
+{
+	background: #2F4070;
+	color: #AAD7FF;
+}
+.fjdpth0
+{
+	background: #5068B0;
+	color: #DEE2F2;
+}
+.panel
+{
+	background: #092655;
+	color: #ffffff;
+	padding:9px;
+}
+.panelsurround
+{
+	background: #333333;
+	padding-left:0px; padding-right:0px; padding-top:11px;
+}
+legend
+{
+	color: #AAD7FF;
+	font: 11px tahoma, verdana, geneva, lucida, 'lucida grande', arial, helvetica, sans-serif;
+}
+.vbmenu_control
+{
+	background: #324580;
+	color: #ffffff;
+	font: bold 11px tahoma, verdana, geneva, lucida, 'lucida grande', arial, helvetica, sans-serif;
+	padding: 3px 6px 3px 6px;
+	white-space: nowrap;
+}
+.vbmenu_control a:link, .vbmenu_control_alink
+{
+	color: #AAD7FF;
+	text-decoration: none;
+}
+.vbmenu_control a:visited, .vbmenu_control_avisited
+{
+	color: #AAD7FF;
+	text-decoration: none;
+}
+.vbmenu_control a:hover, .vbmenu_control a:active, .vbmenu_control_ahover
+{
+	color: #AAD7FF;
+	text-decoration: underline;
+}
+.vbmenu_popup
+{
+	background: #092655;
+	color: #ffffff;
+	border: 1px solid #333333;
+}
+.vbmenu_option
+{
+	background: #092655;
+	color: #ffffff;
+	font: 11px verdana, geneva, lucida, 'lucida grande', arial, helvetica, sans-serif;
+	white-space: nowrap;
+	cursor: pointer;
+}
+.vbmenu_option a:link, .vbmenu_option_alink
+{
+	color: #AAD7FF;
+	text-decoration: none;
+}
+.vbmenu_option a:visited, .vbmenu_option_avisited
+{
+	color: #AAD7FF;
+	text-decoration: none;
+}
+.vbmenu_option a:hover, .vbmenu_option a:active, .vbmenu_option_ahover
+{
+	color: #AAD7FF;
+	text-decoration: none;
+}
+.vbmenu_hilite
+{
+	background: #5068B0;
+	color: #DEE2F2;
+	font: 11px verdana, geneva, lucida, 'lucida grande', arial, helvetica, sans-serif;
+	white-space: nowrap;
+	cursor: pointer;
+}
+.vbmenu_hilite a:link, .vbmenu_hilite_alink
+{
+	color: #DEE2F2;
+	text-decoration: none;
+}
+.vbmenu_hilite a:visited, .vbmenu_hilite_avisited
+{
+	color: #DEE2F2;
+	text-decoration: none;
+}
+.vbmenu_hilite a:hover, .vbmenu_hilite a:active, .vbmenu_hilite_ahover
+{
+	color: #DEE2F2;
+	text-decoration: none;
+}
+/* ***** styling for 'big' usernames on postbit etc. ***** */
+.bigusername { font-size: 13px; }
+
+/* ***** small padding on 'thead' elements ***** */
+td.thead, div.thead { padding: 0px 4px; }
+
+.quote { font-size:11px;}
+.tiny {font-size:4px;}
+
+.alt3 { background-color:#283560; color:#DAE1E3; }
+
+.postbody { line-height:1.4em; }
+.postbody font { line-height:1.4em; }
+
+/* ***** basic styles for multi-page nav elements */
+.pagenav a { text-decoration: none; }
+.pagenav td { padding: 2px 4px 2px 4px; }
+
+/* ***** define margin and font-size for elements inside panels ***** */
+.fieldset { margin-bottom: 6px; }
+.fieldset, .fieldset td, .fieldset p, .fieldset li { font-size: 11px; }
+
+/* ***** don't change the following ***** */
+form { display: inline; }
+label { cursor: default; }
+.normal { font-weight: normal; }
+.inlineimg { vertical-align: middle; }

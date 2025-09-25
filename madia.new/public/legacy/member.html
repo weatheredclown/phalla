@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Member Profile</title>
+    <link rel="stylesheet" href="/legacy/phalla.css" />
+  </head>
+  <body>
+    <div align="center">
+      <div class="page" style="width:98%; text-align:left">
+        <div style="padding:0px 10px 0px 10px">
+          <table class="page" cellpadding="4" cellspacing="1" border="0" width="100%" align="center">
+            <tr>
+              <td class="page" valign="bottom" width="100%">
+                <span class="navbar"><a href="/legacy/index.html" accesskey="1">List of Games</a></span>
+                &raquo; <strong>View Profile</strong>
+              </td>
+            </tr>
+          </table>
+
+          <table class="tborder" cellpadding="4" cellspacing="1" border="0" width="100%" align="center">
+            <tr><td class="tcat">View Profile</td></tr>
+          </table>
+          <div class="smallfont" id="profileInfo" style="margin:6px 0 12px 2px;"></div>
+
+          <table width="100%" cellpadding="4" cellspacing="10" border="0">
+            <tr>
+              <td class="panelsurround" valign="top" width="50%">
+                <div class="panel">
+                  <div style="font-weight:bold; margin-bottom:6px;">Games You Play</div>
+                  <div id="gamesYouPlay"></div>
+                </div>
+              </td>
+              <td class="panelsurround" valign="top" width="50%">
+                <div class="panel">
+                  <div style="font-weight:bold; margin-bottom:6px;">Games You Own</div>
+                  <div id="gamesYouOwn"></div>
+                </div>
+              </td>
+            </tr>
+            <tr>
+              <td colspan="2" class="tcat">Create Game</td>
+            </tr>
+            <tr>
+              <td colspan="2" class="panelsurround">
+                <div class="panel">
+                  <form id="createGameForm" onsubmit="return false;">
+                    <table>
+                      <tr>
+                        <td>Name:</td>
+                        <td><input class="bginput" id="gameName" /></td>
+                      </tr>
+                      <tr>
+                        <td>Description:</td>
+                        <td><input class="bginput" id="gameDesc" /></td>
+                      </tr>
+                      <tr>
+                        <td><button class="button" id="createBtn">create game</button></td>
+                      </tr>
+                    </table>
+                  </form>
+                </div>
+              </td>
+            </tr>
+          </table>
+
+        </div>
+      </div>
+    </div>
+
+    <script type="module" src="/legacy/member.js"></script>
+  </body>
+  </html>
+
