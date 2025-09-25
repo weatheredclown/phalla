@@ -21,6 +21,7 @@ import {
   deleteDoc,
 } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 import { ubbToHtml } from "/legacy/ubb.js";
+import { injectLegacyHeader } from "./header.js";
 
 function getParam(name) {
   const params = new URLSearchParams(location.search);
@@ -42,13 +43,17 @@ const auth = getAuth(app);
 const db = getFirestore(app);
 const provider = new GoogleAuthProvider();
 
+const header = injectLegacyHeader({
+  navHtml: `<a href="/legacy/index.html">&laquo; back to games</a>`,
+});
+
 const els = {
   gameTitle: document.getElementById("gameTitle"),
   gameMeta: document.getElementById("gameMeta"),
   postsContainer: document.getElementById("postsContainer"),
-  signIn: document.getElementById("signIn"),
-  signOut: document.getElementById("signOut"),
-  userName: document.getElementById("userName"),
+  signIn: header.signIn,
+  signOut: header.signOut,
+  userName: header.userName,
   replyForm: document.getElementById("replyForm"),
   replyTitle: document.getElementById("replyTitle"),
   replyBody: document.getElementById("replyBody"),
@@ -64,7 +69,9 @@ const els = {
 onAuthStateChanged(auth, (user) => {
   els.signIn.style.display = user ? "none" : "inline-block";
   els.signOut.style.display = user ? "inline-block" : "none";
-  els.userName.textContent = user ? user.displayName : "";
+  if (els.userName) {
+    els.userName.textContent = user ? user.displayName : "";
+  }
   refreshMembershipAndControls();
 });
 els.signIn.addEventListener("click", async () => signInWithPopup(auth, provider));

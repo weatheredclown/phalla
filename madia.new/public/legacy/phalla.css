@@ -328,3 +328,27 @@ form { display: inline; }
 label { cursor: default; }
 .normal { font-weight: normal; }
 .inlineimg { vertical-align: middle; }
+
+.legacy-header {
+  margin: 10px 0;
+  overflow: auto;
+}
+
+.legacy-header-nav {
+  float: left;
+}
+
+.legacy-header-nav a {
+  margin-right: 12px;
+}
+
+.legacy-header-auth {
+  float: right;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.legacy-header-user {
+  font-weight: bold;
+}
