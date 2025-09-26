@@ -20,6 +20,7 @@ import {
   getDoc,
   increment,
   getDocs,
+  setDoc,
 } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
 // Your web app's Firebase configuration
@@ -98,6 +99,63 @@ let selectedThreadId = null;
 let unsubscribePosts = null;
 let unsubscribeThreads = null;
 let unsubscribeVotes = null;
+
+async function ensurePlayerRecord(user) {
+  if (!user) return;
+  const userRef = doc(db, "users", user.uid);
+  let snapshot;
+  try {
+    snapshot = await getDoc(userRef);
+  } catch (error) {
+    console.error("Failed to load user profile", error);
+    return;
+  }
+
+  if (!snapshot.exists()) {
+    try {
+      const timestamp = serverTimestamp();
+      await setDoc(userRef, {
+        uid: user.uid,
+        displayName: user.displayName || "",
+        email: user.email || "",
+        photoURL: user.photoURL || "",
+        createdAt: timestamp,
+        updatedAt: timestamp,
+        provider: user.providerData?.[0]?.providerId || "google.com",
+      });
+    } catch (error) {
+      console.error("Failed to create user profile", error);
+    }
+    return;
+  }
+
+  const data = snapshot.data() || {};
+  const updates = {};
+  if (!data.displayName && user.displayName) {
+    updates.displayName = user.displayName;
+  }
+  if (!data.photoURL && user.photoURL) {
+    updates.photoURL = user.photoURL;
+  }
+  if (!data.email && user.email) {
+    updates.email = user.email;
+  }
+
+  if (Object.keys(updates).length) {
+    try {
+      await setDoc(
+        userRef,
+        {
+          ...updates,
+          updatedAt: serverTimestamp(),
+        },
+        { merge: true }
+      );
+    } catch (error) {
+      console.error("Failed to update user profile", error);
+    }
+  }
+}
 
 function showThreadsMessage(message) {
   if (!els.threadsList) return;
@@ -457,9 +515,10 @@ if (!missingConfig) {
     els.voteNotesInput.value = "";
   });
 
-  onAuthStateChanged(auth, (user) => {
+  onAuthStateChanged(auth, async (user) => {
     currentUser = user;
     if (user) {
+      await ensurePlayerRecord(user);
       els.authStatus.textContent = `Signed in as ${user.displayName}`;
       els.signInButton.hidden = true;
       els.signOutButton.hidden = false;
