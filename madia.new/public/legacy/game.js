@@ -62,13 +62,11 @@ if (els.playerListLink && gameId) {
   els.playerListLink.href = `/legacy/playerlist.html?g=${encodeURIComponent(gameId)}`;
 }
 
-function wrapTbody(html) {
-  const tbody = document.createElement("tbody");
+function createMetaRow(html) {
   const tr = document.createElement("tr");
   tr.setAttribute("align", "center");
   tr.innerHTML = html;
-  tbody.appendChild(tr);
-  return tbody;
+  return tr;
 }
 
 function postRow(post, alt) {
@@ -156,7 +154,7 @@ async function loadGame() {
 
   els.gameMeta.innerHTML = "";
   els.gameMeta.appendChild(
-    wrapTbody(`
+    createMetaRow(`
       <td class="alt2">&nbsp;</td>
       <td class="alt2" nowrap="nowrap">
         <div class="smallfont" align="left"><a title="not clickable"><strong>${lastTitle}</strong></a></div>
