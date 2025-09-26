@@ -26,11 +26,22 @@ players:
 
 - `games/{gameId}` documents: `gamename` (string), `description`
   (string), `ownerUserId` (string), `ownerName` (string), `active`
-  (bool), `open` (bool), `day` (number).
-- `games/{gameId}/players/{uid}` documents for each participant.
+  (bool), `open` (bool), `day` (number), `updatedAt` (timestamp).
+- `games/{gameId}/players/{uid}` documents for each participant. The
+  retro moderator tools expect `postsLeft` (number) and `active`
+  (boolean) fields when you reset a game, but they default to `-1` and
+  `true` respectively if you omit them.
 - `games/{gameId}/posts/{postId}` documents: `title` (string), `body`
   (UBB), `authorId` (string), `authorName` (string), `avatar` (string,
-  optional), `sig` (string, optional), `createdAt` (timestamp).
+  optional), `sig` (string, optional), `createdAt` (timestamp),
+  `updatedAt` (timestamp, optional), `editedBy` (string, optional),
+  `editedByName` (string, optional).
+- `games/{gameId}/actions/{actionId}` documents capture private
+  actions and vote history recorded from the legacy UI. Each entry
+  stores `playerId` (string), `username` (string), `actionName`
+  (string), `targetName` (string), `notes` (string), `category`
+  (string, either `private` or `vote`), `day` (number), `valid`
+  (boolean), plus `createdAt`/`updatedAt` timestamps.
 - `users/{uid}` documents: `displayName`, `username`, `usernameLower`
   (all strings), `email` (string), `photoURL` (optional string), and
   timestamps (`createdAt`, `lastLoginAt`). The login page looks up
