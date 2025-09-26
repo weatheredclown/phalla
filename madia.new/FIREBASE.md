@@ -1,86 +1,60 @@
 # Firebase Setup (Retro UI)
 
-This project uses Firebase Hosting, Authentication (Google), and Firestore. Follow these steps to configure your project and run locally or deploy.
+The retro UI in `public/legacy/` shares the same Firebase project as the
+modern single-page app documented in [README.md](./README.md). Follow
+that guide for project creation, CLI installation, emulator usage,
+Firestore rules, and deployment. This document only captures the
+additional steps and data requirements that are unique to the retro
+experience.
 
-## 1) Create Firebase project
-- In Firebase Console: Add project (production mode is fine).
-- Enable products:
-  - Firestore Database: Create database (choose a region close to your users).
-  - Authentication: Enable Google provider.
-  - Hosting: Will serve the `public/` folder.
+## Configure retro client SDKs
 
-## 2) Configure client SDK
-- Copy your web app config from Console → Project settings → Your apps → Web.
-- Paste the config into both files (or refactor to a shared loader):
-  - `public/legacy/legacy.js`
-  - `public/legacy/game.js`
-- Optional (local dev): Connect emulators instead of production.
+- After registering your Firebase Web app, paste the configuration
+  snippet into `public/legacy/legacy.js` and `public/legacy/game.js`.
+- Keep the values in sync with `public/script.js` so both experiences
+  point at the same project.
+- When running emulators, call `connectAuthEmulator` and
+  `connectFirestoreEmulator` in these files (mirroring the modern UI)
+  and guard the calls behind a development flag.
 
-## 3) Firestore rules (minimum secure defaults)
-Use rules that allow authenticated users to create posts and only owners to modify game settings. The legacy UI also queries threa
-ds, votes, and user profiles, so the rule set covers each collection the app touches.
+## Data shape expectations
 
-```
-rules_version = '2';
-service cloud.firestore {
-  match /databases/{database}/documents {
-    match /games/{gameId} {
-      allow read: if true;
-      allow create: if request.auth != null && request.resource.data.ownerUserId == request.auth.uid;
-      allow update, delete: if request.auth != null && resource.data.ownerUserId == request.auth.uid;
+The retro UI expects the following Firestore schema. Seed a small data
+set through the emulator UI or the Firebase console before inviting
+players:
 
-      match /players/{uid} {
-        allow read: if true;
-        allow create, delete: if request.auth != null && request.auth.uid == uid;
-      }
+- `games/{gameId}` documents: `gamename` (string), `description`
+  (string), `ownerUserId` (string), `ownerName` (string), `active`
+  (bool), `open` (bool), `day` (number).
+- `games/{gameId}/players/{uid}` documents for each participant.
+- `games/{gameId}/posts/{postId}` documents: `title` (string), `body`
+  (UBB), `authorId` (string), `authorName` (string), `avatar` (string,
+  optional), `sig` (string, optional), `createdAt` (timestamp).
 
-      match /posts/{postId} {
-        allow read: if true;
-        allow create: if request.auth != null
-          && exists(/databases/$(database)/documents/games/$(gameId)/players/$(request.auth.uid));
-      }
-    }
+## Required indexes
 
-    match /threads/{threadId} {
-      allow read: if true;
-      allow create: if request.auth != null && request.resource.data.createdBy == request.auth.uid;
-      allow update, delete: if request.auth != null && resource.data.createdBy == request.auth.uid;
+Create a composite index to support the Games list query:
 
-      match /posts/{postId} {
-        allow read: if true;
-        allow create: if request.auth != null && request.resource.data.author == request.auth.uid;
-      }
-    }
-
-    match /votes/{voteId} {
-      allow read: if true;
-      allow create: if request.auth != null && request.resource.data.recordedBy == request.auth.uid;
-      allow delete: if request.auth != null && resource.data.recordedBy == request.auth.uid;
-    }
-
-    match /users/{userId} {
-      allow read: if true;
-      allow write: if request.auth != null && request.auth.uid == userId;
-    }
-  }
-}
-```
-
-## 4) Indexes
-Create a composite index for the Games list query:
 - Collection: `games`
 - Fields: `active` desc, `open` desc, `gamename` asc
-(Visit the games list once; Firestore will provide a one-click link if missing.)
 
-## 5) Seed minimal data
-- Create a `games/{gameId}` doc with fields:
-  - `gamename` (string), `description` (string), `ownerUserId` (string), `ownerName` (string), `active` (bool), `open` (bool), `day` (number)
-- Add `games/{gameId}/players/{uid}` for participants.
-- Add `games/{gameId}/posts/{postId}` with:
-  - `title` (string), `body` (UBB), `authorId` (string), `authorName` (string), `avatar` (string, optional), `sig` (string, optional), `createdAt` (timestamp)
+If the index is missing, Firestore will prompt you with a one-click link
+after the first query.
 
-## 6) Run locally / deploy
-- Local: `firebase emulators:start` → open `http://localhost:5000/legacy/index.html`
-- Deploy: `firebase deploy --only hosting`
+## Emulator and hosting paths
 
-Notes: This UI expects the `games/*` schema above. Authentication is required to join games and post. Adjust rules to your policy. 
+- Modern SPA: `http://localhost:5000/`
+- Retro UI: `http://localhost:5000/legacy/index.html`
+
+Deploying with `firebase deploy --only hosting` publishes both UIs under
+the same Hosting site.
+
+## Troubleshooting tips
+
+- Ensure authenticated users exist in the emulator or production project
+  before testing posts or votes—anonymous users cannot write.
+- Keep Firestore rules in sync with the version documented in
+  `README.md` so both interfaces enforce the same access patterns.
+- If you refactor collection names or document shapes, update both the
+  modern and retro clients to avoid runtime errors.
+

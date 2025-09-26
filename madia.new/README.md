@@ -1,25 +1,38 @@
 # Madia Firebase Application
 
-This folder contains a modern Firebase implementation of the legacy `mafia.old/default.asp` forum and Mafia game helper. The new single-page app uses Firebase Authentication, Firestore, and Hosting to deliver a collaborative experience for players.
+This directory contains a modern Firebase implementation of the legacy
+`mafia.old/default.asp` forum alongside a “retro” UI that mirrors the
+original look. Both experiences share the same Firebase project, making
+it easy to iterate on the single-page app while keeping long-time
+players comfortable.
 
 ## Features
 
-- **Threaded discussion board** with real-time updates backed by Cloud Firestore.
+- **Threaded discussion board** with real-time updates backed by Cloud
+  Firestore.
 - **Integrated Mafia game dashboard** to track player votes and notes.
-- **Google sign-in** via Firebase Authentication with guards around write operations.
-- **Firebase Hosting configuration** that deploys the static assets in `public/`.
-- **Emulator Suite support** for local development with Auth, Firestore, and Hosting.
+- **Google sign-in** via Firebase Authentication with guards around
+  write operations.
+- **Firebase Hosting configuration** that deploys the static assets in
+  `public/`.
+- **Emulator Suite support** for local development with Auth,
+  Firestore, and Hosting.
 
 ## Project structure
 
 ```
 madia.new/
-├── .firebaserc          # Placeholder project alias mapping
+├── .firebaserc          # Project alias mapping
 ├── firebase.json        # Hosting + emulator configuration
-├── README.md            # This file with setup and deployment guidance
+├── README.md            # Shared setup and deployment guidance
+├── FIREBASE.md          # Retro UI specifics (supplements this guide)
 └── public/
-    ├── index.html       # Application shell
-    ├── script.js        # Firebase-backed forum logic
+    ├── images/          # Shared imagery
+    ├── index.html       # Modern application shell
+    ├── legacy/          # Retro UI assets
+    │   ├── game.js
+    │   └── legacy.js
+    ├── script.js        # Firebase-backed forum logic (modern UI)
     └── styles.css       # Modernized styling
 ```
 
@@ -38,12 +51,14 @@ madia.new/
    - Go to **Build → Firestore Database** and create a database in production mode. Choose a region close to your players.
    - (Optional) Under **Build → Storage**, create a Cloud Storage bucket if you plan to add media uploads later.
 4. Create a **Web app** registration (`</>` icon) to obtain the Firebase configuration snippet. Copy the settings (apiKey, authDomain, etc.).
-5. Update `public/script.js` with the copied configuration values (replace the `YOUR_*` placeholders).
+5. Update all client entry points with the copied configuration values:
+   - `public/script.js` for the modern single-page app.
+   - `public/legacy/legacy.js` and `public/legacy/game.js` for the retro UI.
 6. Update `.firebaserc` to set the default project ID: replace `YOUR_FIREBASE_PROJECT_ID` with the project ID shown in the Firebase console.
 
-### Recommended Firestore security rules
+## 2. Recommended Firestore security rules
 
-In the Firebase console under **Build → Firestore Database → Rules**, replace the default rules with a stricter set:
+Apply the following rules under **Build → Firestore Database → Rules** to cover every collection the modern and legacy UIs touch (games, players, posts, threads, votes, and user profiles) while preventing anonymous writes:
 
 ```firestore
 rules_version = '2';
@@ -91,9 +106,7 @@ service cloud.firestore {
 }
 ```
 
-These rules cover every collection the modern and legacy UIs touch (games, players, posts, threads, votes, and user profiles) and prevent anonymous writes.
-
-## 2. Install and authenticate the Firebase CLI
+## 3. Install and authenticate the Firebase CLI
 
 1. Install the CLI (if not already):
 
@@ -115,7 +128,7 @@ These rules cover every collection the modern and legacy UIs touch (games, playe
    firebase projects:list
    ```
 
-## 3. Initialize local development
+## 4. Initialize local development
 
 1. From the repository root, navigate into this directory and install any local tooling if desired (no dependencies are required for the static app):
 
@@ -135,23 +148,14 @@ These rules cover every collection the modern and legacy UIs touch (games, playe
    firebase emulators:start
    ```
 
-   - Hosting will serve the app at `http://localhost:5000`.
+   - Hosting will serve the modern app at `http://localhost:5000/`.
+   - Visit `http://localhost:5000/legacy/index.html` for the retro UI.
    - Firestore is available at `localhost:8080` and Auth at `localhost:9099`.
    - The CLI prints a UI URL where you can inspect emulator data.
 
-4. When using emulators, override the SDK configuration at the top of `public/script.js` to point to the emulators:
+4. When using emulators, override the SDK configuration at the top of `public/script.js`, `public/legacy/legacy.js`, and `public/legacy/game.js` to point to the emulators. Wrap these calls with a development-only flag or environment check.
 
-   ```js
-   import { connectAuthEmulator } from 'https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js';
-   import { connectFirestoreEmulator } from 'https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js';
-
-   connectAuthEmulator(auth, 'http://localhost:9099');
-   connectFirestoreEmulator(db, 'localhost', 8080);
-   ```
-
-   (Wrap these calls with a development-only flag or environment check.)
-
-## 4. Deploy to Firebase Hosting
+## 5. Deploy to Firebase Hosting
 
 1. Build/prepare static assets. This project is already static, so no additional build step is required.
 2. Run a preview deploy to inspect the result without affecting production:
@@ -170,14 +174,18 @@ These rules cover every collection the modern and legacy UIs touch (games, playe
 
 4. (Optional) In the Firebase console under **Build → Hosting**, connect a custom domain and follow the DNS verification steps.
 
-## 5. Monitor and maintain
+## 6. Monitor and maintain
 
 - Use the [Google Cloud Console](https://console.cloud.google.com/) for project-wide settings, IAM roles, and usage metrics.
 - Set up alerts in **Google Cloud Monitoring** for Firestore and Hosting quotas if you anticipate heavy traffic.
 - Regularly review the **Authentication** user list to prune inactive accounts and update provider settings.
 - Export Firestore data using the [Managed Export and Import service](https://firebase.google.com/docs/firestore/manage-data/export-import) for backups.
 
-## 6. Next steps and customization ideas
+## 7. Legacy UI specifics
+
+Refer to [FIREBASE.md](./FIREBASE.md) for data seeding tips, required indexes, and other retro UI notes that supplement this shared guide.
+
+## 8. Next steps and customization ideas
 
 - Add Cloud Functions for scheduled tasks (e.g., nightly vote summaries).
 - Integrate push notifications with Firebase Cloud Messaging for day/night cycle alerts.
@@ -185,3 +193,4 @@ These rules cover every collection the modern and legacy UIs touch (games, playe
 - Add role management (villager/mafia/host) by extending user profiles in Firestore.
 
 With this foundation you can gradually migrate content and users from the legacy ASP application into a scalable Firebase-backed solution.
+
