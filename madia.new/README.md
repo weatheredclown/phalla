@@ -164,7 +164,9 @@ service cloud.firestore {
    firebase hosting:channel:deploy preview
    ```
 
-3. When satisfied, deploy to production:
+3. GitHub Actions can automatically run the preview deploy for any pull request or push that touches `madia.new/**`. Configure a repository secret named `FIREBASE_TOKEN` (generated with `firebase login:ci`) so the workflow can authenticate, and the deploy job will output the preview channel URL.
+
+4. When satisfied, deploy to production:
 
    ```bash
    firebase deploy --only hosting
@@ -172,7 +174,7 @@ service cloud.firestore {
 
    The CLI prints the live URL (e.g., `https://<project-id>.web.app`).
 
-4. (Optional) In the Firebase console under **Build → Hosting**, connect a custom domain and follow the DNS verification steps.
+5. (Optional) In the Firebase console under **Build → Hosting**, connect a custom domain and follow the DNS verification steps.
 
 ## 6. Monitor and maintain
 
