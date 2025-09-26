@@ -94,12 +94,33 @@ service cloud.firestore {
       match /players/{playerId} {
         allow read: if true;
         allow create, delete: if request.auth != null && request.auth.uid == playerId;
+        allow update: if request.auth != null && (
+          request.auth.uid == playerId ||
+          get(/databases/$(database)/documents/games/$(gameId)).data.ownerUserId == request.auth.uid
+        );
       }
 
       match /posts/{postId} {
         allow read: if true;
         allow create: if request.auth != null
           && exists(/databases/$(database)/documents/games/$(gameId)/players/$(request.auth.uid));
+        allow update: if request.auth != null && (
+          request.auth.uid == resource.data.authorId ||
+          get(/databases/$(database)/documents/games/$(gameId)).data.ownerUserId == request.auth.uid
+        );
+        allow delete: if request.auth != null
+          && get(/databases/$(database)/documents/games/$(gameId)).data.ownerUserId == request.auth.uid;
+      }
+
+      match /actions/{actionId} {
+        allow read: if request.auth != null && (
+          request.auth.uid == resource.data.playerId ||
+          get(/databases/$(database)/documents/games/$(gameId)).data.ownerUserId == request.auth.uid
+        );
+        allow create: if request.auth != null && request.resource.data.playerId == request.auth.uid;
+        allow update: if request.auth != null && request.auth.uid == resource.data.playerId;
+        allow delete: if request.auth != null
+          && get(/databases/$(database)/documents/games/$(gameId)).data.ownerUserId == request.auth.uid;
       }
     }
 
