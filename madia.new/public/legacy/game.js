@@ -1,6 +1,5 @@
 import {
   onAuthStateChanged,
-  signInWithPopup,
   signOut,
 } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
 import {
@@ -17,7 +16,7 @@ import {
   deleteDoc,
 } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 import { ubbToHtml } from "/legacy/ubb.js";
-import { auth, db, provider, missingConfig } from "./firebase.js";
+import { auth, db, ensureUserDocument, missingConfig } from "./firebase.js";
 import { initLegacyHeader } from "./header.js";
 
 function getParam(name) {
@@ -31,6 +30,10 @@ const els = {
   gameTitle: document.getElementById("gameTitle"),
   gameMeta: document.getElementById("gameMeta"),
   postsContainer: document.getElementById("postsContainer"),
+  signIn: document.getElementById("signIn"),
+  signOut: document.getElementById("signOut"),
+  userName: document.getElementById("userName"),
+  signUpLink: document.getElementById("signUpLink"),
   replyForm: document.getElementById("replyForm"),
   replyTitle: document.getElementById("replyTitle"),
   replyBody: document.getElementById("replyBody"),
@@ -43,6 +46,35 @@ const els = {
   nextDay: document.getElementById("nextDay"),
   playerListLink: document.getElementById("playerListLink"),
 };
+
+onAuthStateChanged(auth, async (user) => {
+  els.signIn.style.display = user ? "none" : "inline-block";
+  els.signOut.style.display = user ? "inline-block" : "none";
+  els.userName.textContent = user ? user.displayName : "";
+  if (user) {
+    await ensureUserDocument(user);
+  }
+  if (els.signUpLink) {
+    els.signUpLink.style.display = user ? "none" : "inline";
+  }
+  refreshMembershipAndControls();
+});
+els.signIn.addEventListener("click", () => {
+  const redirect = encodeURIComponent(
+    `${location.pathname}${location.search}${location.hash}`
+  );
+  location.href = `/legacy/login.html?redirect=${redirect}`;
+});
+els.signOut.addEventListener("click", async () => signOut(auth));
+if (els.signUpLink) {
+  els.signUpLink.addEventListener("click", (event) => {
+    event.preventDefault();
+    const redirect = encodeURIComponent(
+      `${location.pathname}${location.search}${location.hash}`
+    );
+    location.href = `/legacy/login.html?redirect=${redirect}#signup`;
+  });
+}
 
 if (header?.signInButton) {
   header.signInButton.addEventListener("click", async () => {

@@ -10,7 +10,8 @@ experience.
 ## Configure retro client SDKs
 
 - After registering your Firebase Web app, paste the configuration
-  snippet into `public/legacy/legacy.js` and `public/legacy/game.js`.
+  snippet into `public/legacy/legacy.js`, `public/legacy/game.js`, and
+  `public/legacy/login.js`.
 - Keep the values in sync with `public/script.js` so both experiences
   point at the same project.
 - When running emulators, call `connectAuthEmulator` and
@@ -30,6 +31,15 @@ players:
 - `games/{gameId}/posts/{postId}` documents: `title` (string), `body`
   (UBB), `authorId` (string), `authorName` (string), `avatar` (string,
   optional), `sig` (string, optional), `createdAt` (timestamp).
+- `users/{uid}` documents: `displayName`, `username`, `usernameLower`
+  (all strings), `email` (string), `photoURL` (optional string), and
+  timestamps (`createdAt`, `lastLoginAt`). The login page looks up
+  `usernameLower` to support username-based sign-in.
+
+The retro login experience lives at `/legacy/login.html` and mimics the
+classic ASP form. Ensure the Firebase Authentication Email/Password
+provider is enabled so the form can create and authenticate local
+accounts alongside Google sign-in.
 
 ## Required indexes
 

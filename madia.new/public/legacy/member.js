@@ -15,7 +15,7 @@ import {
   setDoc,
   getDoc,
 } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
-import { auth, db, missingConfig, provider } from "./firebase.js";
+import { auth, db, ensureUserDocument, missingConfig, provider } from "./firebase.js";
 import { initLegacyHeader } from "./header.js";
 
 const header = initLegacyHeader();
@@ -54,6 +54,9 @@ const viewedUid = getParam("u");
 onAuthStateChanged(auth, async (user) => {
   header?.setUser(user);
   currentUser = user;
+  if (user) {
+    await ensureUserDocument(user);
+  }
   renderProfileHeader();
   await loadLists();
 });

@@ -1,6 +1,5 @@
 import {
   onAuthStateChanged,
-  signInWithPopup,
   signOut,
 } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
 import {
@@ -10,10 +9,14 @@ import {
   orderBy,
   query,
 } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
-import { auth, db, provider, missingConfig } from "./firebase.js";
+import { auth, db, ensureUserDocument, missingConfig } from "./firebase.js";
 import { initLegacyHeader } from "./header.js";
 
 const summaryContent = document.getElementById("summaryContent");
+const signInButton = document.getElementById("signIn");
+const signOutButton = document.getElementById("signOut");
+const profileLink = document.getElementById("profileLink");
+const signUpLink = document.getElementById("signUpLink");
 const header = initLegacyHeader();
 
 if (missingConfig) {
@@ -22,12 +25,28 @@ if (missingConfig) {
   renderInfo("Sign in to view site summary.");
 }
 
-if (header?.signInButton) {
-  header.signInButton.addEventListener("click", async () => {
-    await signInWithPopup(auth, provider);
-  });
-}
+signInButton?.addEventListener("click", () => {
+  const redirect = encodeURIComponent(
+    `${location.pathname}${location.search}${location.hash}`
+  );
+  location.href = `/legacy/login.html?redirect=${redirect}`;
+});
 
+signUpLink?.addEventListener("click", (event) => {
+  event.preventDefault();
+  const redirect = encodeURIComponent(
+    `${location.pathname}${location.search}${location.hash}`
+  );
+  location.href = `/legacy/login.html?redirect=${redirect}#signup`;
+});
+
+// This listener is for the sign-out button within the main content
+signOutButton?.addEventListener("click", async (event) => {
+    event.preventDefault();
+    await signOut(auth);
+});
+
+// This listener is for the sign-out link in the refactored header
 if (header?.signOutLink) {
   header.signOutLink.addEventListener("click", async (event) => {
     event.preventDefault();
@@ -36,6 +55,21 @@ if (header?.signOutLink) {
 }
 
 onAuthStateChanged(auth, async (user) => {
+  // Update UI elements from the codex branch
+  if (signInButton) signInButton.style.display = user ? "none" : "inline-block";
+  if (signOutButton) signOutButton.style.display = user ? "inline-block" : "none";
+  if (profileLink) {
+    profileLink.style.display = user ? "inline-block" : "none";
+    if (user) {
+      profileLink.href = `/legacy/member.html?u=${encodeURIComponent(user.uid)}`;
+      await ensureUserDocument(user);
+    }
+  }
+  if (signUpLink) {
+    signUpLink.style.display = user ? "none" : "inline";
+  }
+  
+  // Also update the header component from the main branch
   header?.setUser(user);
 
   if (missingConfig) {
