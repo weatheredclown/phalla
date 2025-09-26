@@ -12,6 +12,8 @@ import {
   setDoc,
   deleteDoc,
   where,
+  deleteField,
+  runTransaction,
 } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 import { ubbToHtml } from "/legacy/ubb.js";
 import { auth, db, ensureUserDocument, missingConfig } from "./firebase.js";
@@ -49,6 +51,16 @@ const els = {
   voteTarget: document.getElementById("voteTarget"),
   voteDay: document.getElementById("voteDay"),
   voteNotes: document.getElementById("voteNotes"),
+  claimRecordForm: document.getElementById("claimRecordForm"),
+  claimRole: document.getElementById("claimRole"),
+  claimDay: document.getElementById("claimDay"),
+  notebookRecordForm: document.getElementById("notebookRecordForm"),
+  notebookTarget: document.getElementById("notebookTarget"),
+  notebookDay: document.getElementById("notebookDay"),
+  notebookNotes: document.getElementById("notebookNotes"),
+  moderatorPanel: document.getElementById("moderatorPanel"),
+  moderatorStatus: document.getElementById("moderatorStatus"),
+  moderatorRows: document.getElementById("moderatorRows"),
   playerListLink: document.getElementById("playerListLink"),
 };
 els.ubbButtons = document.querySelectorAll(".ubb-button[data-ubb-tag]");
@@ -56,6 +68,8 @@ els.ubbButtons = document.querySelectorAll(".ubb-button[data-ubb-tag]");
 let currentUser = null;
 let currentGame = null;
 let currentPlayer = null;
+let gamePlayers = [];
+let isOwnerView = false;
 
 onAuthStateChanged(auth, async (user) => {
   currentUser = user;
@@ -63,7 +77,12 @@ onAuthStateChanged(auth, async (user) => {
   if (user) {
     await ensureUserDocument(user);
   }
-  refreshMembershipAndControls();
+  await refreshMembershipAndControls();
+  if (!missingConfig && gameId) {
+    loadGame().catch((error) => {
+      console.warn("Failed to refresh game after auth change", error);
+    });
+  }
 });
 
 const gameId = getParam("g");
@@ -192,11 +211,11 @@ async function loadGame() {
   }
   const g = gSnap.data();
   currentGame = { id: gameId, ...g };
+  isOwnerView = !!(auth.currentUser && g.ownerUserId === auth.currentUser.uid);
   els.gameTitle.textContent = g.gamename || "(no name)";
-  els.ownerControls.style.display = auth.currentUser && g.ownerUserId === auth.currentUser.uid ? "block" : "none";
+  els.ownerControls.style.display = isOwnerView ? "block" : "none";
   if (els.daySummary) {
-    els.daySummary.style.display =
-      auth.currentUser && g.ownerUserId === auth.currentUser.uid ? "inline-block" : "none";
+    els.daySummary.style.display = isOwnerView ? "inline-block" : "none";
   }
   if (els.privateActionDay) {
     els.privateActionDay.value = g.day ?? 0;
@@ -204,13 +223,30 @@ async function loadGame() {
   if (els.voteDay) {
     els.voteDay.value = g.day ?? 0;
   }
+  if (els.claimDay) {
+    els.claimDay.value = g.day ?? 0;
+  }
+  if (els.notebookDay) {
+    els.notebookDay.value = g.day ?? 0;
+  }
 
   // Meta row (last post, players, day, open)
-  let playerCount = 0;
   try {
     const playersSnap = await getDocs(collection(gameRef, "players"));
-    playerCount = playersSnap.size;
-  } catch {}
+    gamePlayers = playersSnap.docs
+      .map((docSnap) => {
+        const data = docSnap.data() || {};
+        const name = data.name || data.username || data.displayName || docSnap.id;
+        return { id: docSnap.id, name, data };
+      })
+      .sort((a, b) => a.name.localeCompare(b.name, undefined, { sensitivity: "base" }));
+  } catch (error) {
+    console.warn("Failed to load players", error);
+    gamePlayers = [];
+  }
+  const playerCount = gamePlayers.length;
+  populatePlayerSelects();
+  renderModeratorPanel();
 
   let lastPost = null;
   try {
@@ -346,10 +382,11 @@ els.postReply.addEventListener("click", async () => {
   els.replyTitle.value = "";
   els.replyBody.value = "";
   if (!isOwner && currentPlayer && typeof currentPlayer.postsLeft === "number") {
-    if (currentPlayer.postsLeft === 1) {
+    if (currentPlayer.postsLeft > 0) {
+      const remaining = currentPlayer.postsLeft - 1;
       try {
-        await updateDoc(doc(db, "games", gameId, "players", user.uid), { postsLeft: 0 });
-        currentPlayer.postsLeft = 0;
+        await updateDoc(doc(db, "games", gameId, "players", user.uid), { postsLeft: remaining });
+        currentPlayer.postsLeft = remaining;
       } catch (error) {
         console.warn("Failed to update postsLeft", error);
       }
@@ -403,10 +440,12 @@ els.voteRecordForm?.addEventListener("submit", async (event) => {
     header?.openAuthPanel("login");
     return;
   }
-  const targetName = (els.voteTarget?.value || "").trim();
+  const targetId = (els.voteTarget?.value || "").trim();
+  const target = targetId ? findPlayerById(targetId) : null;
+  const targetName = target?.name || "";
   const notes = (els.voteNotes?.value || "").trim();
   const day = parseDayInput(els.voteDay);
-  if (!targetName) {
+  if (!targetId) {
     setPlayerToolsStatus("Enter a vote target first.", "error");
     return;
   }
@@ -415,6 +454,7 @@ els.voteRecordForm?.addEventListener("submit", async (event) => {
       category: "vote",
       actionName: "Vote",
       targetName,
+      targetPlayerId: targetId,
       notes,
       day,
     });
@@ -428,6 +468,69 @@ els.voteRecordForm?.addEventListener("submit", async (event) => {
   } catch (error) {
     console.error("Failed to record vote", error);
     setPlayerToolsStatus("Unable to record vote.", "error");
+  }
+});
+
+els.claimRecordForm?.addEventListener("submit", async (event) => {
+  event.preventDefault();
+  if (!currentUser) {
+    header?.openAuthPanel("login");
+    return;
+  }
+  const role = (els.claimRole?.value || "").trim();
+  const day = parseDayInput(els.claimDay);
+  if (!role) {
+    setPlayerToolsStatus("Enter a role to claim.", "error");
+    return;
+  }
+  try {
+    await recordAction({
+      category: "claim",
+      actionName: "Claim",
+      notes: role,
+      day,
+    });
+    setPlayerToolsStatus("Claim recorded.", "success");
+    if (els.claimRole) {
+      els.claimRole.value = "";
+    }
+  } catch (error) {
+    console.error("Failed to record claim", error);
+    setPlayerToolsStatus("Unable to record claim.", "error");
+  }
+});
+
+els.notebookRecordForm?.addEventListener("submit", async (event) => {
+  event.preventDefault();
+  if (!currentUser) {
+    header?.openAuthPanel("login");
+    return;
+  }
+  const targetId = (els.notebookTarget?.value || "").trim();
+  const target = targetId ? findPlayerById(targetId) : null;
+  const targetName = target?.name || "";
+  const notes = (els.notebookNotes?.value || "").trim();
+  const day = parseDayInput(els.notebookDay);
+  if (!targetId) {
+    setPlayerToolsStatus("Choose a notebook target first.", "error");
+    return;
+  }
+  try {
+    await recordAction({
+      category: "notebook",
+      actionName: "Notebook",
+      targetName,
+      targetPlayerId: targetId,
+      notes,
+      day,
+    });
+    setPlayerToolsStatus("Notebook entry saved.", "success");
+    if (els.notebookNotes) {
+      els.notebookNotes.value = "";
+    }
+  } catch (error) {
+    console.error("Failed to record notebook entry", error);
+    setPlayerToolsStatus("Unable to record notebook entry.", "error");
   }
 });
 
@@ -515,7 +618,15 @@ function setPlayerToolsStatus(message, type = "info") {
   el.style.color = type === "error" ? "#ff7676" : type === "success" ? "#6ee7b7" : "#F9A906";
 }
 
-async function recordAction({ category, actionName, targetName, notes = "", day }) {
+async function recordAction({
+  category,
+  actionName,
+  targetName = "",
+  targetPlayerId = "",
+  notes = "",
+  day,
+  extra = {},
+}) {
   if (!currentUser) {
     throw new Error("Not signed in");
   }
@@ -523,16 +634,15 @@ async function recordAction({ category, actionName, targetName, notes = "", day 
   const actionsRef = collection(gameRef, "actions");
   const existing = await getDocs(query(actionsRef, where("playerId", "==", currentUser.uid)));
   const invalidations = existing.docs
-    .filter((docSnap) => {
-      const data = docSnap.data();
-      if ((data.category || "") !== category) return false;
-      const dataDay = data.day ?? 0;
-      if (dataDay !== day) return false;
-      if (category === "private" && (data.actionName || "") !== actionName) {
-        return false;
-      }
-      return data.valid !== false;
-    })
+    .filter((docSnap) =>
+      shouldInvalidateAction(docSnap.data(), {
+        category,
+        actionName,
+        targetName,
+        targetPlayerId,
+        day,
+      })
+    )
     .map((docSnap) =>
       updateDoc(docSnap.ref, {
         valid: false,
@@ -542,7 +652,7 @@ async function recordAction({ category, actionName, targetName, notes = "", day 
       })
     );
   await Promise.all(invalidations);
-  await addDoc(actionsRef, {
+  const payload = {
     playerId: currentUser.uid,
     username: currentUser.displayName || "Unknown",
     actionName,
@@ -553,7 +663,442 @@ async function recordAction({ category, actionName, targetName, notes = "", day 
     valid: true,
     createdAt: serverTimestamp(),
     updatedAt: serverTimestamp(),
+    ...extra,
+  };
+  if (targetPlayerId) {
+    payload.targetPlayerId = targetPlayerId;
+  }
+  await addDoc(actionsRef, payload);
+}
+
+function shouldInvalidateAction(data = {}, context) {
+  if (!data || data.valid === false) {
+    return false;
+  }
+  if ((data.category || "") !== context.category) {
+    return false;
+  }
+  const dataDay = data.day ?? 0;
+  switch (context.category) {
+    case "private":
+      if ((data.actionName || "") !== context.actionName) {
+        return false;
+      }
+      return dataDay === context.day;
+    case "vote":
+      return dataDay === context.day;
+    case "claim":
+      return true;
+    case "notebook": {
+      const dataTargetId = data.targetPlayerId || "";
+      if (context.targetPlayerId && dataTargetId) {
+        return dataTargetId === context.targetPlayerId;
+      }
+      const expected = (context.targetName || "").toLowerCase();
+      const actual = (data.targetName || "").toLowerCase();
+      if (expected && actual) {
+        return expected === actual;
+      }
+      return dataDay === context.day;
+    }
+    default:
+      return dataDay === context.day;
+  }
+}
+
+function findPlayerById(id) {
+  if (!id) {
+    return null;
+  }
+  return gamePlayers.find((player) => player.id === id) || null;
+}
+
+function populatePlayerSelects() {
+  const selects = [
+    { element: els.voteTarget, placeholder: "-- select player --" },
+    { element: els.notebookTarget, placeholder: "-- select player --" },
+  ];
+  selects.forEach(({ element, placeholder }) => {
+    if (!element) return;
+    const previous = element.value;
+    element.innerHTML = "";
+    const blank = document.createElement("option");
+    blank.value = "";
+    blank.textContent = placeholder;
+    element.appendChild(blank);
+    gamePlayers.forEach((player) => {
+      const option = document.createElement("option");
+      option.value = player.id;
+      option.textContent = player.name;
+      if (player.id === previous) {
+        option.selected = true;
+      }
+      element.appendChild(option);
+    });
   });
+}
+
+function renderModeratorPanel() {
+  const panel = els.moderatorPanel;
+  const rows = els.moderatorRows;
+  if (!panel || !rows) {
+    return;
+  }
+  if (!isOwnerView) {
+    panel.style.display = "none";
+    setModeratorStatus("");
+    return;
+  }
+  panel.style.display = "block";
+  rows.innerHTML = "";
+  if (!gamePlayers.length) {
+    const emptyRow = document.createElement("tr");
+    emptyRow.innerHTML =
+      '<td class="alt1" colspan="5" align="center"><i>No players joined.</i></td>';
+    rows.appendChild(emptyRow);
+    return;
+  }
+  gamePlayers.forEach((player, index) => {
+    const tr = document.createElement("tr");
+    tr.dataset.playerId = player.id;
+    tr.setAttribute("align", "center");
+    const altPrimary = index % 2 === 0 ? "alt1" : "alt2";
+    const altSecondary = index % 2 === 0 ? "alt2" : "alt1";
+
+    const nameTd = document.createElement("td");
+    nameTd.className = altSecondary;
+    nameTd.setAttribute("align", "left");
+    nameTd.innerHTML = `<strong>${escapeHtml(player.name)}</strong><br /><span class="smallfont">${escapeHtml(
+      player.id
+    )}</span>`;
+
+    const roleTd = document.createElement("td");
+    roleTd.className = altPrimary;
+    const roleInput = document.createElement("input");
+    roleInput.type = "text";
+    roleInput.className = "bginput moderator-role";
+    roleInput.style.width = "95%";
+    roleInput.value = player.data.role || player.data.rolename || "";
+    roleTd.appendChild(roleInput);
+
+    const statusTd = document.createElement("td");
+    statusTd.className = altSecondary;
+    const statusSelect = document.createElement("select");
+    statusSelect.className = "bginput moderator-status";
+    [
+      { value: "alive", label: "Alive" },
+      { value: "eliminated", label: "Eliminated" },
+    ].forEach((optionDef) => {
+      const option = document.createElement("option");
+      option.value = optionDef.value;
+      option.textContent = optionDef.label;
+      statusSelect.appendChild(option);
+    });
+    statusSelect.value = playerIsAlive(player.data) ? "alive" : "eliminated";
+    statusTd.appendChild(statusSelect);
+
+    const postsTd = document.createElement("td");
+    postsTd.className = altPrimary;
+    const postsInput = document.createElement("input");
+    postsInput.type = "number";
+    postsInput.min = "-1";
+    postsInput.className = "bginput moderator-postsleft";
+    postsInput.style.width = "80%";
+    if (typeof player.data.postsLeft === "number" && player.data.postsLeft >= 0) {
+      postsInput.value = player.data.postsLeft;
+    } else {
+      postsInput.placeholder = "∞";
+    }
+    postsTd.appendChild(postsInput);
+
+    const actionsTd = document.createElement("td");
+    actionsTd.className = altSecondary;
+    const saveButton = document.createElement("button");
+    saveButton.type = "button";
+    saveButton.className = "button";
+    saveButton.dataset.action = "save";
+    saveButton.textContent = "Save";
+    actionsTd.appendChild(saveButton);
+
+    const kickButton = document.createElement("button");
+    kickButton.type = "button";
+    kickButton.className = "button";
+    kickButton.dataset.action = "kick";
+    kickButton.textContent = "Kick";
+    kickButton.style.marginLeft = "4px";
+    actionsTd.appendChild(kickButton);
+
+    const replaceButton = document.createElement("button");
+    replaceButton.type = "button";
+    replaceButton.className = "button";
+    replaceButton.dataset.action = "replace";
+    replaceButton.textContent = "Replace";
+    replaceButton.style.marginLeft = "4px";
+    actionsTd.appendChild(replaceButton);
+
+    tr.appendChild(nameTd);
+    tr.appendChild(roleTd);
+    tr.appendChild(statusTd);
+    tr.appendChild(postsTd);
+    tr.appendChild(actionsTd);
+    rows.appendChild(tr);
+  });
+}
+
+function setModeratorStatus(message, type = "info") {
+  const el = els.moderatorStatus;
+  if (!el) return;
+  if (!message) {
+    el.style.display = "none";
+    el.textContent = "";
+    return;
+  }
+  el.style.display = "block";
+  el.textContent = message;
+  el.style.color = type === "error" ? "#ff7676" : type === "success" ? "#6ee7b7" : "#F9A906";
+}
+
+els.moderatorRows?.addEventListener("click", (event) => {
+  const button = event.target.closest("button[data-action]");
+  if (!button) return;
+  const row = button.closest("tr");
+  const playerId = row?.dataset.playerId;
+  if (!playerId) return;
+  if (button.dataset.action === "save") {
+    handleModeratorSave(row, playerId);
+  } else if (button.dataset.action === "kick") {
+    handleModeratorKick(playerId);
+  } else if (button.dataset.action === "replace") {
+    handleModeratorReplace(playerId);
+  }
+});
+
+async function handleModeratorSave(row, playerId) {
+  if (!isOwnerView || !currentGame) {
+    setModeratorStatus("Only the owner can update players.", "error");
+    return;
+  }
+  const roleInput = row.querySelector(".moderator-role");
+  const statusSelect = row.querySelector(".moderator-status");
+  const postsInput = row.querySelector(".moderator-postsleft");
+  const roleValue = (roleInput?.value || "").trim();
+  const alive = statusSelect?.value === "alive";
+  const postsRaw = postsInput?.value || "";
+  const parsedPosts = parseInt(postsRaw, 10);
+  const updates = {
+    active: alive,
+    alive,
+    postsLeft: Number.isFinite(parsedPosts) ? parsedPosts : -1,
+    updatedAt: serverTimestamp(),
+  };
+  if (roleValue) {
+    updates.role = roleValue;
+    updates.rolename = roleValue;
+  } else {
+    updates.role = deleteField();
+    updates.rolename = deleteField();
+  }
+  try {
+    await updateDoc(doc(db, "games", gameId, "players", playerId), updates);
+    setModeratorStatus("Player updated.", "success");
+    await loadGame();
+  } catch (error) {
+    console.error("Failed to update player", error);
+    setModeratorStatus("Unable to update player.", "error");
+  }
+}
+
+async function handleModeratorKick(playerId) {
+  if (!isOwnerView || !currentGame) {
+    setModeratorStatus("Only the owner can remove players.", "error");
+    return;
+  }
+  if ((currentGame.day ?? 0) > 0) {
+    setModeratorStatus("Players can only be removed before the game starts (Day 0).", "error");
+    return;
+  }
+  if (!window.confirm("Remove this player from the game?")) {
+    return;
+  }
+  try {
+    const gameRef = doc(db, "games", gameId);
+    await deleteDoc(doc(gameRef, "players", playerId));
+    const actionsSnap = await getDocs(query(collection(gameRef, "actions"), where("playerId", "==", playerId)));
+    await Promise.all(
+      actionsSnap.docs.map((docSnap) =>
+        deleteDoc(docSnap.ref).catch((error) => {
+          console.warn("Failed to delete action", docSnap.id, error);
+        })
+      )
+    );
+    setModeratorStatus("Player removed.", "success");
+    await loadGame();
+  } catch (error) {
+    console.error("Failed to remove player", error);
+    setModeratorStatus("Unable to remove player.", "error");
+  }
+}
+
+async function handleModeratorReplace(playerId) {
+  if (!isOwnerView || !currentGame) {
+    setModeratorStatus("Only the owner can replace players.", "error");
+    return;
+  }
+  const identifier = window.prompt(
+    "Enter the username, email, or UID of the replacement player:",
+    ""
+  );
+  if (identifier === null) {
+    return;
+  }
+  const trimmed = identifier.trim();
+  if (!trimmed) {
+    setModeratorStatus("Enter a replacement player identifier.", "error");
+    return;
+  }
+  let userDoc;
+  try {
+    userDoc = await findUserProfile(trimmed);
+  } catch (error) {
+    console.error("Lookup failed", error);
+    setModeratorStatus("Unable to look up replacement player.", "error");
+    return;
+  }
+  if (!userDoc) {
+    setModeratorStatus("Replacement player not found.", "error");
+    return;
+  }
+  const newUserId = userDoc.id;
+  if (gamePlayers.some((player) => player.id === newUserId)) {
+    setModeratorStatus("That player is already in the game.", "error");
+    return;
+  }
+  const userData = userDoc.data() || {};
+  const newName = userData.displayName || userData.username || userData.email || "Player";
+  const gameRef = doc(db, "games", gameId);
+  const oldRef = doc(gameRef, "players", playerId);
+  const newRef = doc(gameRef, "players", newUserId);
+  try {
+    await runTransaction(db, async (transaction) => {
+      const oldSnap = await transaction.get(oldRef);
+      if (!oldSnap.exists()) {
+        throw new Error("Player not found.");
+      }
+      const newSnap = await transaction.get(newRef);
+      if (newSnap.exists()) {
+        throw new Error("Replacement already joined.");
+      }
+      const existing = oldSnap.data() || {};
+      const baseData = { ...existing };
+      delete baseData.uid;
+      delete baseData.userid;
+      delete baseData.userId;
+      delete baseData.username;
+      delete baseData.id;
+      transaction.set(newRef, {
+        ...baseData,
+        uid: newUserId,
+        name: newName,
+        username: newName,
+        replacedFrom: playerId,
+        updatedAt: serverTimestamp(),
+      });
+      transaction.delete(oldRef);
+    });
+    const actionsSnap = await getDocs(query(collection(gameRef, "actions"), where("playerId", "==", playerId)));
+    await Promise.all(
+      actionsSnap.docs.map((docSnap) =>
+        updateDoc(docSnap.ref, {
+          playerId: newUserId,
+          username: newName,
+          updatedAt: serverTimestamp(),
+        }).catch((error) => {
+          console.warn("Failed to update action", docSnap.id, error);
+        })
+      )
+    );
+    setModeratorStatus("Player replaced.", "success");
+    await loadGame();
+  } catch (error) {
+    console.error("Failed to replace player", error);
+    setModeratorStatus(error.message || "Unable to replace player.", "error");
+  }
+}
+
+async function findUserProfile(identifier) {
+  const directRef = doc(db, "users", identifier);
+  try {
+    const directSnap = await getDoc(directRef);
+    if (directSnap.exists()) {
+      return directSnap;
+    }
+  } catch (error) {
+    console.warn("Direct lookup failed", error);
+  }
+  const usersRef = collection(db, "users");
+  const normalized = identifier.toLowerCase();
+  try {
+    let snapshot = await getDocs(query(usersRef, where("usernameLower", "==", normalized)));
+    if (!snapshot.empty) {
+      return snapshot.docs[0];
+    }
+    snapshot = await getDocs(query(usersRef, where("email", "==", identifier)));
+    if (!snapshot.empty) {
+      return snapshot.docs[0];
+    }
+  } catch (error) {
+    console.warn("Profile lookup failed", error);
+  }
+  return null;
+}
+
+function playerIsAlive(data = {}) {
+  if (Object.prototype.hasOwnProperty.call(data, "active")) {
+    const value = data.active;
+    if (typeof value === "string") {
+      const normalized = value.trim().toLowerCase();
+      if (["no", "dead", "false", "0"].includes(normalized)) {
+        return false;
+      }
+      if (["yes", "alive", "true", "1"].includes(normalized)) {
+        return true;
+      }
+    }
+    if (typeof value === "number") {
+      return value !== 0;
+    }
+    if (typeof value === "boolean") {
+      return value;
+    }
+  }
+  if (Object.prototype.hasOwnProperty.call(data, "alive")) {
+    const value = data.alive;
+    if (typeof value === "string") {
+      const normalized = value.trim().toLowerCase();
+      if (["no", "dead", "false", "0"].includes(normalized)) {
+        return false;
+      }
+      if (["yes", "alive", "true", "1"].includes(normalized)) {
+        return true;
+      }
+    }
+    if (typeof value === "number") {
+      return value !== 0;
+    }
+    if (typeof value === "boolean") {
+      return value;
+    }
+  }
+  return true;
+}
+
+function escapeHtml(value) {
+  return String(value)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
 }
 
 async function handleEditPost(postId, post) {

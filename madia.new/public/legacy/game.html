@@ -67,7 +67,7 @@
               <form id="voteRecordForm" class="stacked-form">
                 <label>
                   Vote target
-                  <input id="voteTarget" class="bginput" />
+                  <select id="voteTarget" class="bginput"></select>
                 </label>
                 <label>
                   Day
@@ -79,7 +79,53 @@
                 </label>
                 <div><button class="button" type="submit">Record vote</button></div>
               </form>
+              <form id="claimRecordForm" class="stacked-form">
+                <label>
+                  Claim role
+                  <input id="claimRole" class="bginput" />
+                </label>
+                <label>
+                  Day
+                  <input id="claimDay" type="number" class="bginput" min="0" />
+                </label>
+                <div><button class="button" type="submit">Record claim</button></div>
+              </form>
+              <form id="notebookRecordForm" class="stacked-form">
+                <label>
+                  Notebook target
+                  <select id="notebookTarget" class="bginput"></select>
+                </label>
+                <label>
+                  Day
+                  <input id="notebookDay" type="number" class="bginput" min="0" />
+                </label>
+                <label>
+                  Notes
+                  <input id="notebookNotes" class="bginput" />
+                </label>
+                <div><button class="button" type="submit">Save notebook entry</button></div>
+              </form>
               <div id="playerToolsStatus" style="display:none; margin-top:6px; color:#F9A906;"></div>
+            </div>
+            <div id="moderatorPanel" class="smallfont" style="display:none; margin-bottom:12px;">
+              <div><strong>Moderator Player Management</strong></div>
+              <div id="moderatorStatus" style="display:none; margin:6px 0; color:#F9A906;"></div>
+              <table class="tborder" cellpadding="4" cellspacing="1" border="0" width="100%" style="margin-top:6px;">
+                <thead>
+                  <tr align="center">
+                    <td class="thead" width="240">Player</td>
+                    <td class="thead" width="200">Role</td>
+                    <td class="thead" width="120">Status</td>
+                    <td class="thead" width="120">Posts left</td>
+                    <td class="thead" width="200">Actions</td>
+                  </tr>
+                </thead>
+                <tbody id="moderatorRows">
+                  <tr>
+                    <td class="alt1" colspan="5" align="center">Loading players…</td>
+                  </tr>
+                </tbody>
+              </table>
             </div>
             <form id="replyForm" style="display:none;" onsubmit="return false;">
               <table cellpadding="4" cellspacing="0" border="0" width="100%" class="tborder">
