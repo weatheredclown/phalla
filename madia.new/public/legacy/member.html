@@ -28,6 +28,45 @@
 
           <table width="100%" cellpadding="4" cellspacing="10" border="0">
             <tr>
+              <td colspan="2" class="panelsurround">
+                <div class="panel">
+                  <div style="font-weight:bold; margin-bottom:6px;">Profile Summary</div>
+                  <div class="profile-card">
+                    <img
+                      id="profileAvatar"
+                      class="profile-avatar"
+                      alt="Member avatar"
+                      src="/images/avatars/001.jpg"
+                    />
+                    <div>
+                      <div id="profileDisplayName" class="profile-display-name"></div>
+                      <div id="profileEmail" class="profile-email"></div>
+                    </div>
+                  </div>
+                  <form id="profileForm" class="profile-form" onsubmit="return false;">
+                    <table cellpadding="3" cellspacing="0" border="0">
+                      <tr>
+                        <td class="smallfont" style="white-space:nowrap;">Display Name:</td>
+                        <td><input class="bginput" id="displayNameInput" maxlength="40" /></td>
+                      </tr>
+                      <tr>
+                        <td class="smallfont" style="white-space:nowrap;">Thumbnail:</td>
+                        <td>
+                          <input id="avatarInput" type="file" accept="image/*" />
+                          <div class="smallfont">Images are resized to 64&times;64 automatically.</div>
+                        </td>
+                      </tr>
+                      <tr>
+                        <td></td>
+                        <td><button class="button" id="profileSaveBtn">Update Display Name</button></td>
+                      </tr>
+                    </table>
+                  </form>
+                  <div class="smallfont profile-status" id="profileStatus"></div>
+                </div>
+              </td>
+            </tr>
+            <tr>
               <td class="panelsurround" valign="top" width="50%">
                 <div class="panel">
                   <div style="font-weight:bold; margin-bottom:6px;">Games You Play</div>
