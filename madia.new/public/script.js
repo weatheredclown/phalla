@@ -95,38 +95,44 @@ if (missingConfig) {
 }
 
 let currentUser = null;
+let currentUserProfile = null;
 let selectedThreadId = null;
 let unsubscribePosts = null;
 let unsubscribeThreads = null;
 let unsubscribeVotes = null;
+let unsubscribeProfile = null;
 
 async function ensurePlayerRecord(user) {
-  if (!user) return;
+  if (!user) return null;
   const userRef = doc(db, "users", user.uid);
   let snapshot;
   try {
     snapshot = await getDoc(userRef);
   } catch (error) {
     console.error("Failed to load user profile", error);
-    return;
+    return null;
   }
 
   if (!snapshot.exists()) {
     try {
       const timestamp = serverTimestamp();
-      await setDoc(userRef, {
+      const profile = {
         uid: user.uid,
         displayName: user.displayName || "",
         email: user.email || "",
         photoURL: user.photoURL || "",
+        provider: user.providerData?.[0]?.providerId || "google.com",
+      };
+      await setDoc(userRef, {
+        ...profile,
         createdAt: timestamp,
         updatedAt: timestamp,
-        provider: user.providerData?.[0]?.providerId || "google.com",
       });
+      return profile;
     } catch (error) {
       console.error("Failed to create user profile", error);
     }
-    return;
+    return null;
   }
 
   const data = snapshot.data() || {};
@@ -154,7 +160,60 @@ async function ensurePlayerRecord(user) {
     } catch (error) {
       console.error("Failed to update user profile", error);
     }
+    return { ...data, ...updates };
   }
+
+  return data;
+}
+
+function stopProfileSubscription() {
+  if (unsubscribeProfile) {
+    unsubscribeProfile();
+    unsubscribeProfile = null;
+  }
+}
+
+function getCurrentDisplayName() {
+  const profileName = (currentUserProfile?.displayName || "").trim();
+  if (profileName) {
+    return profileName;
+  }
+  const authName = (currentUser?.displayName || "").trim();
+  if (authName) {
+    return authName;
+  }
+  const email = (currentUser?.email || "").trim();
+  if (email) {
+    return email.split("@")[0];
+  }
+  const uid = (currentUser?.uid || "").trim();
+  if (uid) {
+    return uid;
+  }
+  return "Unknown";
+}
+
+function updateAuthDisplay() {
+  if (!els.authStatus) return;
+  if (currentUser) {
+    els.authStatus.textContent = `Signed in as ${getCurrentDisplayName()}`;
+  } else {
+    els.authStatus.textContent = "Not signed in";
+  }
+}
+
+function watchUserProfile(user) {
+  if (!user) return null;
+  return onSnapshot(
+    doc(db, "users", user.uid),
+    (snapshot) => {
+      currentUserProfile = snapshot.exists() ? snapshot.data() || null : null;
+      updateAuthDisplay();
+    },
+    (error) => {
+      console.error("Failed to watch user profile", error);
+    }
+  );
 }
 
 function showThreadsMessage(message) {
@@ -364,17 +423,18 @@ function watchThreads() {
 
 async function createThread(title, body) {
   const threadsRef = collection(db, "threads");
+  const displayName = getCurrentDisplayName();
   const newThread = await addDoc(threadsRef, {
     title,
     createdBy: currentUser.uid,
-    createdByName: currentUser.displayName,
+    createdByName: displayName,
     createdAt: serverTimestamp(),
     postCount: 1,
   });
   const postRef = collection(db, "threads", newThread.id, "posts");
   await addDoc(postRef, {
     author: currentUser.uid,
-    authorName: currentUser.displayName,
+    authorName: displayName,
     body,
     createdAt: serverTimestamp(),
   });
@@ -396,10 +456,11 @@ async function submitReply(event) {
   if (!selectedThreadId) return;
   const body = els.replyBody.value.trim();
   if (!body) return;
+  const displayName = getCurrentDisplayName();
   const postRef = collection(db, "threads", selectedThreadId, "posts");
   await addDoc(postRef, {
     author: currentUser.uid,
-    authorName: currentUser.displayName,
+    authorName: displayName,
     body,
     createdAt: serverTimestamp(),
   });
@@ -412,12 +473,13 @@ async function submitReply(event) {
 
 async function recordVote(player, votes, notes) {
   const voteRef = collection(db, "votes");
+  const displayName = getCurrentDisplayName();
   await addDoc(voteRef, {
     player,
     votes,
     notes,
     recordedBy: currentUser.uid,
-    recordedByName: currentUser.displayName,
+    recordedByName: displayName,
     createdAt: serverTimestamp(),
   });
 }
@@ -518,8 +580,14 @@ if (!missingConfig) {
   onAuthStateChanged(auth, async (user) => {
     currentUser = user;
     if (user) {
-      await ensurePlayerRecord(user);
-      els.authStatus.textContent = `Signed in as ${user.displayName}`;
+      currentUserProfile = null;
+      const profile = await ensurePlayerRecord(user);
+      if (profile) {
+        currentUserProfile = profile;
+      }
+      updateAuthDisplay();
+      stopProfileSubscription();
+      unsubscribeProfile = watchUserProfile(user);
       els.signInButton.hidden = true;
       els.signOutButton.hidden = false;
       els.replyForm.hidden = !selectedThreadId;
@@ -528,7 +596,9 @@ if (!missingConfig) {
         resetThreadSelection("Select a thread");
       }
     } else {
-      els.authStatus.textContent = "Not signed in";
+      stopProfileSubscription();
+      currentUserProfile = null;
+      updateAuthDisplay();
       els.signInButton.hidden = false;
       els.signOutButton.hidden = true;
       els.replyForm.hidden = true;
@@ -539,5 +609,6 @@ if (!missingConfig) {
 
   window.addEventListener("beforeunload", () => {
     stopRealtimeSubscriptions();
+    stopProfileSubscription();
   });
 }
