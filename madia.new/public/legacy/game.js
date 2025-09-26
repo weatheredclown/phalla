@@ -26,6 +26,8 @@ function getParam(name) {
 
 const header = initLegacyHeader();
 
+const CUSTOM_ROLE_OPTION_VALUE = "__custom-role__";
+
 const els = {
   gameTitle: document.getElementById("gameTitle"),
   gameMeta: document.getElementById("gameMeta"),
@@ -70,6 +72,8 @@ let currentGame = null;
 let currentPlayer = null;
 let gamePlayers = [];
 let isOwnerView = false;
+let availableRoles = [];
+let rolesLoadPromise = null;
 
 onAuthStateChanged(auth, async (user) => {
   currentUser = user;
@@ -255,6 +259,7 @@ async function loadGame() {
     gamePlayers = [];
   }
   const playerCount = gamePlayers.length;
+  await ensureRolesLoaded();
   populatePlayerSelects();
   renderModeratorPanel();
 
@@ -790,6 +795,53 @@ function populatePlayerSelects() {
   });
 }
 
+function getKnownRoleNames() {
+  const names = new Set(availableRoles);
+  gamePlayers.forEach((player) => {
+    const roleValue = (player.data.role || player.data.rolename || "").trim();
+    if (roleValue) {
+      names.add(roleValue);
+    }
+  });
+  return Array.from(names).sort((a, b) => a.localeCompare(b, undefined, { sensitivity: "base" }));
+}
+
+async function ensureRolesLoaded() {
+  if (availableRoles.length) {
+    return availableRoles;
+  }
+  if (rolesLoadPromise) {
+    return rolesLoadPromise;
+  }
+  const loadPromise = (async () => {
+    try {
+      const rolesSnap = await getDocs(query(collection(db, "roles"), orderBy("rolename")));
+      const names = [];
+      rolesSnap.forEach((docSnap) => {
+        const data = docSnap.data() || {};
+        const name = String(data.rolename || data.name || docSnap.id || "").trim();
+        if (!name) {
+          return;
+        }
+        if (!names.includes(name)) {
+          names.push(name);
+        }
+      });
+      availableRoles = names;
+    } catch (error) {
+      console.warn("Failed to load available roles", error);
+      availableRoles = [];
+    }
+    return availableRoles;
+  })();
+  rolesLoadPromise = loadPromise;
+  try {
+    return await loadPromise;
+  } finally {
+    rolesLoadPromise = null;
+  }
+}
+
 function renderModeratorPanel() {
   const panel = els.moderatorPanel;
   const rows = els.moderatorRows;
@@ -810,6 +862,7 @@ function renderModeratorPanel() {
     rows.appendChild(emptyRow);
     return;
   }
+  const roleOptions = getKnownRoleNames();
   gamePlayers.forEach((player, index) => {
     const tr = document.createElement("tr");
     tr.dataset.playerId = player.id;
@@ -826,12 +879,65 @@ function renderModeratorPanel() {
 
     const roleTd = document.createElement("td");
     roleTd.className = altPrimary;
-    const roleInput = document.createElement("input");
-    roleInput.type = "text";
-    roleInput.className = "bginput moderator-role";
-    roleInput.style.width = "95%";
-    roleInput.value = player.data.role || player.data.rolename || "";
-    roleTd.appendChild(roleInput);
+    const roleSelect = document.createElement("select");
+    roleSelect.className = "bginput moderator-role";
+    roleSelect.style.width = "95%";
+    const blankOption = document.createElement("option");
+    blankOption.value = "";
+    blankOption.textContent = "-- select role --";
+    roleSelect.appendChild(blankOption);
+    roleOptions.forEach((roleName) => {
+      const option = document.createElement("option");
+      option.value = roleName;
+      option.textContent = roleName;
+      roleSelect.appendChild(option);
+    });
+    const currentRole = (player.data.role || player.data.rolename || "").trim();
+    if (currentRole && !roleOptions.includes(currentRole)) {
+      const existing = document.createElement("option");
+      existing.value = currentRole;
+      existing.textContent = currentRole;
+      existing.dataset.custom = "true";
+      roleSelect.appendChild(existing);
+    }
+    const customTrigger = document.createElement("option");
+    customTrigger.value = CUSTOM_ROLE_OPTION_VALUE;
+    customTrigger.textContent = "Custom role…";
+    roleSelect.appendChild(customTrigger);
+    if (currentRole) {
+      roleSelect.value = currentRole;
+    } else {
+      roleSelect.value = "";
+    }
+    roleSelect.dataset.previousValue = roleSelect.value;
+    roleSelect.addEventListener("change", () => {
+      if (roleSelect.value !== CUSTOM_ROLE_OPTION_VALUE) {
+        roleSelect.dataset.previousValue = roleSelect.value;
+        return;
+      }
+      const customValue = window.prompt("Enter a custom role name:", "");
+      if (customValue === null) {
+        roleSelect.value = roleSelect.dataset.previousValue || "";
+        return;
+      }
+      const trimmed = customValue.trim();
+      if (!trimmed) {
+        roleSelect.value = "";
+        roleSelect.dataset.previousValue = "";
+        return;
+      }
+      let customOption = roleSelect.querySelector("option[data-custom='true']");
+      if (!customOption) {
+        customOption = document.createElement("option");
+        customOption.dataset.custom = "true";
+        roleSelect.insertBefore(customOption, customTrigger);
+      }
+      customOption.value = trimmed;
+      customOption.textContent = trimmed;
+      roleSelect.value = trimmed;
+      roleSelect.dataset.previousValue = trimmed;
+    });
+    roleTd.appendChild(roleSelect);
 
     const statusTd = document.createElement("td");
     statusTd.className = altSecondary;
@@ -930,10 +1036,15 @@ async function handleModeratorSave(row, playerId) {
     setModeratorStatus("Only the owner can update players.", "error");
     return;
   }
-  const roleInput = row.querySelector(".moderator-role");
+  const roleSelect = row.querySelector(".moderator-role");
   const statusSelect = row.querySelector(".moderator-status");
   const postsInput = row.querySelector(".moderator-postsleft");
-  const roleValue = (roleInput?.value || "").trim();
+  const roleValueRaw = roleSelect?.value || "";
+  if (roleValueRaw === CUSTOM_ROLE_OPTION_VALUE) {
+    setModeratorStatus("Select a role before saving.", "error");
+    return;
+  }
+  const roleValue = roleValueRaw.trim();
   const alive = statusSelect?.value === "alive";
   const postsRaw = postsInput?.value || "";
   const parsedPosts = parseInt(postsRaw, 10);
