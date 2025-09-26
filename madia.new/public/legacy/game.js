@@ -195,24 +195,30 @@ loadGame().catch((e) => {
   els.gameTitle.textContent = `Error: ${e.message}`;
 });
 
+function setDisplay(el, value) {
+  if (el) {
+    el.style.display = value;
+  }
+}
+
 async function refreshMembershipAndControls() {
   const user = auth.currentUser;
   if (!user) {
-    els.replyForm.style.display = "none";
-    els.joinButton.style.display = "inline-block";
-    els.leaveButton.style.display = "none";
+    setDisplay(els.replyForm, "none");
+    setDisplay(els.joinButton, "inline-block");
+    setDisplay(els.leaveButton, "none");
     return;
   }
   try {
     const p = await getDoc(doc(db, "games", gameId, "players", user.uid));
     const joined = p.exists();
-    els.replyForm.style.display = joined ? "block" : "none";
-    els.joinButton.style.display = joined ? "none" : "inline-block";
-    els.leaveButton.style.display = joined ? "inline-block" : "none";
+    setDisplay(els.replyForm, joined ? "block" : "none");
+    setDisplay(els.joinButton, joined ? "none" : "inline-block");
+    setDisplay(els.leaveButton, joined ? "inline-block" : "none");
   } catch {}
 }
 
-els.joinButton.addEventListener("click", async () => {
+els.joinButton?.addEventListener("click", async () => {
   const user = auth.currentUser;
   if (!user) {
     header?.openAuthPanel("login");
@@ -222,7 +228,7 @@ els.joinButton.addEventListener("click", async () => {
   await refreshMembershipAndControls();
 });
 
-els.leaveButton.addEventListener("click", async () => {
+els.leaveButton?.addEventListener("click", async () => {
   const user = auth.currentUser;
   if (!user) {
     header?.openAuthPanel("login");
