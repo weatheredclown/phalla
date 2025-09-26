@@ -13,12 +13,12 @@ This document summarizes the custom server-side logic implemented in each `mafia
 | `default.asp` | Redirects visitors to the games list. | ✅ | Meta refresh redirect in `public/index.html`. |
 | `daysummary.asp` | GM-only day summary, renaming, reset/close/delete controls. | ✅ | `legacy/daysummary.html` + `daysummary.js` owner tools and action log. |
 | `editpost.asp` | Loads a post for editing when a user is signed in. | ✅ | Inline edit buttons in `legacy/game.js`. |
-| `gamedisplay.asp` | Core thread view: posting, role/admin controls, vote + action handling. | ⚠️ | `legacy/game.html` + `game.js` cover posting, moderation, and actions but lack the legacy auto vote tally table. |
+| `gamedisplay.asp` | Core thread view: posting, role/admin controls, vote + action handling. | ✅ | `legacy/game.html` + `game.js` cover posting, moderation, actions, and render the inline day vote tally table. |
 | `games.asp` | Lists games grouped by status with last-post metadata. | ✅ | `legacy/index.html` + `legacy.js` live game list. |
 | `helloworld.asp` | Test page opening a DB connection and printing "hello world". | ❌ | No equivalent debug page in `madia.new`. |
 | `login.asp` | Handles username/password sign-in, cookie persistence, and registration. | ✅ | Firebase auth flows in `legacy/login.html` + `login.js` and the shared header. |
 | `member.asp` | Profile view/edit, avatar field, and create-game workflow. | ✅ | `legacy/member.html` + `member.js` profile editor and game creation. |
-| `mygame.asp` | Player private view: submit private/vote/claim/notebook actions and review outcomes. | ⚠️ | `legacy/game.js` exposes action forms but does not yet reproduce the per-day action result table. |
+| `mygame.asp` | Player private view: submit private/vote/claim/notebook actions and review outcomes. | ✅ | `legacy/game.js` now adds a per-day action history table summarizing recorded actions and statuses. |
 | `newplayercomment.asp` | Notebook comment modal tied to action type 17. | ✅ | Notebook form embedded in `legacy/game.html` handled by `game.js`. |
 | `playerlist.asp` | Dumps game roster with hidden roles. | ✅ | `legacy/playerlist.html` + `playerlist.js` roster view. |
 | `replaceplayer.asp` | Owner flow to swap a player slot to a different user. | ✅ | Moderator panel replace workflow in `legacy/game.js`. |
