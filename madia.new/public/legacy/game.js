@@ -28,6 +28,8 @@ const header = initLegacyHeader();
 
 
 const CUSTOM_ROLE_OPTION_VALUE = "__custom-role__";
+const CUSTOM_ACTION_OPTION_VALUE = "__custom-action__";
+const CUSTOM_TARGET_OPTION_VALUE = "__custom-target__";
 
 const ACTION_LIMIT_ERROR_CODE = "action-limit-exceeded";
 const ACTION_RULE_KEYS = [
@@ -65,7 +67,9 @@ const els = {
   playerToolsStatus: document.getElementById("playerToolsStatus"),
   privateActionForm: document.getElementById("privateActionForm"),
   privateActionName: document.getElementById("privateActionName"),
+  privateActionNameCustom: document.getElementById("privateActionNameCustom"),
   privateActionTarget: document.getElementById("privateActionTarget"),
+  privateActionTargetCustom: document.getElementById("privateActionTargetCustom"),
   privateActionDay: document.getElementById("privateActionDay"),
   voteRecordForm: document.getElementById("voteRecordForm"),
   voteTarget: document.getElementById("voteTarget"),
@@ -120,6 +124,14 @@ if (els.ubbButtons?.length) {
   els.ubbButtons.forEach((button) => {
     button.addEventListener("click", () => applyUbbTag(button.dataset.ubbTag));
   });
+}
+
+if (els.privateActionName) {
+  els.privateActionName.addEventListener("change", handlePrivateActionNameChange);
+}
+
+if (els.privateActionTarget) {
+  els.privateActionTarget.addEventListener("change", handlePrivateActionTargetChange);
 }
 
 function createMetaRow(html) {
@@ -279,6 +291,7 @@ async function loadGame() {
   const playerCount = gamePlayers.length;
   await ensureRolesLoaded();
   populatePlayerSelects();
+  populatePrivateActionOptions();
   renderModeratorPanel();
 
   let lastPost = null;
@@ -395,6 +408,7 @@ async function refreshMembershipAndControls() {
     setDisplay(els.playerTools, "none");
     setPlayerToolsStatus("");
     currentPlayer = null;
+    populatePrivateActionOptions();
     return;
   }
   try {
@@ -407,6 +421,7 @@ async function refreshMembershipAndControls() {
     const ownerView = currentGame && currentGame.ownerUserId === user.uid;
     setDisplay(els.playerTools, joined || ownerView ? "block" : "none");
   } catch {}
+  populatePrivateActionOptions();
 }
 
 els.joinButton?.addEventListener("click", async () => {
@@ -485,16 +500,32 @@ els.privateActionForm?.addEventListener("submit", async (event) => {
     header?.openAuthPanel("login");
     return;
   }
-  const actionName = (els.privateActionName?.value || "").trim();
-  const targetNameInput = (els.privateActionTarget?.value || "").trim();
+  const rawActionValue = els.privateActionName?.value || "";
+  const actionName =
+    rawActionValue === CUSTOM_ACTION_OPTION_VALUE
+      ? (els.privateActionNameCustom?.value || "").trim()
+      : (rawActionValue || "").trim();
+  const targetSelectValue = els.privateActionTarget?.value || "";
+  let targetPlayerId = "";
+  let targetName = "";
+  if (targetSelectValue === CUSTOM_TARGET_OPTION_VALUE) {
+    const customTarget = (els.privateActionTargetCustom?.value || "").trim();
+    if (customTarget) {
+      const matchedCustom = findPlayerByName(customTarget);
+      targetPlayerId = matchedCustom?.id || "";
+      targetName = matchedCustom?.name || customTarget;
+    }
+  } else if (targetSelectValue) {
+    targetPlayerId = targetSelectValue;
+    const selectedOption = els.privateActionTarget?.selectedOptions?.[0];
+    const optionName = selectedOption?.dataset?.playerName || selectedOption?.textContent || "";
+    targetName = optionName || findPlayerById(targetPlayerId)?.name || "";
+  }
   const day = parseDayInput(els.privateActionDay);
   if (!actionName) {
     setPlayerToolsStatus("Enter an action name to record.", "error");
     return;
   }
-  const matchedTarget = targetNameInput ? findPlayerByName(targetNameInput) : null;
-  const targetName = matchedTarget?.name || targetNameInput;
-  const targetPlayerId = matchedTarget?.id || "";
   try {
     await recordAction({
       category: "private",
@@ -507,6 +538,10 @@ els.privateActionForm?.addEventListener("submit", async (event) => {
     if (els.privateActionTarget) {
       els.privateActionTarget.value = "";
     }
+    if (els.privateActionTargetCustom) {
+      els.privateActionTargetCustom.value = "";
+    }
+    handlePrivateActionTargetChange();
   } catch (error) {
     if (error?.code === ACTION_LIMIT_ERROR_CODE) {
       const limit = typeof error.limit === "number" ? error.limit : null;
@@ -1047,10 +1082,11 @@ function findPlayerByName(name) {
 
 function populatePlayerSelects() {
   const selects = [
-    { element: els.voteTarget, placeholder: "-- select player --" },
-    { element: els.notebookTarget, placeholder: "-- select player --" },
+    { element: els.privateActionTarget, placeholder: "-- choose target --", allowCustom: true },
+    { element: els.voteTarget, placeholder: "-- select player --", allowCustom: false },
+    { element: els.notebookTarget, placeholder: "-- select player --", allowCustom: false },
   ];
-  selects.forEach(({ element, placeholder }) => {
+  selects.forEach(({ element, placeholder, allowCustom }) => {
     if (!element) return;
     const previous = element.value;
     element.innerHTML = "";
@@ -1062,12 +1098,161 @@ function populatePlayerSelects() {
       const option = document.createElement("option");
       option.value = player.id;
       option.textContent = player.name;
-      if (player.id === previous) {
-        option.selected = true;
-      }
+      option.dataset.playerName = player.name;
       element.appendChild(option);
     });
+    if (allowCustom) {
+      const customOption = document.createElement("option");
+      customOption.value = CUSTOM_TARGET_OPTION_VALUE;
+      customOption.textContent = "Custom target…";
+      element.appendChild(customOption);
+    }
+    if (previous) {
+      element.value = previous;
+      if (element.value !== previous) {
+        const normalizedPrevious = normalizeIdentifier(previous);
+        const match = gamePlayers.find(
+          (player) => normalizeIdentifier(player.id) === normalizedPrevious
+        );
+        if (match) {
+          element.value = match.id;
+        } else if (allowCustom && normalizedPrevious === CUSTOM_TARGET_OPTION_VALUE) {
+          element.value = CUSTOM_TARGET_OPTION_VALUE;
+        } else if (allowCustom && previous === CUSTOM_TARGET_OPTION_VALUE) {
+          element.value = CUSTOM_TARGET_OPTION_VALUE;
+        }
+      }
+    }
   });
+  handlePrivateActionTargetChange();
+}
+
+function handlePrivateActionNameChange() {
+  const input = els.privateActionNameCustom;
+  if (!input) {
+    return;
+  }
+  const isCustom = (els.privateActionName?.value || "") === CUSTOM_ACTION_OPTION_VALUE;
+  setDisplay(input, isCustom ? "block" : "none");
+  if (!isCustom) {
+    input.value = "";
+  }
+}
+
+function handlePrivateActionTargetChange() {
+  const input = els.privateActionTargetCustom;
+  if (!input) {
+    return;
+  }
+  const isCustom = (els.privateActionTarget?.value || "") === CUSTOM_TARGET_OPTION_VALUE;
+  setDisplay(input, isCustom ? "block" : "none");
+  if (!isCustom) {
+    input.value = "";
+  }
+}
+
+function getAvailablePrivateActionNames() {
+  const names = new Map();
+  const visited = new WeakSet();
+
+  function addName(name) {
+    if (typeof name !== "string") {
+      return;
+    }
+    const trimmed = name.trim();
+    if (!trimmed) {
+      return;
+    }
+    const normalized = normalizeActionName(trimmed);
+    if (!normalized || names.has(normalized)) {
+      return;
+    }
+    names.set(normalized, trimmed);
+  }
+
+  function inspect(value) {
+    if (!value) {
+      return;
+    }
+    if (typeof value === "string") {
+      addName(value);
+      return;
+    }
+    if (typeof value === "number" || typeof value === "boolean") {
+      return;
+    }
+    if (Array.isArray(value)) {
+      value.forEach(inspect);
+      return;
+    }
+    if (typeof value === "object") {
+      if (visited.has(value)) {
+        return;
+      }
+      visited.add(value);
+      addName(
+        value.actionName ||
+          value.name ||
+          value.action ||
+          value.label ||
+          value.title ||
+          value.key ||
+          value.id ||
+          value.slug
+      );
+      if (Array.isArray(value.aliases)) {
+        value.aliases.forEach(addName);
+      }
+      Object.values(value).forEach(inspect);
+    }
+  }
+
+  getActionRuleSources().forEach(inspect);
+
+  const result = Array.from(names.values());
+  result.sort((a, b) => a.localeCompare(b, undefined, { sensitivity: "base" }));
+  return result;
+}
+
+function populatePrivateActionOptions() {
+  const select = els.privateActionName;
+  if (!select) {
+    return;
+  }
+  const previous = select.value;
+  const options = getAvailablePrivateActionNames();
+  select.innerHTML = "";
+
+  const blank = document.createElement("option");
+  blank.value = "";
+  blank.textContent = "-- select action --";
+  select.appendChild(blank);
+
+  options.forEach((name) => {
+    const option = document.createElement("option");
+    option.value = name;
+    option.textContent = name;
+    select.appendChild(option);
+  });
+
+  const customOption = document.createElement("option");
+  customOption.value = CUSTOM_ACTION_OPTION_VALUE;
+  customOption.textContent = "Custom action…";
+  select.appendChild(customOption);
+
+  if (previous) {
+    if (previous === CUSTOM_ACTION_OPTION_VALUE) {
+      select.value = CUSTOM_ACTION_OPTION_VALUE;
+    } else {
+      const normalizedPrevious = normalizeActionName(previous);
+      const match = options.find((name) => normalizeActionName(name) === normalizedPrevious);
+      if (match) {
+        select.value = match;
+      }
+    }
+  }
+
+  handlePrivateActionNameChange();
 }
 
 function getKnownRoleNames() {
