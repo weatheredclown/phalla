@@ -34,6 +34,7 @@
   - Clear description and rationale; link related issues.
   - Screenshots or a preview URL (from `hosting:channel`) showing UI changes.
   - Notes on Firestore rules or data model changes.
+  - Updates to documentation covering any Firebase Console setup when introducing new database reads.
 
 ## Security & Configuration Tips
 - Do not commit service account keys. Client Firebase config in `script.js` is public; rely on Firestore rules for protection.
