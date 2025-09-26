@@ -49,27 +49,49 @@ In the Firebase console under **Build → Firestore Database → Rules**, replac
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    match /threads/{threadId} {
+    match /games/{gameId} {
       allow read: if true;
-      allow create: if request.auth != null;
-      allow update, delete: if request.auth != null && request.auth.uid == resource.data.createdBy;
+      allow create: if request.auth != null && request.resource.data.ownerUserId == request.auth.uid;
+      allow update, delete: if request.auth != null && resource.data.ownerUserId == request.auth.uid;
+
+      match /players/{playerId} {
+        allow read: if true;
+        allow create, delete: if request.auth != null && request.auth.uid == playerId;
+      }
 
       match /posts/{postId} {
         allow read: if true;
-        allow create: if request.auth != null;
+        allow create: if request.auth != null
+          && exists(/databases/$(database)/documents/games/$(gameId)/players/$(request.auth.uid));
+      }
+    }
+
+    match /threads/{threadId} {
+      allow read: if true;
+      allow create: if request.auth != null && request.resource.data.createdBy == request.auth.uid;
+      allow update, delete: if request.auth != null && resource.data.createdBy == request.auth.uid;
+
+      match /posts/{postId} {
+        allow read: if true;
+        allow create: if request.auth != null && request.resource.data.author == request.auth.uid;
       }
     }
 
     match /votes/{voteId} {
       allow read: if true;
-      allow create: if request.auth != null;
-      allow delete: if request.auth != null && request.auth.uid == resource.data.recordedBy;
+      allow create: if request.auth != null && request.resource.data.recordedBy == request.auth.uid;
+      allow delete: if request.auth != null && resource.data.recordedBy == request.auth.uid;
+    }
+
+    match /users/{userId} {
+      allow read: if true;
+      allow write: if request.auth != null && request.auth.uid == userId;
     }
   }
 }
 ```
 
-These rules mirror the client-side checks in `script.js` and prevent anonymous writes.
+These rules cover every collection the modern and legacy UIs touch (games, players, posts, threads, votes, and user profiles) and prevent anonymous writes.
 
 ## 2. Install and authenticate the Firebase CLI
 
