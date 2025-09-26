@@ -14,11 +14,10 @@ import {
   query,
 } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 import { auth, db, provider, missingConfig } from "./firebase.js";
+import { initLegacyHeader } from "./header.js";
 
 const summaryContent = document.getElementById("summaryContent");
-const signInButton = document.getElementById("signIn");
-const signOutButton = document.getElementById("signOut");
-const profileLink = document.getElementById("profileLink");
+const header = initLegacyHeader();
 
 if (missingConfig) {
   renderConfigWarning();
@@ -26,23 +25,21 @@ if (missingConfig) {
   renderInfo("Sign in to view site summary.");
 }
 
-signInButton?.addEventListener("click", async () => {
-  await signInWithPopup(auth, provider);
-});
+if (header?.signInButton) {
+  header.signInButton.addEventListener("click", async () => {
+    await signInWithPopup(auth, provider);
+  });
+}
 
-signOutButton?.addEventListener("click", async () => {
-  await signOut(auth);
-});
+if (header?.signOutLink) {
+  header.signOutLink.addEventListener("click", async (event) => {
+    event.preventDefault();
+    await signOut(auth);
+  });
+}
 
 onAuthStateChanged(auth, async (user) => {
-  if (signInButton) signInButton.style.display = user ? "none" : "inline-block";
-  if (signOutButton) signOutButton.style.display = user ? "inline-block" : "none";
-  if (profileLink) {
-    profileLink.style.display = user ? "inline-block" : "none";
-    if (user) {
-      profileLink.href = `/legacy/member.html?u=${encodeURIComponent(user.uid)}`;
-    }
-  }
+  header?.setUser(user);
 
   if (missingConfig) {
     return;
