@@ -29,6 +29,17 @@ This document summarizes the custom server-side logic implemented in each `mafia
 | `uploader.asp` | Avatar upload via custom multipart parser writing to disk. | ✅ | Avatar uploads handled through Firebase Storage in `legacy/member.js`. |
 | `userlist.asp` | Lists registered users with avatars and signup dates. | ✅ | `legacy/userlist.html` + `userlist.js`. |
 | `logo.asp` | Header banner with login state / quick login form. | ✅ | Shared legacy header rendered by `legacy/header.js`. |
+
+## Shared include files
+| Legacy include | Key legacy logic | Port status | Modern implementation |
+| --- | --- | --- | --- |
+| `Char.inc` | Escapes HTML and expands UBB/BBCode tags (spoilers, quotes, colors, embeds). | ⚠️ | `legacy/ubb.js` renders a curated UBB subset with safer escaping but omits advanced tags like Flash and inline attachments. |
+| `getuserid.inc` | Restores the signed-in user from session/cookie values when the ASP session is empty. | ✅ | `legacy/header.js` listens to Firebase auth state, updates the header UI, and persists "remember me" selections. |
+| `googletrack.inc` | Injects the classic Google Analytics tracker script. | ❌ | No analytics snippet ships with the Firebase app. |
+| `login_form.inc` | Renders the inline username/password form embedded in the site header. | ✅ | `legacy/header.js` supplies the sign-in/sign-up panel with email/username, remember-me, and Google auth flows. |
+| `posts.inc` | Generates the main thread view: alternating post chrome, avatars, action callouts (votes/claims), and edit/delete links. | ⚠️ | `legacy/game.js` rebuilds post rendering from Firestore but lacks the legacy inline action badges and vote annotations. |
+| `profile.inc` | Loads a user's profile, avatar, and last activity into the profile summary header. | ✅ | `legacy/member.html` + `member.js` pull profile docs from Firestore, surface avatar/display name/email, and gate edit/create controls. |
+| `quickreply.inc` | Provides the quick-reply form, seeded title/body, and public action checkboxes/dropdowns for votes/claims. | ⚠️ | `legacy/game.html` + `game.js` expose reply posting and private/moderator action forms, but public action toggles tied to posts are still pending. |
 ## File-by-file notes
 
 ### `default.asp`
@@ -106,3 +117,31 @@ This document summarizes the custom server-side logic implemented in each `mafia
 ### `logo.asp`
 - **Legacy behavior:** Draws the top banner, conditionally shows welcome/logout links for signed-in users, and embeds the login form for anonymous visitors.
 - **Port notes:** `legacy/header.js` ships a reusable header component with an integrated sign-in/sign-up dialog, mirroring the classic look while talking to Firebase auth.
+
+### `Char.inc`
+- **Legacy behavior:** Supplies `unHtml` and `ubb` helpers to escape content while expanding an expansive set of BBCode tags, including spoilers, colors, alignment, Flash embeds, and emoticons. 【F:Char.inc†L2-L200】
+- **Port notes:** `legacy/ubb.js` now performs HTML escaping and converts a safer subset of tags (bold/italic/underline, quotes, spoilers, colors, links, and images), deliberately dropping risky constructs like Flash or arbitrary HTML. 【F:madia.new/public/legacy/ubb.js†L1-L69】
+
+### `getuserid.inc`
+- **Legacy behavior:** When no ASP session is present it back-fills `Session("userid")` and `Session("username")` from authentication cookies so returning visitors stay signed in. 【F:getuserid.inc†L2-L8】
+- **Port notes:** Firebase handles persistence; `legacy/header.js` wires the login panel, applies session vs. local persistence based on "remember me", and reacts to `onAuthStateChanged` to update header links. 【F:madia.new/public/legacy/header.js†L225-L356】【F:madia.new/public/legacy/header.js†L404-L428】
+
+### `googletrack.inc`
+- **Legacy behavior:** Emits the GA.js snippet with property `UA-4404725-3` to track page views. 【F:googletrack.inc†L1-L8】
+- **Port notes:** Analytics is intentionally omitted from the Firebase-hosted app; no equivalent script is loaded. 
+
+### `login_form.inc`
+- **Legacy behavior:** Outputs the compact username/password/remember form that lived in the site chrome. 【F:login_form.inc†L1-L20】
+- **Port notes:** The modern header replaces this with a modal-style sign-in/sign-up experience, supporting username lookups, email auth, remember-me persistence, and Google sign-in. 【F:madia.new/public/legacy/header.js†L225-L356】
+
+### `posts.inc`
+- **Legacy behavior:** Queries `fullposts`, alternates row styling, prints avatars/sigs, and injects contextual callouts for votes, claims, and other action types alongside edit/delete controls. 【F:posts.inc†L49-L227】
+- **Port notes:** `legacy/game.js` now streams Firestore posts, renders them with alternating chrome and edit/delete buttons, and converts bodies/sigs through the new UBB renderer. Action recap badges tied to posts remain unimplemented. 【F:madia.new/public/legacy/game.js†L170-L225】【F:madia.new/public/legacy/game.js†L400-L470】
+
+### `profile.inc`
+- **Legacy behavior:** Pulls user rows from `users`, shows avatar/name, and adds a last-post timestamp fetched from `posts`. 【F:profile.inc†L2-L44】
+- **Port notes:** `legacy/member.html` with `member.js` loads the viewed user's Firestore profile, displays avatar/display name/email, and conditionally exposes edit/create game tools for the signed-in owner. 【F:madia.new/public/legacy/member.html†L24-L105】【F:madia.new/public/legacy/member.js†L63-L155】
+
+### `quickreply.inc`
+- **Legacy behavior:** Hosts the quick-reply textarea, seeds title/body, and lists available public actions (vote/claim/etc.) with target dropdowns for immediate logging. 【F:quickreply.inc†L1-L140】
+- **Port notes:** `legacy/game.html` keeps a reply form plus dedicated player tools for private actions, votes, claims, and notebook entries; action toggles integrated directly into the posting flow are still on the backlog. 【F:madia.new/public/legacy/game.html†L40-L109】【F:madia.new/public/legacy/game.js†L400-L579】
