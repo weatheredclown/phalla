@@ -328,3 +328,21 @@ form { display: inline; }
 label { cursor: default; }
 .normal { font-weight: normal; }
 .inlineimg { vertical-align: middle; }
+.ubb-toolbar {
+        margin: 4px 0px;
+        display: flex;
+        gap: 4px;
+}
+.ubb-button {
+        background: #2f3d66;
+        color: #ffffff;
+        font: bold 10px verdana, geneva, lucida, 'lucida grande', arial, helvetica, sans-serif;
+        border: 1px solid #6C78AB;
+        padding: 1px 5px;
+        line-height: 1.2;
+        cursor: pointer;
+        text-transform: uppercase;
+}
+.ubb-button:hover {
+        background: #3d4d7d;
+}
