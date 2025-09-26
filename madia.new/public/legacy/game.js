@@ -45,6 +45,8 @@ const els = {
   playerToolsStatus: document.getElementById("playerToolsStatus"),
   privateActionForm: document.getElementById("privateActionForm"),
   privateActionName: document.getElementById("privateActionName"),
+  privateActionNameCustom: document.getElementById("privateActionNameCustom"),
+  privateActionNameCustomLabel: document.getElementById("privateActionNameCustomLabel"),
   privateActionTarget: document.getElementById("privateActionTarget"),
   privateActionDay: document.getElementById("privateActionDay"),
   voteRecordForm: document.getElementById("voteRecordForm"),
@@ -70,6 +72,9 @@ let currentGame = null;
 let currentPlayer = null;
 let gamePlayers = [];
 let isOwnerView = false;
+const CUSTOM_ACTION_VALUE = "__custom__";
+let privateActionDefinitions = [];
+let privateActionOptions = [];
 
 onAuthStateChanged(auth, async (user) => {
   currentUser = user;
@@ -254,6 +259,7 @@ async function loadGame() {
     console.warn("Failed to load players", error);
     gamePlayers = [];
   }
+  await loadPrivateActionDefinitions(gameRef);
   const playerCount = gamePlayers.length;
   populatePlayerSelects();
   renderModeratorPanel();
@@ -372,6 +378,7 @@ async function refreshMembershipAndControls() {
     setDisplay(els.playerTools, "none");
     setPlayerToolsStatus("");
     currentPlayer = null;
+    updatePrivateActionOptions();
     return;
   }
   try {
@@ -384,6 +391,7 @@ async function refreshMembershipAndControls() {
     const ownerView = currentGame && currentGame.ownerUserId === user.uid;
     setDisplay(els.playerTools, joined || ownerView ? "block" : "none");
   } catch {}
+  updatePrivateActionOptions();
 }
 
 els.joinButton?.addEventListener("click", async () => {
@@ -456,17 +464,39 @@ els.daySummary?.addEventListener("click", () => {
   window.location.href = `/legacy/daysummary.html?g=${encodeURIComponent(gameId)}`;
 });
 
+els.privateActionName?.addEventListener("change", () => {
+  const showCustom = (els.privateActionName?.value || "") === CUSTOM_ACTION_VALUE;
+  toggleCustomActionName(showCustom);
+  syncPrivateActionTargetRequirement();
+});
+
 els.privateActionForm?.addEventListener("submit", async (event) => {
   event.preventDefault();
   if (!currentUser) {
     header?.openAuthPanel("login");
     return;
   }
-  const actionName = (els.privateActionName?.value || "").trim();
-  const targetName = (els.privateActionTarget?.value || "").trim();
+  const selectValue = els.privateActionName?.value || "";
+  const actionName =
+    selectValue === CUSTOM_ACTION_VALUE
+      ? (els.privateActionNameCustom?.value || "").trim()
+      : selectValue.trim();
+  const selectedOption = els.privateActionName?.selectedOptions
+    ? els.privateActionName.selectedOptions[0]
+    : null;
+  const requiresTarget = selectedOption
+    ? selectedOption.dataset.requiresTarget !== "false"
+    : true;
+  const targetId = (els.privateActionTarget?.value || "").trim();
+  const target = targetId ? findPlayerById(targetId) : null;
+  const targetName = target?.name || "";
   const day = parseDayInput(els.privateActionDay);
   if (!actionName) {
     setPlayerToolsStatus("Enter an action name to record.", "error");
+    return;
+  }
+  if (requiresTarget && !targetId) {
+    setPlayerToolsStatus("Choose a target for this action.", "error");
     return;
   }
   try {
@@ -474,12 +504,18 @@ els.privateActionForm?.addEventListener("submit", async (event) => {
       category: "private",
       actionName,
       targetName,
+      targetPlayerId: target?.id || "",
       day,
     });
     setPlayerToolsStatus("Private action recorded.", "success");
+    if (els.privateActionName) {
+      els.privateActionName.value = "";
+    }
+    toggleCustomActionName(false);
     if (els.privateActionTarget) {
       els.privateActionTarget.value = "";
     }
+    syncPrivateActionTargetRequirement();
   } catch (error) {
     console.error("Failed to record action", error);
     setPlayerToolsStatus("Unable to record action.", "error");
@@ -767,6 +803,7 @@ function findPlayerById(id) {
 
 function populatePlayerSelects() {
   const selects = [
+    { element: els.privateActionTarget, placeholder: "-- select target --" },
     { element: els.voteTarget, placeholder: "-- select player --" },
     { element: els.notebookTarget, placeholder: "-- select player --" },
   ];
@@ -788,6 +825,237 @@ function populatePlayerSelects() {
       element.appendChild(option);
     });
   });
+  syncPrivateActionTargetRequirement();
+}
+
+function toggleCustomActionName(show) {
+  const label = els.privateActionNameCustomLabel;
+  const input = els.privateActionNameCustom;
+  if (!label || !input) return;
+  label.style.display = show ? "block" : "none";
+  input.required = !!show;
+  if (!show) {
+    input.value = "";
+  }
+}
+
+function syncPrivateActionTargetRequirement() {
+  const actionSelect = els.privateActionName;
+  const targetSelect = els.privateActionTarget;
+  if (!actionSelect || !targetSelect) return;
+  const selectedOption = actionSelect.selectedOptions
+    ? actionSelect.selectedOptions[0]
+    : null;
+  const requiresTarget = selectedOption
+    ? selectedOption.dataset.requiresTarget !== "false"
+    : true;
+  targetSelect.disabled = !requiresTarget;
+  if (!requiresTarget) {
+    targetSelect.value = "";
+  }
+}
+
+function addActionOption(map, value, label, { requiresTarget, order } = {}) {
+  if (!value) {
+    return;
+  }
+  const key = String(value).toLowerCase();
+  const normalizedLabel = label || String(value);
+  const normalizedRequiresTarget =
+    requiresTarget === undefined ? true : !!requiresTarget;
+  let normalizedOrder = null;
+  if (typeof order === "number" && Number.isFinite(order)) {
+    normalizedOrder = order;
+  } else if (typeof order === "string") {
+    const parsed = parseFloat(order);
+    if (!Number.isNaN(parsed)) {
+      normalizedOrder = parsed;
+    }
+  }
+  if (map.has(key)) {
+    const existing = map.get(key);
+    if (existing.requiresTarget && !normalizedRequiresTarget) {
+      existing.requiresTarget = false;
+    }
+    if (existing.order === null && normalizedOrder !== null) {
+      existing.order = normalizedOrder;
+    }
+    return;
+  }
+  map.set(key, {
+    value: String(value),
+    label: normalizedLabel,
+    requiresTarget: normalizedRequiresTarget,
+    order: normalizedOrder,
+  });
+}
+
+function considerActionOptionSource(source, map) {
+  if (!source) {
+    return;
+  }
+  if (Array.isArray(source)) {
+    source.forEach((entry) => considerActionOptionSource(entry, map));
+    return;
+  }
+  if (typeof source === "string") {
+    addActionOption(map, source, source);
+    return;
+  }
+  if (typeof source !== "object") {
+    return;
+  }
+  if (Array.isArray(source.options)) {
+    considerActionOptionSource(source.options, map);
+  }
+  const hasDirectValue =
+    Object.prototype.hasOwnProperty.call(source, "value") ||
+    Object.prototype.hasOwnProperty.call(source, "name") ||
+    Object.prototype.hasOwnProperty.call(source, "actionName") ||
+    Object.prototype.hasOwnProperty.call(source, "label");
+  if (!hasDirectValue) {
+    Object.values(source).forEach((value) =>
+      considerActionOptionSource(value, map)
+    );
+    return;
+  }
+  const value =
+    source.value ??
+    source.name ??
+    source.actionName ??
+    source.label ??
+    source.id;
+  if (!value) {
+    return;
+  }
+  const label =
+    source.label ?? source.name ?? source.actionName ?? String(value);
+  let requiresTarget;
+  if (source.requiresTarget !== undefined) {
+    requiresTarget = source.requiresTarget;
+  } else if (source.targeted !== undefined) {
+    requiresTarget = source.targeted;
+  } else if (source.needsTarget !== undefined) {
+    requiresTarget = source.needsTarget;
+  } else if (source.allowNoTarget !== undefined) {
+    requiresTarget = !source.allowNoTarget;
+  }
+  let order = null;
+  const orderCandidates = [
+    source.order,
+    source.sort,
+    source.position,
+    source.priority,
+    source.index,
+  ];
+  for (const candidate of orderCandidates) {
+    if (candidate === undefined || candidate === null) continue;
+    const numeric =
+      typeof candidate === "number" ? candidate : parseFloat(candidate);
+    if (!Number.isNaN(numeric)) {
+      order = numeric;
+      break;
+    }
+  }
+  addActionOption(map, value, label, { requiresTarget, order });
+}
+
+function updatePrivateActionOptions() {
+  const select = els.privateActionName;
+  if (!select) {
+    return;
+  }
+  const previousValue = select.value || "";
+  const wasCustom = previousValue === CUSTOM_ACTION_VALUE;
+  const previousCustomValue = els.privateActionNameCustom?.value || "";
+  const map = new Map();
+  considerActionOptionSource(privateActionDefinitions, map);
+  if (currentGame) {
+    considerActionOptionSource(currentGame.privateActions, map);
+    considerActionOptionSource(currentGame.actionOptions, map);
+    considerActionOptionSource(currentGame.actions, map);
+  }
+  if (currentPlayer) {
+    considerActionOptionSource(currentPlayer.privateActions, map);
+    considerActionOptionSource(currentPlayer.actionOptions, map);
+    considerActionOptionSource(currentPlayer.actions, map);
+    considerActionOptionSource(currentPlayer.abilities, map);
+  }
+  privateActionOptions = Array.from(map.values()).sort((a, b) => {
+    const orderA = a.order ?? Number.POSITIVE_INFINITY;
+    const orderB = b.order ?? Number.POSITIVE_INFINITY;
+    if (orderA !== orderB) {
+      return orderA - orderB;
+    }
+    return a.label.localeCompare(b.label, undefined, { sensitivity: "base" });
+  });
+
+  select.innerHTML = "";
+  const placeholder = document.createElement("option");
+  placeholder.value = "";
+  placeholder.textContent = "-- select action --";
+  select.appendChild(placeholder);
+
+  let restoredPrevious = false;
+  privateActionOptions.forEach((option) => {
+    const opt = document.createElement("option");
+    opt.value = option.value;
+    opt.textContent = option.label;
+    opt.dataset.requiresTarget = option.requiresTarget ? "true" : "false";
+    if (option.value === previousValue) {
+      opt.selected = true;
+      restoredPrevious = true;
+    }
+    select.appendChild(opt);
+  });
+
+  const customOption = document.createElement("option");
+  customOption.value = CUSTOM_ACTION_VALUE;
+  customOption.textContent = "Other…";
+  customOption.dataset.requiresTarget = "true";
+  select.appendChild(customOption);
+
+  let showCustom = false;
+  if (restoredPrevious) {
+    select.value = previousValue;
+  } else if (wasCustom) {
+    select.value = CUSTOM_ACTION_VALUE;
+    showCustom = true;
+  } else if (!privateActionOptions.length) {
+    select.value = CUSTOM_ACTION_VALUE;
+    showCustom = true;
+  } else {
+    select.value = "";
+  }
+  if (select.value === CUSTOM_ACTION_VALUE) {
+    showCustom = true;
+  }
+
+  toggleCustomActionName(showCustom);
+  if (showCustom && wasCustom && els.privateActionNameCustom) {
+    els.privateActionNameCustom.value = previousCustomValue;
+  }
+
+  syncPrivateActionTargetRequirement();
+}
+
+async function loadPrivateActionDefinitions(gameRef) {
+  privateActionDefinitions = [];
+  if (!gameRef) {
+    updatePrivateActionOptions();
+    return;
+  }
+  try {
+    const snapshot = await getDocs(collection(gameRef, "privateActions"));
+    privateActionDefinitions = snapshot.docs.map((docSnap) => ({
+      id: docSnap.id,
+      ...(docSnap.data() || {}),
+    }));
+  } catch (error) {
+    console.warn("Failed to load private action definitions", error);
+    privateActionDefinitions = [];
+  }
+  updatePrivateActionOptions();
 }
 
 function renderModeratorPanel() {
