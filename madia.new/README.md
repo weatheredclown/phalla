@@ -160,7 +160,9 @@ These rules cover every collection the modern and legacy UIs touch (games, playe
    firebase hosting:channel:deploy preview
    ```
 
-3. When satisfied, deploy to production:
+3. GitHub Actions can automatically run the preview deploy for any pull request or push that touches `madia.new/**`. Configure a repository secret named `FIREBASE_TOKEN` (generated with `firebase login:ci`) so the workflow can authenticate, and the deploy job will output the preview channel URL.
+
+4. When satisfied, deploy to production:
 
    ```bash
    firebase deploy --only hosting
@@ -168,7 +170,7 @@ These rules cover every collection the modern and legacy UIs touch (games, playe
 
    The CLI prints the live URL (e.g., `https://<project-id>.web.app`).
 
-4. (Optional) In the Firebase console under **Build → Hosting**, connect a custom domain and follow the DNS verification steps.
+5. (Optional) In the Firebase console under **Build → Hosting**, connect a custom domain and follow the DNS verification steps.
 
 ## 5. Monitor and maintain
 

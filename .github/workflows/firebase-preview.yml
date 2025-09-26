@@ -1,0 +1,32 @@
+name: Firebase preview deploy
+
+on:
+  push:
+    paths:
+      - 'madia.new/**'
+  pull_request:
+    paths:
+      - 'madia.new/**'
+
+jobs:
+  deploy-preview:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: madia.new
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 18
+
+      - name: Install Firebase CLI
+        run: npm install --global firebase-tools
+
+      - name: Deploy preview channel
+        run: firebase hosting:channel:deploy preview --non-interactive
+        env:
+          FIREBASE_TOKEN: ${{ secrets.FIREBASE_TOKEN }}
