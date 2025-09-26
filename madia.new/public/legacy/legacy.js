@@ -146,7 +146,7 @@ function gameRow(game, meta) {
 function watchGames() {
   if (unsubscribeGames) unsubscribeGames();
   showGamesMessage("Loading games…");
-  const qGames = query(collection(db, "games"), orderBy("active", "desc"), orderBy("open", "desc"), orderBy("gamename"));
+  const qGames = query(collection(db, "games"), orderBy("gamename"));
   unsubscribeGames = onSnapshot(
     qGames,
     async (snap) => {
@@ -163,12 +163,21 @@ function watchGames() {
         else groups.over.push(g);
       });
 
+      const sortByName = (a, b) =>
+        String(a.gamename || "").localeCompare(String(b.gamename || ""));
+
       if (groups.open.length) els.gamesBody.appendChild(sectionHeader("Open"));
-      for (const g of groups.open) els.gamesBody.appendChild(await decorateRow(g));
+      for (const g of groups.open.sort(sortByName)) {
+        els.gamesBody.appendChild(await decorateRow(g));
+      }
       if (groups.running.length) els.gamesBody.appendChild(sectionHeader("Running"));
-      for (const g of groups.running) els.gamesBody.appendChild(await decorateRow(g));
+      for (const g of groups.running.sort(sortByName)) {
+        els.gamesBody.appendChild(await decorateRow(g));
+      }
       if (groups.over.length) els.gamesBody.appendChild(sectionHeader("Game Over"));
-      for (const g of groups.over) els.gamesBody.appendChild(await decorateRow(g));
+      for (const g of groups.over.sort(sortByName)) {
+        els.gamesBody.appendChild(await decorateRow(g));
+      }
     },
     (error) => {
       console.error("Failed to watch games", error);
