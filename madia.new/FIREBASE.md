@@ -17,7 +17,8 @@ This project uses Firebase Hosting, Authentication (Google), and Firestore. Foll
 - Optional (local dev): Connect emulators instead of production.
 
 ## 3) Firestore rules (minimum secure defaults)
-Use rules that allow authenticated users to create posts and only owners to modify game settings.
+Use rules that allow authenticated users to create posts and only owners to modify game settings. The legacy UI also queries threa
+ds, votes, and user profiles, so the rule set covers each collection the app touches.
 
 ```
 rules_version = '2';
@@ -25,19 +26,41 @@ service cloud.firestore {
   match /databases/{database}/documents {
     match /games/{gameId} {
       allow read: if true;
-      allow create: if request.auth != null;
-      allow update, delete: if request.auth != null && request.resource.data.ownerUserId == request.auth.uid;
+      allow create: if request.auth != null && request.resource.data.ownerUserId == request.auth.uid;
+      allow update, delete: if request.auth != null && resource.data.ownerUserId == request.auth.uid;
 
       match /players/{uid} {
         allow read: if true;
-        allow write: if request.auth != null && request.auth.uid == uid;
+        allow create, delete: if request.auth != null && request.auth.uid == uid;
       }
 
       match /posts/{postId} {
         allow read: if true;
-        allow create: if request.auth != null;
-        allow update, delete: if false; // immutable posts (adjust if needed)
+        allow create: if request.auth != null
+          && exists(/databases/$(database)/documents/games/$(gameId)/players/$(request.auth.uid));
       }
+    }
+
+    match /threads/{threadId} {
+      allow read: if true;
+      allow create: if request.auth != null && request.resource.data.createdBy == request.auth.uid;
+      allow update, delete: if request.auth != null && resource.data.createdBy == request.auth.uid;
+
+      match /posts/{postId} {
+        allow read: if true;
+        allow create: if request.auth != null && request.resource.data.author == request.auth.uid;
+      }
+    }
+
+    match /votes/{voteId} {
+      allow read: if true;
+      allow create: if request.auth != null && request.resource.data.recordedBy == request.auth.uid;
+      allow delete: if request.auth != null && resource.data.recordedBy == request.auth.uid;
+    }
+
+    match /users/{userId} {
+      allow read: if true;
+      allow write: if request.auth != null && request.auth.uid == userId;
     }
   }
 }
