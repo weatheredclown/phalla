@@ -26,7 +26,25 @@ function getParam(name) {
 
 const header = initLegacyHeader();
 
+
 const CUSTOM_ROLE_OPTION_VALUE = "__custom-role__";
+
+const ACTION_LIMIT_ERROR_CODE = "action-limit-exceeded";
+const ACTION_RULE_KEYS = [
+  "actionRules",
+  "actionLimits",
+  "privateActions",
+  "privateActionRules",
+  "specialActions",
+  "actions",
+  "abilities",
+  "abilityRules",
+  "playerActions",
+  "privateActionLimit",
+  "privateActionLimitMap",
+  "privateActionLimits",
+];
+
 
 const els = {
   gameTitle: document.getElementById("gameTitle"),
@@ -468,17 +486,21 @@ els.privateActionForm?.addEventListener("submit", async (event) => {
     return;
   }
   const actionName = (els.privateActionName?.value || "").trim();
-  const targetName = (els.privateActionTarget?.value || "").trim();
+  const targetNameInput = (els.privateActionTarget?.value || "").trim();
   const day = parseDayInput(els.privateActionDay);
   if (!actionName) {
     setPlayerToolsStatus("Enter an action name to record.", "error");
     return;
   }
+  const matchedTarget = targetNameInput ? findPlayerByName(targetNameInput) : null;
+  const targetName = matchedTarget?.name || targetNameInput;
+  const targetPlayerId = matchedTarget?.id || "";
   try {
     await recordAction({
       category: "private",
       actionName,
       targetName,
+      targetPlayerId,
       day,
     });
     setPlayerToolsStatus("Private action recorded.", "success");
@@ -486,6 +508,17 @@ els.privateActionForm?.addEventListener("submit", async (event) => {
       els.privateActionTarget.value = "";
     }
   } catch (error) {
+    if (error?.code === ACTION_LIMIT_ERROR_CODE) {
+      const limit = typeof error.limit === "number" ? error.limit : null;
+      const limitText =
+        limit === 0
+          ? `You cannot perform ${actionName || "this action"} again.`
+          : limit
+          ? `You may perform ${actionName || "this action"} only ${limit} time(s) per game.`
+          : `You have already used ${actionName || "this action"} the maximum number of times this game.`;
+      setPlayerToolsStatus(limitText, "error");
+      return;
+    }
     console.error("Failed to record action", error);
     setPlayerToolsStatus("Unable to record action.", "error");
   }
@@ -675,6 +708,205 @@ function setPlayerToolsStatus(message, type = "info") {
   el.style.color = type === "error" ? "#ff7676" : type === "success" ? "#6ee7b7" : "#F9A906";
 }
 
+function normalizeActionName(name) {
+  if (typeof name !== "string") {
+    return "";
+  }
+  return name.trim().toLowerCase();
+}
+
+function isTrustAction(name) {
+  return normalizeActionName(name) === "trust";
+}
+
+function normalizeIdentifier(value) {
+  if (value === null || value === undefined) {
+    return "";
+  }
+  if (typeof value === "string") {
+    return value.trim();
+  }
+  return String(value).trim();
+}
+
+function targetsMatch(a = {}, b = {}) {
+  const idA = normalizeIdentifier(a.targetPlayerId);
+  const idB = normalizeIdentifier(b.targetPlayerId);
+  if (idA && idB) {
+    return idA === idB;
+  }
+  const nameA = normalizeActionName(a.targetName);
+  const nameB = normalizeActionName(b.targetName);
+  if (nameA && nameB) {
+    return nameA === nameB;
+  }
+  return false;
+}
+
+function actionHasTarget(action = {}) {
+  return !!(normalizeIdentifier(action.targetPlayerId) || normalizeActionName(action.targetName));
+}
+
+function parseNumericLimit(value) {
+  if (value === null || value === undefined) {
+    return null;
+  }
+  if (typeof value === "number") {
+    return Number.isFinite(value) ? value : null;
+  }
+  if (typeof value === "string") {
+    const trimmed = value.trim();
+    if (!trimmed) {
+      return null;
+    }
+    const parsed = Number.parseInt(trimmed, 10);
+    return Number.isFinite(parsed) ? parsed : null;
+  }
+  return null;
+}
+
+function extractTimesPerGame(rule) {
+  if (rule === null || rule === undefined) {
+    return null;
+  }
+  if (typeof rule === "number" || typeof rule === "string") {
+    const parsed = parseNumericLimit(rule);
+    if (parsed === null || parsed < 0) {
+      return null;
+    }
+    return parsed;
+  }
+  if (typeof rule !== "object") {
+    return null;
+  }
+  const candidates = [
+    rule.timesPerGame,
+    rule.timesPerDay,
+    rule.timesperday,
+    rule.limit,
+    rule.max,
+    rule.maxUses,
+    rule.maxPerGame,
+    rule.perGame,
+    rule.uses,
+    rule.allowed,
+  ];
+  for (const candidate of candidates) {
+    const parsed = parseNumericLimit(candidate);
+    if (parsed === null) {
+      continue;
+    }
+    if (parsed < 0) {
+      return null;
+    }
+    return parsed;
+  }
+  return null;
+}
+
+function getActionRuleSources() {
+  const sources = [];
+  const entities = [];
+  if (currentPlayer) {
+    entities.push(currentPlayer);
+    if (currentPlayer.rules && typeof currentPlayer.rules === "object") {
+      entities.push(currentPlayer.rules);
+    }
+  }
+  if (currentGame) {
+    entities.push(currentGame);
+    if (currentGame.rules && typeof currentGame.rules === "object") {
+      entities.push(currentGame.rules);
+    }
+  }
+  entities.forEach((entity) => {
+    if (!entity) return;
+    ACTION_RULE_KEYS.forEach((key) => {
+      if (Object.prototype.hasOwnProperty.call(entity, key)) {
+        const value = entity[key];
+        if (value !== undefined && value !== null) {
+          sources.push(value);
+        }
+      }
+    });
+  });
+  return sources;
+}
+
+function resolveActionRuleFromSource(source, normalized, seen = new WeakSet()) {
+  if (!source) {
+    return null;
+  }
+  if (typeof source === "object") {
+    if (seen.has(source)) {
+      return null;
+    }
+    seen.add(source);
+  }
+  if (Array.isArray(source)) {
+    for (const entry of source) {
+      const resolved = resolveActionRuleFromSource(entry, normalized, seen);
+      if (resolved !== null && resolved !== undefined) {
+        return resolved;
+      }
+    }
+    return null;
+  }
+  if (typeof source !== "object") {
+    return null;
+  }
+  const candidateNames = [
+    source.name,
+    source.actionName,
+    source.action,
+    source.label,
+    source.title,
+    source.key,
+    source.id,
+    source.slug,
+    source.code,
+  ];
+  if (candidateNames.some((candidate) => normalizeActionName(candidate) === normalized)) {
+    return source;
+  }
+  const directKey = Object.keys(source).find((key) => normalizeActionName(key) === normalized);
+  if (directKey) {
+    const value = source[directKey];
+    if (value && typeof value === "object") {
+      const nested = resolveActionRuleFromSource(value, normalized, seen);
+      if (nested !== null && nested !== undefined) {
+        return nested;
+      }
+    }
+    return value;
+  }
+  for (const value of Object.values(source)) {
+    if (typeof value === "object" || Array.isArray(value)) {
+      const nested = resolveActionRuleFromSource(value, normalized, seen);
+      if (nested !== null && nested !== undefined) {
+        return nested;
+      }
+    }
+  }
+  return null;
+}
+
+function getTimesPerGameLimitFor(actionName) {
+  const normalized = normalizeActionName(actionName);
+  if (!normalized) {
+    return null;
+  }
+  const sources = getActionRuleSources();
+  for (const source of sources) {
+    const rule = resolveActionRuleFromSource(source, normalized);
+    const limit = extractTimesPerGame(rule);
+    if (limit !== null && limit !== undefined) {
+      return limit;
+    }
+  }
+  return null;
+}
+
 async function recordAction({
   category,
   actionName,
@@ -689,31 +921,45 @@ async function recordAction({
   }
   const gameRef = doc(db, "games", gameId);
   const actionsRef = collection(gameRef, "actions");
-  const existing = await getDocs(query(actionsRef, where("playerId", "==", currentUser.uid)));
-  const invalidations = existing.docs
-    .filter((docSnap) =>
-      shouldInvalidateAction(docSnap.data(), {
-        category,
-        actionName,
-        targetName,
-        targetPlayerId,
-        day,
-      })
-    )
-    .map((docSnap) =>
-      updateDoc(docSnap.ref, {
+  const cleanActionName = typeof actionName === "string" ? actionName.trim() : actionName || "";
+  const cleanTargetName = typeof targetName === "string" ? targetName.trim() : targetName || "";
+  const existingSnapshot = await getDocs(query(actionsRef, where("playerId", "==", currentUser.uid)));
+  const existingActions = existingSnapshot.docs.map((docSnap) => ({ doc: docSnap, data: docSnap.data() || {} }));
+  if (category === "private") {
+    const limit = getTimesPerGameLimitFor(cleanActionName);
+    if (limit !== null && limit !== undefined) {
+      const normalizedName = normalizeActionName(cleanActionName);
+      const usageCount = existingActions.filter(
+        ({ data }) =>
+          normalizeActionName(data.category) === "private" &&
+          normalizeActionName(data.actionName) === normalizedName
+      ).length;
+      if (usageCount >= limit) {
+        const error = new Error("Action limit reached");
+        error.code = ACTION_LIMIT_ERROR_CODE;
+        error.limit = limit;
+        error.actionName = cleanActionName;
+        throw error;
+      }
+    }
+  }
+  const context = { category, actionName: cleanActionName, targetName: cleanTargetName, targetPlayerId, day };
+  const invalidations = existingActions
+    .filter(({ data }) => shouldInvalidateAction(data, context))
+    .map(({ doc }) =>
+      updateDoc(doc.ref, {
         valid: false,
         updatedAt: serverTimestamp(),
       }).catch((error) => {
-        console.warn("Failed to invalidate action", docSnap.id, error);
+        console.warn("Failed to invalidate action", doc.id, error);
       })
     );
   await Promise.all(invalidations);
   const payload = {
     playerId: currentUser.uid,
     username: currentUser.displayName || "Unknown",
-    actionName,
-    targetName,
+    actionName: cleanActionName,
+    targetName: cleanTargetName,
     notes,
     day,
     category,
@@ -728,38 +974,54 @@ async function recordAction({
   await addDoc(actionsRef, payload);
 }
 
-function shouldInvalidateAction(data = {}, context) {
+function shouldInvalidateAction(data = {}, context = {}) {
   if (!data || data.valid === false) {
     return false;
   }
-  if ((data.category || "") !== context.category) {
+  const dataCategory = normalizeActionName(data.category);
+  const contextCategory = normalizeActionName(context.category);
+  if (!dataCategory || dataCategory !== contextCategory) {
     return false;
   }
   const dataDay = data.day ?? 0;
-  switch (context.category) {
-    case "private":
-      if ((data.actionName || "") !== context.actionName) {
+  const contextDay = context.day ?? 0;
+  switch (contextCategory) {
+    case "private": {
+      const dataAction = normalizeActionName(data.actionName);
+      const contextAction = normalizeActionName(context.actionName);
+      if (!dataAction || dataAction !== contextAction) {
         return false;
       }
-      return dataDay === context.day;
+      if (isTrustAction(context.actionName)) {
+        if (targetsMatch(data, context)) {
+          return true;
+        }
+        if (!actionHasTarget(data) || !actionHasTarget(context)) {
+          return dataDay === contextDay;
+        }
+        return false;
+      }
+      return dataDay === contextDay;
+    }
     case "vote":
-      return dataDay === context.day;
+      return dataDay === contextDay;
     case "claim":
       return true;
     case "notebook": {
-      const dataTargetId = data.targetPlayerId || "";
-      if (context.targetPlayerId && dataTargetId) {
-        return dataTargetId === context.targetPlayerId;
+      const dataTargetId = normalizeIdentifier(data.targetPlayerId);
+      const contextTargetId = normalizeIdentifier(context.targetPlayerId);
+      if (dataTargetId && contextTargetId) {
+        return dataTargetId === contextTargetId;
       }
-      const expected = (context.targetName || "").toLowerCase();
-      const actual = (data.targetName || "").toLowerCase();
+      const expected = normalizeActionName(context.targetName);
+      const actual = normalizeActionName(data.targetName);
       if (expected && actual) {
         return expected === actual;
       }
-      return dataDay === context.day;
+      return dataDay === contextDay;
     }
     default:
-      return dataDay === context.day;
+      return dataDay === contextDay;
   }
 }
 
@@ -768,6 +1030,19 @@ function findPlayerById(id) {
     return null;
   }
   return gamePlayers.find((player) => player.id === id) || null;
+}
+
+function findPlayerByName(name) {
+  if (!name) {
+    return null;
+  }
+  const normalized = name.trim().toLowerCase();
+  if (!normalized) {
+    return null;
+  }
+  return (
+    gamePlayers.find((player) => (player.name || "").trim().toLowerCase() === normalized) || null
+  );
 }
 
 function populatePlayerSelects() {
