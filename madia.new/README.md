@@ -2,9 +2,9 @@
 
 This directory contains a modern Firebase implementation of the legacy
 `mafia.old/default.asp` forum alongside a “retro” UI that mirrors the
-original look. Both experiences share the same Firebase project, making
-it easy to iterate on the single-page app while keeping long-time
-players comfortable.
+original look. The Firebase rewrite currently uses its own Firestore
+schema and does **not** connect to the classic ASP/MS Access database,
+so a handful of moderator tools from the legacy site are still missing.
 
 ## Features
 
@@ -17,6 +17,21 @@ players comfortable.
   `public/`.
 - **Emulator Suite support** for local development with Auth,
   Firestore, and Hosting.
+
+### Legacy workflows still missing
+
+The Firebase app does not yet reach moderator parity with
+`gamedisplay.asp`. The following workflows remain TODO and should be
+tracked before planning a full migration:
+
+- Viewing a consolidated roster for a game (player order, alive status,
+  replacement history, vote counts).
+- Assigning or updating hidden roles, public role descriptions, or
+  alignment flags for individual players.
+- Editing player metadata (notes, moderator comments, death flavor) or
+  removing/replacing players from an existing game.
+- Toggling phase state or resolving day transitions that depend on
+  moderator-entered vote thresholds.
 
 ## Project structure
 
@@ -158,6 +173,18 @@ service cloud.firestore {
    - Hosting will serve the modern app at `http://localhost:5000/`.
    - Visit `http://localhost:5000/legacy/index.html` for the retro UI.
    - Firestore is available at `localhost:8080` and Auth at `localhost:9099`.
+
+## Legacy moderator workflow reference
+
+Until the Firebase experience reaches full parity, moderators can rely on
+the legacy ASP workflow for game-specific actions. When you view a game you
+own in the classic interface (`gamedisplay.asp`), the player table shows
+everyone enrolled in the game together with their alive status and current
+vote count. From that same table, a drop-down appears next to each player
+that lets you assign or change their role, edit their description, toggle
+their alive state, or remove them from the roster while the game is open.
+Those controls are only rendered for the game owner, ensuring other players
+cannot edit assignments.
    - The CLI prints a UI URL where you can inspect emulator data.
 
 4. When using emulators, override the SDK configuration at the top of `public/script.js`, `public/legacy/legacy.js`, and `public/legacy/game.js` to point to the emulators. Wrap these calls with a development-only flag or environment check.
