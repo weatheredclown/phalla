@@ -481,3 +481,51 @@ label { cursor: default; }
 .ubb-button:hover {
         background: #3d4d7d;
 }
+
+.post-actions {
+  text-align: right;
+  margin: -8px 0 16px;
+  padding-bottom: 8px;
+}
+
+.post-actions .button {
+  margin-left: 6px;
+}
+
+.post-meta {
+  color: #94a3b8;
+  font-size: 10px;
+}
+
+.summary-grid {
+  display: grid;
+  gap: 12px;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  margin-bottom: 12px;
+}
+
+.summary-grid form {
+  border: 1px solid #3b4970;
+  border-radius: 6px;
+  padding: 10px;
+  background: rgba(24, 51, 94, 0.3);
+}
+
+.summary-grid p {
+  margin: 6px 0;
+  color: #cbd5f5;
+}
+
+.stacked-form {
+  display: grid;
+  gap: 6px;
+  margin-top: 6px;
+  margin-bottom: 10px;
+  max-width: 320px;
+}
+
+.stacked-form label {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}

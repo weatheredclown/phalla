@@ -11,6 +11,7 @@ import {
   updateDoc,
   setDoc,
   deleteDoc,
+  where,
 } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 import { ubbToHtml } from "/legacy/ubb.js";
 import { auth, db, ensureUserDocument, missingConfig } from "./firebase.js";
@@ -37,11 +38,27 @@ const els = {
   toggleOpen: document.getElementById("toggleOpen"),
   toggleActive: document.getElementById("toggleActive"),
   nextDay: document.getElementById("nextDay"),
+  daySummary: document.getElementById("daySummary"),
+  playerTools: document.getElementById("playerTools"),
+  playerToolsStatus: document.getElementById("playerToolsStatus"),
+  privateActionForm: document.getElementById("privateActionForm"),
+  privateActionName: document.getElementById("privateActionName"),
+  privateActionTarget: document.getElementById("privateActionTarget"),
+  privateActionDay: document.getElementById("privateActionDay"),
+  voteRecordForm: document.getElementById("voteRecordForm"),
+  voteTarget: document.getElementById("voteTarget"),
+  voteDay: document.getElementById("voteDay"),
+  voteNotes: document.getElementById("voteNotes"),
   playerListLink: document.getElementById("playerListLink"),
 };
 els.ubbButtons = document.querySelectorAll(".ubb-button[data-ubb-tag]");
 
+let currentUser = null;
+let currentGame = null;
+let currentPlayer = null;
+
 onAuthStateChanged(auth, async (user) => {
+  currentUser = user;
   header?.setUser(user);
   if (user) {
     await ensureUserDocument(user);
@@ -71,10 +88,16 @@ function createMetaRow(html) {
   return tr;
 }
 
-function postRow(post, alt) {
+function postRow(postId, post, alt) {
   const altClass = alt ? "alt1" : "alt3";
   const altColor = alt ? "#18335E" : "#3B4970";
   const altStyle = `border-top:2px solid ${altColor};`;
+
+  const editedMeta = [];
+  if (post.updatedAt) {
+    const editor = post.editedByName || "Unknown";
+    editedMeta.push(`Edited by ${editor} · ${formatDate(post.updatedAt)}`);
+  }
 
   const container = document.createElement("div");
   container.innerHTML = `
@@ -98,9 +121,13 @@ function postRow(post, alt) {
           <div class="smallfont"><strong>${post.title || ""}</strong></div>
           <hr size="1" style="color:silver" />
         </td></tr></table>
-        <div class="smallfont"><img class="inlineimg" src="/images/doc.gif" alt="Old" border="0" /> ${
-          post.createdAt || ""
-        }</div>
+          <div class="smallfont"><img class="inlineimg" src="/images/doc.gif" alt="Old" border="0" /> ${
+            post.createdAt || ""
+          }${
+            editedMeta.length
+              ? `<br /><span class="post-meta">${editedMeta.join(" · ")}</span>`
+              : ""
+          }</div>
         <div style="margin:10px 3px;">
           <table cellspacing="0"><tr><td><img src="/clear.gif" alt="" width="1" height="20" /></td><td class="postbody" valign="top">${
             ubbToHtml(post.body || "")
@@ -115,6 +142,38 @@ function postRow(post, alt) {
       </td>
     </tr>
   </table>`;
+
+  const canEdit =
+    !!currentUser &&
+    (post.authorId === currentUser.uid || currentGame?.ownerUserId === currentUser.uid);
+  const canDelete =
+    !!currentUser && currentGame?.ownerUserId === currentUser.uid;
+
+  if (canEdit || canDelete) {
+    const actions = document.createElement("div");
+    actions.className = "post-actions";
+
+    if (canEdit) {
+      const editButton = document.createElement("button");
+      editButton.type = "button";
+      editButton.className = "button";
+      editButton.textContent = "Edit Post";
+      editButton.addEventListener("click", () => handleEditPost(postId, post));
+      actions.appendChild(editButton);
+    }
+
+    if (canDelete) {
+      const deleteButton = document.createElement("button");
+      deleteButton.type = "button";
+      deleteButton.className = "button";
+      deleteButton.textContent = "Delete Post";
+      deleteButton.addEventListener("click", () => handleDeletePost(postId));
+      actions.appendChild(deleteButton);
+    }
+
+    container.appendChild(actions);
+  }
+
   return container;
 }
 
@@ -132,8 +191,19 @@ async function loadGame() {
     return;
   }
   const g = gSnap.data();
+  currentGame = { id: gameId, ...g };
   els.gameTitle.textContent = g.gamename || "(no name)";
   els.ownerControls.style.display = auth.currentUser && g.ownerUserId === auth.currentUser.uid ? "block" : "none";
+  if (els.daySummary) {
+    els.daySummary.style.display =
+      auth.currentUser && g.ownerUserId === auth.currentUser.uid ? "inline-block" : "none";
+  }
+  if (els.privateActionDay) {
+    els.privateActionDay.value = g.day ?? 0;
+  }
+  if (els.voteDay) {
+    els.voteDay.value = g.day ?? 0;
+  }
 
   // Meta row (last post, players, day, open)
   let playerCount = 0;
@@ -178,17 +248,22 @@ async function loadGame() {
   posts.forEach((p) => {
     const data = p.data();
     const post = {
+      id: p.id,
       title: data.title || "",
       body: data.body || "",
       authorName: data.authorName || "",
       authorId: data.authorId || "",
       avatar: data.avatar || "",
-      createdAt: data.createdAt?.toDate ? data.createdAt.toDate().toLocaleString() : "",
+      createdAt: formatDate(data.createdAt),
+      updatedAt: data.updatedAt || null,
+      editedByName: data.editedByName || "",
       sig: data.sig || "",
     };
-    els.postsContainer.appendChild(postRow(post, alt));
+    els.postsContainer.appendChild(postRow(post.id, post, alt));
     alt = !alt;
   });
+
+  await refreshMembershipAndControls();
 }
 
 loadGame().catch((e) => {
@@ -207,6 +282,9 @@ async function refreshMembershipAndControls() {
     setDisplay(els.replyForm, "none");
     setDisplay(els.joinButton, "inline-block");
     setDisplay(els.leaveButton, "none");
+    setDisplay(els.playerTools, "none");
+    setPlayerToolsStatus("");
+    currentPlayer = null;
     return;
   }
   try {
@@ -215,6 +293,9 @@ async function refreshMembershipAndControls() {
     setDisplay(els.replyForm, joined ? "block" : "none");
     setDisplay(els.joinButton, joined ? "none" : "inline-block");
     setDisplay(els.leaveButton, joined ? "inline-block" : "none");
+    currentPlayer = joined ? { id: p.id, ...p.data() } : null;
+    const ownerView = currentGame && currentGame.ownerUserId === user.uid;
+    setDisplay(els.playerTools, joined || ownerView ? "block" : "none");
   } catch {}
 }
 
@@ -245,6 +326,13 @@ els.postReply.addEventListener("click", async () => {
     header?.openAuthPanel("login");
     return;
   }
+  const isOwner = currentGame?.ownerUserId === user.uid;
+  if (!isOwner && currentPlayer && typeof currentPlayer.postsLeft === "number") {
+    if (currentPlayer.postsLeft <= 0) {
+      alert("You have no posts remaining for today.");
+      return;
+    }
+  }
   const title = (els.replyTitle.value || "").trim();
   const body = (els.replyBody.value || "").trim();
   if (!body) return;
@@ -257,6 +345,16 @@ els.postReply.addEventListener("click", async () => {
   });
   els.replyTitle.value = "";
   els.replyBody.value = "";
+  if (!isOwner && currentPlayer && typeof currentPlayer.postsLeft === "number") {
+    if (currentPlayer.postsLeft === 1) {
+      try {
+        await updateDoc(doc(db, "games", gameId, "players", user.uid), { postsLeft: 0 });
+        currentPlayer.postsLeft = 0;
+      } catch (error) {
+        console.warn("Failed to update postsLeft", error);
+      }
+    }
+  }
   await loadGame();
 });
 
@@ -264,6 +362,74 @@ els.postReply.addEventListener("click", async () => {
 els.toggleOpen.addEventListener("click", async () => ownerUpdate({ toggle: "open" }));
 els.toggleActive.addEventListener("click", async () => ownerUpdate({ toggle: "active" }));
 els.nextDay.addEventListener("click", async () => ownerUpdate({ nextDay: true }));
+els.daySummary?.addEventListener("click", () => {
+  if (!gameId) return;
+  window.location.href = `/legacy/daysummary.html?g=${encodeURIComponent(gameId)}`;
+});
+
+els.privateActionForm?.addEventListener("submit", async (event) => {
+  event.preventDefault();
+  if (!currentUser) {
+    header?.openAuthPanel("login");
+    return;
+  }
+  const actionName = (els.privateActionName?.value || "").trim();
+  const targetName = (els.privateActionTarget?.value || "").trim();
+  const day = parseDayInput(els.privateActionDay);
+  if (!actionName) {
+    setPlayerToolsStatus("Enter an action name to record.", "error");
+    return;
+  }
+  try {
+    await recordAction({
+      category: "private",
+      actionName,
+      targetName,
+      day,
+    });
+    setPlayerToolsStatus("Private action recorded.", "success");
+    if (els.privateActionTarget) {
+      els.privateActionTarget.value = "";
+    }
+  } catch (error) {
+    console.error("Failed to record action", error);
+    setPlayerToolsStatus("Unable to record action.", "error");
+  }
+});
+
+els.voteRecordForm?.addEventListener("submit", async (event) => {
+  event.preventDefault();
+  if (!currentUser) {
+    header?.openAuthPanel("login");
+    return;
+  }
+  const targetName = (els.voteTarget?.value || "").trim();
+  const notes = (els.voteNotes?.value || "").trim();
+  const day = parseDayInput(els.voteDay);
+  if (!targetName) {
+    setPlayerToolsStatus("Enter a vote target first.", "error");
+    return;
+  }
+  try {
+    await recordAction({
+      category: "vote",
+      actionName: "Vote",
+      targetName,
+      notes,
+      day,
+    });
+    setPlayerToolsStatus("Vote recorded.", "success");
+    if (els.voteTarget) {
+      els.voteTarget.value = "";
+    }
+    if (els.voteNotes) {
+      els.voteNotes.value = "";
+    }
+  } catch (error) {
+    console.error("Failed to record vote", error);
+    setPlayerToolsStatus("Unable to record vote.", "error");
+  }
+});
 
 async function ownerUpdate(action) {
   const user = auth.currentUser;
@@ -309,4 +475,147 @@ function applyUbbTag(tag) {
 
   textarea.setSelectionRange(newSelectionStart, newSelectionEnd);
   textarea.scrollTop = scrollTop;
+}
+
+function formatDate(value) {
+  if (!value) {
+    return "";
+  }
+  if (typeof value.toDate === "function") {
+    const date = value.toDate();
+    return date instanceof Date ? date.toLocaleString() : "";
+  }
+  if (value instanceof Date) {
+    return value.toLocaleString();
+  }
+  return String(value);
+}
+
+function parseDayInput(input) {
+  if (!input) {
+    return currentGame?.day ?? 0;
+  }
+  const value = parseInt(input.value, 10);
+  if (Number.isFinite(value) && value >= 0) {
+    return value;
+  }
+  return currentGame?.day ?? 0;
+}
+
+function setPlayerToolsStatus(message, type = "info") {
+  const el = els.playerToolsStatus;
+  if (!el) return;
+  if (!message) {
+    el.style.display = "none";
+    el.textContent = "";
+    return;
+  }
+  el.style.display = "block";
+  el.textContent = message;
+  el.style.color = type === "error" ? "#ff7676" : type === "success" ? "#6ee7b7" : "#F9A906";
+}
+
+async function recordAction({ category, actionName, targetName, notes = "", day }) {
+  if (!currentUser) {
+    throw new Error("Not signed in");
+  }
+  const gameRef = doc(db, "games", gameId);
+  const actionsRef = collection(gameRef, "actions");
+  const existing = await getDocs(query(actionsRef, where("playerId", "==", currentUser.uid)));
+  const invalidations = existing.docs
+    .filter((docSnap) => {
+      const data = docSnap.data();
+      if ((data.category || "") !== category) return false;
+      const dataDay = data.day ?? 0;
+      if (dataDay !== day) return false;
+      if (category === "private" && (data.actionName || "") !== actionName) {
+        return false;
+      }
+      return data.valid !== false;
+    })
+    .map((docSnap) =>
+      updateDoc(docSnap.ref, {
+        valid: false,
+        updatedAt: serverTimestamp(),
+      }).catch((error) => {
+        console.warn("Failed to invalidate action", docSnap.id, error);
+      })
+    );
+  await Promise.all(invalidations);
+  await addDoc(actionsRef, {
+    playerId: currentUser.uid,
+    username: currentUser.displayName || "Unknown",
+    actionName,
+    targetName,
+    notes,
+    day,
+    category,
+    valid: true,
+    createdAt: serverTimestamp(),
+    updatedAt: serverTimestamp(),
+  });
+}
+
+async function handleEditPost(postId, post) {
+  if (!currentUser) {
+    header?.openAuthPanel("login");
+    return;
+  }
+  if (!currentGame || !postId) {
+    return;
+  }
+  const allowEdit =
+    post.authorId === currentUser.uid || currentGame.ownerUserId === currentUser.uid;
+  if (!allowEdit) {
+    alert("You do not have permission to edit this post.");
+    return;
+  }
+  const newTitle = prompt("Edit post title", post.title || "");
+  if (newTitle === null) {
+    return;
+  }
+  const newBody = prompt("Edit post body (UBB)", post.body || "");
+  if (newBody === null) {
+    return;
+  }
+  const trimmedTitle = newTitle.trim();
+  const trimmedBody = newBody.trim();
+  if (!trimmedBody) {
+    alert("Post body cannot be empty.");
+    return;
+  }
+  try {
+    await updateDoc(doc(db, "games", gameId, "posts", postId), {
+      title: trimmedTitle,
+      body: trimmedBody,
+      updatedAt: serverTimestamp(),
+      editedBy: currentUser.uid,
+      editedByName: currentUser.displayName || "Unknown",
+    });
+    await loadGame();
+  } catch (error) {
+    console.error("Failed to edit post", error);
+    alert("Unable to save changes. Try again later.");
+  }
+}
+
+async function handleDeletePost(postId) {
+  if (!currentUser) {
+    header?.openAuthPanel("login");
+    return;
+  }
+  if (!currentGame || currentGame.ownerUserId !== currentUser.uid) {
+    alert("Only the game owner can delete posts.");
+    return;
+  }
+  if (!confirm("Delete this post? This cannot be undone.")) {
+    return;
+  }
+  try {
+    await deleteDoc(doc(db, "games", gameId, "posts", postId));
+    await loadGame();
+  } catch (error) {
+    console.error("Failed to delete post", error);
+    alert("Unable to delete post. Try again later.");
+  }
 }

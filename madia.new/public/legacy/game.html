@@ -41,10 +41,45 @@
               <button id="toggleOpen" class="button">Toggle Open</button>
               <button id="toggleActive" class="button">Toggle Active</button>
               <button id="nextDay" class="button">Next Day</button>
+              <button id="daySummary" class="button">Day Summary</button>
             </div>
             <div class="smallfont" style="margin-bottom:8px;">
               <button id="joinButton" class="button">Join Game</button>
               <button id="leaveButton" class="button" style="display:none;">Leave Game</button>
+            </div>
+            <div id="playerTools" class="smallfont" style="display:none; margin-bottom:12px;">
+              <div><strong>Private Game Tools</strong></div>
+              <form id="privateActionForm" class="stacked-form">
+                <label>
+                  Action name
+                  <input id="privateActionName" class="bginput" />
+                </label>
+                <label>
+                  Target name
+                  <input id="privateActionTarget" class="bginput" />
+                </label>
+                <label>
+                  Day
+                  <input id="privateActionDay" type="number" class="bginput" min="0" />
+                </label>
+                <div><button class="button" type="submit">Record private action</button></div>
+              </form>
+              <form id="voteRecordForm" class="stacked-form">
+                <label>
+                  Vote target
+                  <input id="voteTarget" class="bginput" />
+                </label>
+                <label>
+                  Day
+                  <input id="voteDay" type="number" class="bginput" min="0" />
+                </label>
+                <label>
+                  Notes
+                  <input id="voteNotes" class="bginput" />
+                </label>
+                <div><button class="button" type="submit">Record vote</button></div>
+              </form>
+              <div id="playerToolsStatus" style="display:none; margin-top:6px; color:#F9A906;"></div>
             </div>
             <form id="replyForm" style="display:none;" onsubmit="return false;">
               <table cellpadding="4" cellspacing="0" border="0" width="100%" class="tborder">
