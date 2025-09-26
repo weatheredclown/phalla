@@ -128,7 +128,34 @@ service cloud.firestore {
 }
 ```
 
-## 3. Install and authenticate the Firebase CLI
+## 3. Configure Firebase Storage rules
+
+Avatar uploads in the retro member profile use Cloud Storage. Until you
+set explicit rules, Storage rejects every write with the
+`Missing or insufficient permissions` error you may see in the browser
+console. Apply the following rules under **Build → Storage → Rules** (or
+deploy them with `firebase deploy --only storage`) so that signed-in
+players can manage their own thumbnails while keeping other paths
+locked down:
+
+```storage
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+    match /thumbnails/{fileName} {
+      allow read: if true;
+      allow write: if request.auth != null
+        && fileName.startsWith(request.auth.uid + "-");
+    }
+  }
+}
+```
+
+Update the path prefix if you relocate avatar uploads to a different
+folder. Any additional media workflows should receive similarly
+scoped-down rules to avoid granting blanket write access to the bucket.
+
+## 4. Install and authenticate the Firebase CLI
 
 1. Install the CLI (if not already):
 
@@ -150,7 +177,7 @@ service cloud.firestore {
    firebase projects:list
    ```
 
-## 4. Initialize local development
+## 5. Initialize local development
 
 1. From the repository root, navigate into this directory and install any local tooling if desired (no dependencies are required for the static app):
 
@@ -189,7 +216,7 @@ cannot edit assignments.
 
 4. When using emulators, override the SDK configuration at the top of `public/script.js`, `public/legacy/legacy.js`, and `public/legacy/game.js` to point to the emulators. Wrap these calls with a development-only flag or environment check.
 
-## 5. Deploy to Firebase Hosting
+## 6. Deploy to Firebase Hosting
 
 1. Build/prepare static assets. This project is already static, so no additional build step is required.
 2. Run a preview deploy to inspect the result without affecting production:
@@ -210,18 +237,18 @@ cannot edit assignments.
 
 5. (Optional) In the Firebase console under **Build → Hosting**, connect a custom domain and follow the DNS verification steps.
 
-## 6. Monitor and maintain
+## 7. Monitor and maintain
 
 - Use the [Google Cloud Console](https://console.cloud.google.com/) for project-wide settings, IAM roles, and usage metrics.
 - Set up alerts in **Google Cloud Monitoring** for Firestore and Hosting quotas if you anticipate heavy traffic.
 - Regularly review the **Authentication** user list to prune inactive accounts and update provider settings.
 - Export Firestore data using the [Managed Export and Import service](https://firebase.google.com/docs/firestore/manage-data/export-import) for backups.
 
-## 7. Legacy UI specifics
+## 8. Legacy UI specifics
 
 Refer to [FIREBASE.md](./FIREBASE.md) for data seeding tips, required indexes, and other retro UI notes that supplement this shared guide.
 
-## 8. Next steps and customization ideas
+## 9. Next steps and customization ideas
 
 - Add Cloud Functions for scheduled tasks (e.g., nightly vote summaries).
 - Integrate push notifications with Firebase Cloud Messaging for day/night cycle alerts.
