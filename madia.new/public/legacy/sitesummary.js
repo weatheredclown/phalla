@@ -1,4 +1,9 @@
 import {
+  onAuthStateChanged,
+  signInWithPopup,
+  signOut,
+} from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+import {
   collection,
   collectionGroup,
   doc,
@@ -8,15 +13,54 @@ import {
   orderBy,
   query,
 } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
-import { db, missingConfig } from "./firebase.js";
+import { auth, db, provider, missingConfig } from "./firebase.js";
 
 const summaryContent = document.getElementById("summaryContent");
+const signInButton = document.getElementById("signIn");
+const signOutButton = document.getElementById("signOut");
+const profileLink = document.getElementById("profileLink");
 
 if (missingConfig) {
   renderConfigWarning();
 } else {
-  loadSummary().catch((err) => renderError(err.message));
+  renderInfo("Sign in to view site summary.");
 }
+
+signInButton?.addEventListener("click", async () => {
+  await signInWithPopup(auth, provider);
+});
+
+signOutButton?.addEventListener("click", async () => {
+  await signOut(auth);
+});
+
+onAuthStateChanged(auth, async (user) => {
+  if (signInButton) signInButton.style.display = user ? "none" : "inline-block";
+  if (signOutButton) signOutButton.style.display = user ? "inline-block" : "none";
+  if (profileLink) {
+    profileLink.style.display = user ? "inline-block" : "none";
+    if (user) {
+      profileLink.href = `/legacy/member.html?u=${encodeURIComponent(user.uid)}`;
+    }
+  }
+
+  if (missingConfig) {
+    return;
+  }
+
+  if (!user) {
+    renderInfo("Sign in to view site summary.");
+    return;
+  }
+
+  try {
+    renderInfo("Loading summary...");
+    await loadSummary();
+  } catch (error) {
+    console.error("Failed to load summary", error);
+    renderError(error);
+  }
+});
 
 function renderConfigWarning() {
   summaryContent.innerHTML = `
@@ -26,7 +70,17 @@ function renderConfigWarning() {
   `;
 }
 
-function renderError(message) {
+function renderInfo(message) {
+  summaryContent.innerHTML = `
+    <div class="smallfont" style="color:#F9A906;">${message}</div>
+  `;
+}
+
+function renderError(error) {
+  const message =
+    error?.code === "permission-denied"
+      ? "You do not have permission to view this summary."
+      : error?.message || "An unknown error occurred.";
   summaryContent.innerHTML = `
     <div class="smallfont" style="color:#F9A906;">Failed to load summary: ${message}</div>
   `;
