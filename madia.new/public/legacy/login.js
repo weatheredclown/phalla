@@ -1,28 +1,25 @@
 import {
-  browserLocalPersistence,
-  browserSessionPersistence,
   createUserWithEmailAndPassword,
   onAuthStateChanged,
-  setPersistence,
   signInWithEmailAndPassword,
   signInWithPopup,
   signOut,
   updateProfile,
 } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+import { auth, db, ensureUserDocument, missingConfig, provider } from "./firebase.js";
 import {
-  collection,
-  getDocs,
-  limit,
-  query,
-  where,
-} from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
-import {
-  auth,
-  db,
-  ensureUserDocument,
-  missingConfig,
-  provider,
-} from "./firebase.js";
+  applyPersistence,
+  describeAuthError,
+  ensureUsernameAvailable,
+  hide,
+  resolveIdentifier,
+  sanitizeRedirect,
+  setButtonLoading,
+  setError,
+  setSubmitting,
+  show,
+  validateSignup,
+} from "./auth-helpers.js";
 
 const els = {
   configWarning: document.getElementById("configWarning"),
@@ -123,8 +120,8 @@ if (els.loginForm) {
         throw new Error("Enter your username or email and password.");
       }
 
-      await applyPersistence(remember);
-      const email = await resolveIdentifier(identifier);
+      await applyPersistence(auth, remember);
+      const email = await resolveIdentifier(db, identifier);
       const credential = await signInWithEmailAndPassword(auth, email, password);
       await ensureUserDocument(credential.user);
       location.href = redirectTarget;
@@ -144,7 +141,7 @@ if (els.googleSignIn) {
     setError(els.loginError, "");
     setButtonLoading(els.googleSignIn, true, "Signing in...");
     try {
-      await setPersistence(auth, browserLocalPersistence);
+      await applyPersistence(auth, true);
       const credential = await signInWithPopup(auth, provider);
       await ensureUserDocument(credential.user);
       location.href = redirectTarget;
@@ -171,7 +168,7 @@ if (els.signupForm) {
 
     try {
       validateSignup({ username, email, password, confirm });
-      await ensureUsernameAvailable(username);
+      await ensureUsernameAvailable(db, username);
 
       const credential = await createUserWithEmailAndPassword(auth, email, password);
       await updateProfile(credential.user, { displayName: username });
@@ -189,108 +186,6 @@ if (els.signupForm) {
   });
 }
 
-function sanitizeRedirect(value) {
-  if (!value) return "/legacy/index.html";
-  try {
-    const url = new URL(value, location.origin);
-    if (url.origin !== location.origin) {
-      return "/legacy/index.html";
-    }
-    return `${url.pathname}${url.search}${url.hash}`;
-  } catch {
-    return "/legacy/index.html";
-  }
-}
-
-async function resolveIdentifier(identifier) {
-  if (identifier.includes("@")) {
-    return identifier.toLowerCase();
-  }
-  const usernameLower = identifier.toLowerCase();
-  const q = query(
-    collection(db, "users"),
-    where("usernameLower", "==", usernameLower),
-    limit(1)
-  );
-  const snapshot = await getDocs(q);
-  if (snapshot.empty) {
-    throw new Error("No account matches that username.");
-  }
-  const data = snapshot.docs[0].data();
-  if (!data.email) {
-    throw new Error("This account does not have an email on file. Use email to sign in.");
-  }
-  return data.email;
-}
-
-async function ensureUsernameAvailable(username) {
-  const q = query(
-    collection(db, "users"),
-    where("usernameLower", "==", username.toLowerCase()),
-    limit(1)
-  );
-  const snapshot = await getDocs(q);
-  if (!snapshot.empty) {
-    throw new Error("Username already in use.");
-  }
-}
-
-function validateSignup({ username, email, password, confirm }) {
-  if (!username) {
-    throw new Error("Choose a username.");
-  }
-  if (!email) {
-    throw new Error("Enter an email address.");
-  }
-  if (!password) {
-    throw new Error("Enter a password.");
-  }
-  if (password.length < 6) {
-    throw new Error("Choose a password with at least 6 characters.");
-  }
-  if (password !== confirm) {
-    throw new Error("Passwords do not match.");
-  }
-}
-
-async function applyPersistence(remember) {
-  const persistence = remember
-    ? browserLocalPersistence
-    : browserSessionPersistence;
-  await setPersistence(auth, persistence);
-}
-
-function setError(element, message) {
-  if (!element) return;
-  if (message) {
-    element.textContent = message;
-    element.style.display = "block";
-  } else {
-    element.textContent = "";
-    element.style.display = "none";
-  }
-}
-
-function setSubmitting(form, submitEl, submitting, label) {
-  if (submitEl) {
-    submitEl.value = label;
-    submitEl.disabled = submitting;
-  }
-  if (form) {
-    Array.from(form.elements).forEach((el) => {
-      if (el !== submitEl) {
-        el.disabled = submitting;
-      }
-    });
-  }
-}
-
-function setButtonLoading(button, loading, label) {
-  if (!button) return;
-  button.textContent = label;
-  button.disabled = loading;
-}
-
 function showConfigWarning(message) {
   if (!els.configWarning) return;
   els.configWarning.textContent = message;
@@ -304,47 +199,4 @@ function disableSection(section) {
   controls.forEach((el) => {
     el.disabled = true;
   });
-}
-
-function show(element) {
-  if (!element) return;
-  element.style.display = "block";
-}
-
-function hide(element) {
-  if (!element) return;
-  element.style.display = "none";
-}
-
-function describeAuthError(error) {
-  if (!error) {
-    return "An unknown error occurred.";
-  }
-  if (typeof error === "string") {
-    return error;
-  }
-  switch (error.code) {
-    case "auth/user-not-found":
-      return "No account found with that email.";
-    case "auth/wrong-password":
-      return "Incorrect password.";
-    case "auth/invalid-email":
-      return "Enter a valid email address.";
-    case "auth/email-already-in-use":
-      return "That email address is already in use.";
-    case "auth/weak-password":
-      return "Choose a stronger password (6+ characters).";
-    case "auth/account-exists-with-different-credential":
-      return "That email is linked to another sign-in method.";
-    case "auth/credential-already-in-use":
-      return "That credential is already linked to another account.";
-    case "auth/popup-closed-by-user":
-      return "Google sign-in was cancelled.";
-    case "auth/popup-blocked":
-      return "Allow popups to sign in with Google.";
-    case "auth/too-many-requests":
-      return "Too many attempts. Try again later.";
-    default:
-      return error.message || "An unknown error occurred.";
-  }
 }

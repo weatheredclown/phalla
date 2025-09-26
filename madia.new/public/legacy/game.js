@@ -1,7 +1,4 @@
-import {
-  onAuthStateChanged,
-  signOut,
-} from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
 import {
   doc,
   getDoc,
@@ -30,10 +27,6 @@ const els = {
   gameTitle: document.getElementById("gameTitle"),
   gameMeta: document.getElementById("gameMeta"),
   postsContainer: document.getElementById("postsContainer"),
-  signIn: document.getElementById("signIn"),
-  signOut: document.getElementById("signOut"),
-  userName: document.getElementById("userName"),
-  signUpLink: document.getElementById("signUpLink"),
   replyForm: document.getElementById("replyForm"),
   replyTitle: document.getElementById("replyTitle"),
   replyBody: document.getElementById("replyBody"),
@@ -48,49 +41,10 @@ const els = {
 };
 
 onAuthStateChanged(auth, async (user) => {
-  els.signIn.style.display = user ? "none" : "inline-block";
-  els.signOut.style.display = user ? "inline-block" : "none";
-  els.userName.textContent = user ? user.displayName : "";
+  header?.setUser(user);
   if (user) {
     await ensureUserDocument(user);
   }
-  if (els.signUpLink) {
-    els.signUpLink.style.display = user ? "none" : "inline";
-  }
-  refreshMembershipAndControls();
-});
-els.signIn.addEventListener("click", () => {
-  const redirect = encodeURIComponent(
-    `${location.pathname}${location.search}${location.hash}`
-  );
-  location.href = `/legacy/login.html?redirect=${redirect}`;
-});
-els.signOut.addEventListener("click", async () => signOut(auth));
-if (els.signUpLink) {
-  els.signUpLink.addEventListener("click", (event) => {
-    event.preventDefault();
-    const redirect = encodeURIComponent(
-      `${location.pathname}${location.search}${location.hash}`
-    );
-    location.href = `/legacy/login.html?redirect=${redirect}#signup`;
-  });
-}
-
-if (header?.signInButton) {
-  header.signInButton.addEventListener("click", async () => {
-    await signInWithPopup(auth, provider);
-  });
-}
-
-if (header?.signOutLink) {
-  header.signOutLink.addEventListener("click", async (event) => {
-    event.preventDefault();
-    await signOut(auth);
-  });
-}
-
-onAuthStateChanged(auth, (user) => {
-  header?.setUser(user);
   refreshMembershipAndControls();
 });
 
@@ -253,14 +207,20 @@ async function refreshMembershipAndControls() {
 
 els.joinButton.addEventListener("click", async () => {
   const user = auth.currentUser;
-  if (!user) return;
+  if (!user) {
+    header?.openAuthPanel("login");
+    return;
+  }
   await setDoc(doc(db, "games", gameId, "players", user.uid), { uid: user.uid, name: user.displayName || "" });
   await refreshMembershipAndControls();
 });
 
 els.leaveButton.addEventListener("click", async () => {
   const user = auth.currentUser;
-  if (!user) return;
+  if (!user) {
+    header?.openAuthPanel("login");
+    return;
+  }
   // Delete player doc keyed by uid
   await deleteDoc(doc(db, "games", gameId, "players", user.uid));
   await refreshMembershipAndControls();
@@ -268,7 +228,10 @@ els.leaveButton.addEventListener("click", async () => {
 
 els.postReply.addEventListener("click", async () => {
   const user = auth.currentUser;
-  if (!user) return;
+  if (!user) {
+    header?.openAuthPanel("login");
+    return;
+  }
   const title = (els.replyTitle.value || "").trim();
   const body = (els.replyBody.value || "").trim();
   if (!body) return;
@@ -291,7 +254,10 @@ els.nextDay.addEventListener("click", async () => ownerUpdate({ nextDay: true })
 
 async function ownerUpdate(action) {
   const user = auth.currentUser;
-  if (!user) return;
+  if (!user) {
+    header?.openAuthPanel("login");
+    return;
+  }
   const ref = doc(db, "games", gameId);
   const snap = await getDoc(ref);
   if (!snap.exists()) return;

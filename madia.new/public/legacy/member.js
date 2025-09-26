@@ -1,8 +1,4 @@
-import {
-  onAuthStateChanged,
-  signInWithPopup,
-  signOut,
-} from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
 import {
   collection,
   collectionGroup,
@@ -15,23 +11,10 @@ import {
   setDoc,
   getDoc,
 } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
-import { auth, db, ensureUserDocument, missingConfig, provider } from "./firebase.js";
+import { auth, db, ensureUserDocument, missingConfig } from "./firebase.js";
 import { initLegacyHeader } from "./header.js";
 
 const header = initLegacyHeader();
-
-if (header?.signInButton) {
-  header.signInButton.addEventListener("click", async () => {
-    await signInWithPopup(auth, provider);
-  });
-}
-
-if (header?.signOutLink) {
-  header.signOutLink.addEventListener("click", async (event) => {
-    event.preventDefault();
-    await signOut(auth);
-  });
-}
 
 function getParam(name) {
   const params = new URLSearchParams(location.search);
