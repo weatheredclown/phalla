@@ -455,23 +455,77 @@ if (els.avatarInput) {
   });
 }
 
+function renderListMessage(container, message, tone = "info") {
+  if (!container) {
+    return;
+  }
+  const colors = {
+    success: "#8ddf8d",
+    error: "#ffb3a9",
+    info: "#F9A906",
+  };
+  container.innerHTML = `<div class="smallfont" style="color:${colors[tone] || colors.info};">${message}</div>`;
+}
+
+function isPermissionDenied(error) {
+  return error?.code === "permission-denied";
+}
+
+function handleListError(error) {
+  console.error("Failed to load games", error);
+  const message = isPermissionDenied(error)
+    ? currentUser
+      ? "You don't have permission to view games yet."
+      : "Sign in to view games."
+    : "We couldn't load games right now.";
+  const tone = isPermissionDenied(error) ? "info" : "error";
+  renderListMessage(els.gamesYouPlay, message, tone);
+  renderListMessage(els.gamesYouOwn, message, tone);
+}
+
 async function loadLists() {
   if (missingConfig) {
-    els.gamesYouPlay.innerHTML = `<div class="smallfont" style="color:#F9A906;">Configure Firebase to load games.</div>`;
-    els.gamesYouOwn.innerHTML = `<div class="smallfont" style="color:#F9A906;">Configure Firebase to load games.</div>`;
+    renderListMessage(
+      els.gamesYouPlay,
+      "Configure Firebase to load games.",
+      "info"
+    );
+    renderListMessage(
+      els.gamesYouOwn,
+      "Configure Firebase to load games.",
+      "info"
+    );
     return;
   }
   els.gamesYouPlay.innerHTML = groupSectionSkeleton();
   els.gamesYouOwn.innerHTML = groupSectionSkeleton();
 
-  const ownedQ = query(collection(db, "games"), where("ownerUserId", "==", viewedUid));
-  const ownedSnap = await getDocs(ownedQ);
-  const owned = ownedSnap.docs.map((d) => ({ id: d.id, ...d.data() }));
-  renderGrouped(els.gamesYouOwn, owned);
+  try {
+    const ownedQ = query(
+      collection(db, "games"),
+      where("ownerUserId", "==", viewedUid)
+    );
+    const ownedSnap = await getDocs(ownedQ);
+    const owned = ownedSnap.docs.map((d) => ({ id: d.id, ...d.data() }));
+    renderGrouped(els.gamesYouOwn, owned);
+  } catch (error) {
+    handleListError(error);
+    return;
+  }
 
   // Find games where players subdoc has uid == viewedUid
-  const playersCG = query(collectionGroup(db, "players"), where("uid", "==", viewedUid));
-  const playersSnap = await getDocs(playersCG);
+  let playersSnap;
+  try {
+    const playersCG = query(
+      collectionGroup(db, "players"),
+      where("uid", "==", viewedUid)
+    );
+    playersSnap = await getDocs(playersCG);
+  } catch (error) {
+    handleListError(error);
+    return;
+  }
+
   const gameIds = new Set();
   playersSnap.forEach((p) => {
     const gameRef = p.ref.parent.parent; // games/{id}
@@ -482,8 +536,12 @@ async function loadLists() {
     try {
       const d = await getDoc(doc(db, "games", gid));
       if (d.exists()) plays.push({ id: gid, ...d.data() });
-    } catch (err) {
-      console.warn("Failed to load game", gid, err);
+    } catch (error) {
+      if (isPermissionDenied(error)) {
+        handleListError(error);
+        return;
+      }
+      console.warn("Failed to load game", gid, error);
     }
   }
   renderGrouped(els.gamesYouPlay, plays);
