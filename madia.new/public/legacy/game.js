@@ -43,6 +43,7 @@ const els = {
   nextDay: document.getElementById("nextDay"),
   playerListLink: document.getElementById("playerListLink"),
 };
+els.ubbButtons = document.querySelectorAll(".ubb-button[data-ubb-tag]");
 
 if (header?.signInButton) {
   header.signInButton.addEventListener("click", async () => {
@@ -69,6 +70,12 @@ if (!gameId) {
 
 if (els.playerListLink && gameId) {
   els.playerListLink.href = `/legacy/playerlist.html?g=${encodeURIComponent(gameId)}`;
+}
+
+if (els.ubbButtons?.length) {
+  els.ubbButtons.forEach((button) => {
+    button.addEventListener("click", () => applyUbbTag(button.dataset.ubbTag));
+  });
 }
 
 function createMetaRow(html) {
@@ -271,4 +278,31 @@ async function ownerUpdate(action) {
   if (action.nextDay) patch.day = (g.day || 0) + 1;
   await updateDoc(ref, patch);
   await loadGame();
+}
+
+function applyUbbTag(tag) {
+  if (!tag || !els.replyBody) {
+    return;
+  }
+
+  const textarea = els.replyBody;
+  const value = textarea.value || "";
+  const start = textarea.selectionStart ?? 0;
+  const end = textarea.selectionEnd ?? 0;
+  const openTag = `[${tag}]`;
+  const closeTag = `[/${tag}]`;
+  const before = value.slice(0, start);
+  const selected = value.slice(start, end);
+  const after = value.slice(end);
+  const scrollTop = textarea.scrollTop;
+
+  textarea.value = `${before}${openTag}${selected}${closeTag}${after}`;
+  textarea.focus();
+
+  const newSelectionStart = start + openTag.length;
+  const selectionLength = selected.length;
+  const newSelectionEnd = selectionLength ? newSelectionStart + selectionLength : newSelectionStart;
+
+  textarea.setSelectionRange(newSelectionStart, newSelectionEnd);
+  textarea.scrollTop = scrollTop;
 }
