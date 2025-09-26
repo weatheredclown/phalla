@@ -88,9 +88,7 @@ function sectionHeader(label) {
       ${label}
     </td>
   `;
-  const tbody = document.createElement("tbody");
-  tbody.appendChild(tr);
-  return tbody;
+  return tr;
 }
 
 function gameRow(game, meta) {
@@ -138,9 +136,7 @@ function gameRow(game, meta) {
     <td class="alt1">${game.day ?? 0}</td>
     <td class="alt2">${game.open ? "Yes" : "No"}</td>
   `;
-  const tbody = document.createElement("tbody");
-  tbody.appendChild(tr);
-  return tbody;
+  return tr;
 }
 
 function watchGames() {
