@@ -126,12 +126,10 @@ function postRow(postId, post, alt) {
         <div style="margin:-4px 8px 8px -4px;background-color:${altColor}" class="rounded">
           <div style="padding:5px;">
             <div class="pbit">
-              <div style="font-weight:bold"><a style="font-size:13px;text-decoration:none;" href="#/member/${
-                post.authorId || ""
-              }">${post.authorName || "Unknown"}</a></div>
+              <div style="font-weight:bold"><a style="font-size:13px;text-decoration:none;" href="#" data-author-link="true">${post.authorName || "Unknown"}</a></div>
             </div>
             <div class="pbit"><div class="smallfont">${post.title || ""}</div></div>
-            ${post.avatar ? `<div class="pbit"><div><img src="${post.avatar}" alt="" class="avatar" border="0" /></div></div>` : "&nbsp;"}
+            ${post.avatar ? `<div class="pbit"><div><img data-avatar="true" alt="" class="avatar" border="0" /></div></div>` : "&nbsp;"}
           </div>
         </div>
       </td>
@@ -161,6 +159,18 @@ function postRow(postId, post, alt) {
       </td>
     </tr>
   </table>`;
+
+  const authorLink = container.querySelector("[data-author-link]");
+  if (authorLink) {
+    authorLink.setAttribute(
+      "href",
+      `/legacy/member.html?u=${encodeURIComponent(post.authorId || "")}`
+    );
+  }
+  const avatarImg = container.querySelector("img[data-avatar]");
+  if (avatarImg && post.avatar) {
+    avatarImg.src = post.avatar;
+  }
 
   const canEdit =
     !!currentUser &&
@@ -279,17 +289,31 @@ async function loadGame() {
 
   // Posts list (ascending)
   els.postsContainer.innerHTML = "";
-  const posts = await getDocs(query(collection(gameRef, "posts"), orderBy("createdAt", "asc")));
-  let alt = false;
-  posts.forEach((p) => {
+  const postsSnap = await getDocs(
+    query(collection(gameRef, "posts"), orderBy("createdAt", "asc"))
+  );
+  const postEntries = [];
+  const authorIds = new Set();
+  postsSnap.forEach((p) => {
     const data = p.data();
+    postEntries.push({ id: p.id, data });
+    if (data.authorId) {
+      authorIds.add(data.authorId);
+    }
+  });
+
+  const avatarMap = await fetchUserThumbnails(Array.from(authorIds));
+
+  let alt = false;
+  postEntries.forEach((entry) => {
+    const data = entry.data;
     const post = {
-      id: p.id,
+      id: entry.id,
       title: data.title || "",
       body: data.body || "",
       authorName: data.authorName || "",
       authorId: data.authorId || "",
-      avatar: data.avatar || "",
+      avatar: data.avatar || avatarMap.get(data.authorId || "") || "",
       createdAt: formatDate(data.createdAt),
       updatedAt: data.updatedAt || null,
       editedByName: data.editedByName || "",
@@ -300,6 +324,33 @@ async function loadGame() {
   });
 
   await refreshMembershipAndControls();
+}
+
+async function fetchUserThumbnails(userIds = []) {
+  const thumbnails = new Map();
+  if (!userIds.length || missingConfig) {
+    return thumbnails;
+  }
+
+  await Promise.all(
+    userIds.map(async (uid) => {
+      try {
+        const snap = await getDoc(doc(db, "users", uid));
+        if (!snap.exists()) {
+          return;
+        }
+        const data = snap.data() || {};
+        const avatar = data.photoURL || data.avatar || data.image || "";
+        if (avatar) {
+          thumbnails.set(uid, avatar);
+        }
+      } catch (error) {
+        console.warn(`Failed to load thumbnail for ${uid}`, error);
+      }
+    })
+  );
+
+  return thumbnails;
 }
 
 loadGame().catch((e) => {
@@ -377,6 +428,7 @@ els.postReply.addEventListener("click", async () => {
     body, // store as UBB; render via ubbToHtml
     authorId: user.uid,
     authorName: user.displayName || "Unknown",
+    avatar: user.photoURL || "",
     createdAt: serverTimestamp(),
   });
   els.replyTitle.value = "";
