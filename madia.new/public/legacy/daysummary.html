@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>GM Day Summary</title>
+    <link rel="stylesheet" href="/legacy/phalla.css" />
+  </head>
+  <body>
+    <div id="legacyHeader"></div>
+    <div align="center">
+      <div class="page" style="width:98%; text-align:left">
+        <div style="padding:0px 10px 0px 10px">
+          <div style="margin:10px 0;">
+            <a href="/legacy/index.html">&laquo; back to games</a>
+          </div>
+
+          <table class="tborder" cellpadding="4" cellspacing="1" border="0" width="100%" align="center">
+            <thead>
+              <tr>
+                <td class="thead">GM Day Summary</td>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td class="alt1">
+                  <div><strong id="gameName">Loading...</strong></div>
+                  <div class="smallfont" id="gameMeta"></div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+
+          <div id="summaryStatus" class="smallfont" style="margin:8px 2px; color:#F9A906;"></div>
+
+          <div id="actionsSection" style="margin-top:16px;">
+            <h2 style="color:black;">Recorded Private Actions</h2>
+            <table class="tborder" cellpadding="4" cellspacing="1" border="0" width="100%">
+              <thead>
+                <tr align="center">
+                  <td class="thead" width="60">Day</td>
+                  <td class="thead" width="180">Player</td>
+                  <td class="thead" width="180">Action</td>
+                  <td class="thead" width="180">Target</td>
+                  <td class="thead" width="120">Valid</td>
+                  <td class="thead" width="160">Updated</td>
+                </tr>
+              </thead>
+              <tbody id="actionsBody">
+                <tr>
+                  <td class="alt1" colspan="6" align="center">Loading actions…</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <hr />
+
+          <div id="controls" class="smallfont">
+            <h2 style="color:black;">Owner Tools</h2>
+            <div class="summary-grid">
+              <form id="renameForm">
+                <label for="renameInput"><strong>Rename game</strong></label>
+                <input id="renameInput" class="bginput" style="width:100%; margin:6px 0;" />
+                <div>
+                  <button class="button" type="submit">Change name</button>
+                </div>
+              </form>
+
+              <form id="resetForm">
+                <div><strong>Reset game to Day 0</strong></div>
+                <p>Reopens the game, clears private actions, posts a reset message, and restores player posts.</p>
+                <label><input type="checkbox" id="resetConfirm" /> confirm</label>
+                <div style="margin-top:6px;"><button class="button" type="submit">Reset game</button></div>
+              </form>
+
+              <form id="gameOverForm">
+                <div><strong>Mark game over</strong></div>
+                <p>Closes the thread and adds a &ldquo;GAME ENDED!&rdquo; marker post.</p>
+                <label><input type="checkbox" id="gameOverConfirm" /> confirm</label>
+                <div style="margin-top:6px;"><button class="button" type="submit">Game over</button></div>
+              </form>
+
+              <form id="clearPostsForm">
+                <div><strong>Clear all posts</strong></div>
+                <p>Removes every post in the game thread. This cannot be undone.</p>
+                <label><input type="checkbox" id="clearPostsConfirm" /> confirm</label>
+                <div style="margin-top:6px;"><button class="button" type="submit">Clear forum</button></div>
+              </form>
+
+              <form id="deleteForm">
+                <div><strong>Delete game</strong></div>
+                <p>Deletes the game, players, posts, and actions forever.</p>
+                <label><input type="checkbox" id="deleteConfirm" /> confirm</label>
+                <div style="margin-top:6px;"><button class="button" type="submit">Delete game</button></div>
+              </form>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script type="module" src="/legacy/daysummary.js"></script>
+  </body>
+</html>
