@@ -1,7 +1,4 @@
-import {
-  onAuthStateChanged,
-  signOut,
-} from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
 import {
   collection,
   doc,
@@ -12,16 +9,12 @@ import {
   limit,
   onSnapshot,
 } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
-import { auth, db, provider, ensureUserDocument, missingConfig } from "./firebase.js";
+import { auth, db, ensureUserDocument, missingConfig } from "./firebase.js";
 import { initLegacyHeader } from "./header.js";
 
 const header = initLegacyHeader();
 const els = {
   gamesBody: document.getElementById("gamesBody"),
-  signIn: document.getElementById("signIn"),
-  signOut: document.getElementById("signOut"),
-  profileLink: document.getElementById("profileLink"),
-  signUpLink: document.getElementById("signUpLink"),
 };
 
 let currentUser = null;
@@ -55,30 +48,10 @@ function stopWatchingGames({ signedOut = false } = {}) {
   }
 }
 
-if (header?.signInButton) {
-  header.signInButton.addEventListener("click", async () => {
-    await signInWithPopup(auth, provider);
-  });
-}
-
-if (header?.signOutLink) {
-  header.signOutLink.addEventListener("click", async (event) => {
-    event.preventDefault();
-    await signOut(auth);
-  });
-}
-
 onAuthStateChanged(auth, async (user) => {
   currentUser = user;
   header?.setUser(user);
-  els.signIn.style.display = user ? "none" : "inline-block";
-  els.signOut.style.display = user ? "inline-block" : "none";
-  els.profileLink.style.display = user ? "inline-block" : "none";
-  if (els.signUpLink) {
-    els.signUpLink.style.display = user ? "none" : "inline";
-  }
   if (user) {
-    els.profileLink.href = `/legacy/member.html?u=${encodeURIComponent(user.uid)}`;
     await ensureUserDocument(user);
   }
   if (missingConfig) {
@@ -91,25 +64,6 @@ onAuthStateChanged(auth, async (user) => {
   } else {
     stopWatchingGames({ signedOut: true });
   }
-});
-
-els.signIn.addEventListener("click", () => {
-  const redirect = encodeURIComponent(
-    `${location.pathname}${location.search}${location.hash}`
-  );
-  location.href = `/legacy/login.html?redirect=${redirect}`;
-});
-if (els.signUpLink) {
-  els.signUpLink.addEventListener("click", (event) => {
-    event.preventDefault();
-    const redirect = encodeURIComponent(
-      `${location.pathname}${location.search}${location.hash}`
-    );
-    location.href = `/legacy/login.html?redirect=${redirect}#signup`;
-  });
-}
-els.signOut.addEventListener("click", async () => {
-  await signOut(auth);
 });
 
 function sectionHeader(label) {

@@ -319,6 +319,91 @@ td.thead, div.thead { padding: 0px 4px; }
 .pagenav a { text-decoration: none; }
 .pagenav td { padding: 2px 4px 2px 4px; }
 
+.legacy-auth-panel {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  width: 260px;
+  margin-top: 8px;
+  padding: 12px 14px 16px 14px;
+  background: rgba(9, 38, 85, 0.96);
+  border: 1px solid #32435d;
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.45);
+  z-index: 1000;
+  border-radius: 4px;
+}
+
+.legacy-auth-close {
+  position: absolute;
+  top: 4px;
+  right: 6px;
+  background: transparent;
+  border: none;
+  color: #f9a906;
+  font-size: 20px;
+  cursor: pointer;
+}
+
+.legacy-auth-tabs {
+  display: flex;
+  gap: 4px;
+  margin-bottom: 10px;
+}
+
+.legacy-auth-tab {
+  flex: 1;
+  background: #1f2a44;
+  border: 1px solid #32435d;
+  color: #dee2f2;
+  padding: 4px 0;
+  cursor: pointer;
+}
+
+.legacy-auth-tab.active {
+  background: #324580;
+  color: #ffffff;
+}
+
+.legacy-auth-section {
+  margin-bottom: 16px;
+}
+
+.legacy-auth-section form {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.legacy-auth-section input.bginput {
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.legacy-auth-section .button {
+  width: 100%;
+}
+
+.legacy-auth-google {
+  margin-top: 8px;
+  width: 100%;
+}
+
+.legacy-auth-error {
+  color: #f9a906;
+  margin-bottom: 6px;
+}
+
+.legacy-auth-warning {
+  color: #f9a906;
+  margin-bottom: 8px;
+}
+
+.legacy-auth-remember {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
 /* ***** define margin and font-size for elements inside panels ***** */
 .fieldset { margin-bottom: 6px; }
 .fieldset, .fieldset td, .fieldset p, .fieldset li { font-size: 11px; }
