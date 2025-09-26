@@ -1,6 +1,5 @@
 import {
   onAuthStateChanged,
-  signInWithPopup,
   signOut,
 } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
 import {
@@ -13,13 +12,14 @@ import {
   limit,
   onSnapshot,
 } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
-import { auth, db, provider, missingConfig } from "./firebase.js";
+import { auth, db, ensureUserDocument, missingConfig } from "./firebase.js";
 
 const els = {
   gamesBody: document.getElementById("gamesBody"),
   signIn: document.getElementById("signIn"),
   signOut: document.getElementById("signOut"),
   profileLink: document.getElementById("profileLink"),
+  signUpLink: document.getElementById("signUpLink"),
 };
 
 let currentUser = null;
@@ -58,8 +58,12 @@ onAuthStateChanged(auth, async (user) => {
   els.signIn.style.display = user ? "none" : "inline-block";
   els.signOut.style.display = user ? "inline-block" : "none";
   els.profileLink.style.display = user ? "inline-block" : "none";
+  if (els.signUpLink) {
+    els.signUpLink.style.display = user ? "none" : "inline";
+  }
   if (user) {
     els.profileLink.href = `/legacy/member.html?u=${encodeURIComponent(user.uid)}`;
+    await ensureUserDocument(user);
   }
   if (missingConfig) {
     stopWatchingGames();
@@ -73,9 +77,21 @@ onAuthStateChanged(auth, async (user) => {
   }
 });
 
-els.signIn.addEventListener("click", async () => {
-  await signInWithPopup(auth, provider);
+els.signIn.addEventListener("click", () => {
+  const redirect = encodeURIComponent(
+    `${location.pathname}${location.search}${location.hash}`
+  );
+  location.href = `/legacy/login.html?redirect=${redirect}`;
 });
+if (els.signUpLink) {
+  els.signUpLink.addEventListener("click", (event) => {
+    event.preventDefault();
+    const redirect = encodeURIComponent(
+      `${location.pathname}${location.search}${location.hash}`
+    );
+    location.href = `/legacy/login.html?redirect=${redirect}#signup`;
+  });
+}
 els.signOut.addEventListener("click", async () => {
   await signOut(auth);
 });

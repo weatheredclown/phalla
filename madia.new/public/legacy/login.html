@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Login</title>
+    <link rel="stylesheet" href="/legacy/phalla.css" />
+  </head>
+  <body>
+    <div align="center">
+      <div class="page" style="width:98%; text-align:left">
+        <div style="padding:0px 10px 0px 10px">
+          <div style="margin:10px 0;">
+            <a href="/legacy/index.html">&laquo; back to games</a>
+          </div>
+
+          <div
+            id="configWarning"
+            class="smallfont"
+            style="color:#F9A906; display:none; margin-bottom:12px;"
+          ></div>
+
+          <div
+            id="signedInNotice"
+            class="smallfont"
+            style="display:none; margin-bottom:18px;"
+          >
+            <div style="margin-bottom:6px;">
+              You are currently signed in as <span id="signedInName"></span>.
+            </div>
+            <div>
+              <button id="continueButton" class="button">Continue</button>
+              <button id="signOutButton" class="button">Sign out</button>
+            </div>
+          </div>
+
+          <div id="loginSection" style="margin-bottom:24px;">
+            <div
+              id="loginError"
+              class="smallfont"
+              style="color:#F9A906; margin-bottom:6px; display:none;"
+            ></div>
+            <form id="loginForm" method="post">
+              <table cellpadding="0" cellspacing="3" border="0">
+                <tr>
+                  <td class="smallfont">
+                    <label for="loginUsername">Login:</label>
+                  </td>
+                  <td>
+                    <input
+                      type="text"
+                      class="bginput"
+                      style="font-size: 11px"
+                      name="loginUsername"
+                      id="loginUsername"
+                      size="20"
+                      autocomplete="username"
+                    />
+                  </td>
+                  <td class="smallfont" colspan="2" nowrap="nowrap">
+                    <label for="loginRemember">
+                      <input
+                        type="checkbox"
+                        name="loginRemember"
+                        id="loginRemember"
+                        value="y"
+                        checked
+                      />
+                      remember
+                    </label>
+                  </td>
+                </tr>
+                <tr>
+                  <td class="smallfont">
+                    <label for="loginPassword">Password:</label>
+                  </td>
+                  <td>
+                    <input
+                      type="password"
+                      class="bginput"
+                      style="font-size: 11px"
+                      name="loginPassword"
+                      id="loginPassword"
+                      size="20"
+                      autocomplete="current-password"
+                    />
+                  </td>
+                </tr>
+                <tr>
+                  <td colspan="2" align="left">
+                    <input
+                      type="submit"
+                      class="button"
+                      value="Log in"
+                      id="loginSubmit"
+                    />
+                  </td>
+                </tr>
+              </table>
+            </form>
+            <div class="smallfont" style="margin-top:8px;">
+              Tip: you can enter either your username or email address.
+            </div>
+            <div style="margin-top:12px;">
+              <button id="googleSignIn" class="button">
+                Sign in with Google
+              </button>
+            </div>
+          </div>
+
+          <a id="signup"></a>
+          <div id="signupSection">
+            <div
+              id="signupError"
+              class="smallfont"
+              style="color:#F9A906; margin-bottom:6px; display:none;"
+            ></div>
+            <form id="signupForm" method="post">
+              <input type="hidden" name="newaccount" value="y" />
+              <table cellpadding="0" cellspacing="3" border="0">
+                <tr>
+                  <td class="smallfont">
+                    <label for="signupUsername">Username:</label>
+                  </td>
+                  <td>
+                    <input
+                      type="text"
+                      class="bginput"
+                      style="font-size: 11px"
+                      name="signupUsername"
+                      id="signupUsername"
+                      size="20"
+                      autocomplete="nickname"
+                    />
+                  </td>
+                </tr>
+                <tr>
+                  <td class="smallfont">
+                    <label for="signupPassword">Password:</label>
+                  </td>
+                  <td>
+                    <input
+                      type="password"
+                      class="bginput"
+                      style="font-size: 11px"
+                      name="signupPassword"
+                      id="signupPassword"
+                      size="20"
+                      autocomplete="new-password"
+                    />
+                  </td>
+                </tr>
+                <tr>
+                  <td class="smallfont">
+                    <label for="signupConfirmPassword">Retype Password:</label>
+                  </td>
+                  <td>
+                    <input
+                      type="password"
+                      class="bginput"
+                      style="font-size: 11px"
+                      name="signupConfirmPassword"
+                      id="signupConfirmPassword"
+                      size="20"
+                      autocomplete="new-password"
+                    />
+                  </td>
+                </tr>
+                <tr>
+                  <td class="smallfont">
+                    <label for="signupEmail">Email Address:</label>
+                  </td>
+                  <td>
+                    <input
+                      type="email"
+                      class="bginput"
+                      style="font-size: 11px"
+                      name="signupEmail"
+                      id="signupEmail"
+                      size="20"
+                      autocomplete="email"
+                    />
+                  </td>
+                </tr>
+                <tr>
+                  <td colspan="2">
+                    <div class="smallfont" style="margin:6px 0;">
+                      Email is required for account recovery and multi-login support.
+                    </div>
+                  </td>
+                </tr>
+                <tr>
+                  <td>
+                    <input
+                      type="submit"
+                      class="button"
+                      value="Sign Up!"
+                      id="signupSubmit"
+                    />
+                  </td>
+                </tr>
+              </table>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script type="module" src="/legacy/login.js"></script>
+  </body>
+</html>

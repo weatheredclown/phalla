@@ -11,8 +11,8 @@ players comfortable.
 - **Threaded discussion board** with real-time updates backed by Cloud
   Firestore.
 - **Integrated Mafia game dashboard** to track player votes and notes.
-- **Google sign-in** via Firebase Authentication with guards around
-  write operations.
+- **Google and email/password sign-in** via Firebase Authentication with
+  guards around write operations and legacy-inspired forms.
 - **Firebase Hosting configuration** that deploys the static assets in
   `public/`.
 - **Emulator Suite support** for local development with Auth,
@@ -47,14 +47,21 @@ madia.new/
 1. Navigate to the [Firebase console](https://console.firebase.google.com/) and click **Add project**.
 2. Choose (or create) a Google Cloud project name, enable Google Analytics if desired, and finish the wizard.
 3. In the project dashboard:
-   - Go to **Build → Authentication → Sign-in method** and enable **Google**. Configure an authorized domain if you plan to use a custom domain.
+   - Go to **Build → Authentication → Sign-in method** and enable both **Google** *and* **Email/Password** providers. The retro login page mirrors the classic ASP form and relies on the Email/Password provider for site-specific credentials.
+   - Still within the Authentication section, review the **Authorized domains** list and add any custom domains you intend to serve from Firebase Hosting.
    - Go to **Build → Firestore Database** and create a database in production mode. Choose a region close to your players.
    - (Optional) Under **Build → Storage**, create a Cloud Storage bucket if you plan to add media uploads later.
 4. Create a **Web app** registration (`</>` icon) to obtain the Firebase configuration snippet. Copy the settings (apiKey, authDomain, etc.).
 5. Update all client entry points with the copied configuration values:
    - `public/script.js` for the modern single-page app.
    - `public/legacy/legacy.js` and `public/legacy/game.js` for the retro UI.
+   - `public/legacy/login.js` for the legacy-styled authentication flow.
 6. Update `.firebaserc` to set the default project ID: replace `YOUR_FIREBASE_PROJECT_ID` with the project ID shown in the Firebase console.
+7. (Optional) Customize the password reset and verification emails under **Authentication → Templates** if you plan to support account recovery for the Email/Password provider.
+
+### Username-backed sign-in
+
+The legacy login page (served at `/legacy/login.html`) allows players to sign in with either their email address or their site-specific username. Email/Password accounts are stored in Firebase Authentication, while profile metadata (display name, username, and lowercase username) lives in Firestore under `users/{uid}`. When migrating existing data, ensure each document includes a `usernameLower` field so the login form can resolve usernames to email addresses. The helper logic in `public/legacy/login.js` will maintain these fields automatically for new and returning users.
 
 ## 2. Recommended Firestore security rules
 

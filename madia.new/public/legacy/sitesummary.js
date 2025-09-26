@@ -1,6 +1,5 @@
 import {
   onAuthStateChanged,
-  signInWithPopup,
   signOut,
 } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
 import {
@@ -13,12 +12,13 @@ import {
   orderBy,
   query,
 } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
-import { auth, db, provider, missingConfig } from "./firebase.js";
+import { auth, db, ensureUserDocument, missingConfig } from "./firebase.js";
 
 const summaryContent = document.getElementById("summaryContent");
 const signInButton = document.getElementById("signIn");
 const signOutButton = document.getElementById("signOut");
 const profileLink = document.getElementById("profileLink");
+const signUpLink = document.getElementById("signUpLink");
 
 if (missingConfig) {
   renderConfigWarning();
@@ -26,8 +26,19 @@ if (missingConfig) {
   renderInfo("Sign in to view site summary.");
 }
 
-signInButton?.addEventListener("click", async () => {
-  await signInWithPopup(auth, provider);
+signInButton?.addEventListener("click", () => {
+  const redirect = encodeURIComponent(
+    `${location.pathname}${location.search}${location.hash}`
+  );
+  location.href = `/legacy/login.html?redirect=${redirect}`;
+});
+
+signUpLink?.addEventListener("click", (event) => {
+  event.preventDefault();
+  const redirect = encodeURIComponent(
+    `${location.pathname}${location.search}${location.hash}`
+  );
+  location.href = `/legacy/login.html?redirect=${redirect}#signup`;
 });
 
 signOutButton?.addEventListener("click", async () => {
@@ -41,7 +52,11 @@ onAuthStateChanged(auth, async (user) => {
     profileLink.style.display = user ? "inline-block" : "none";
     if (user) {
       profileLink.href = `/legacy/member.html?u=${encodeURIComponent(user.uid)}`;
+      await ensureUserDocument(user);
     }
+  }
+  if (signUpLink) {
+    signUpLink.style.display = user ? "none" : "inline";
   }
 
   if (missingConfig) {

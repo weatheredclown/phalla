@@ -11,7 +11,7 @@ import {
   setDoc,
   getDoc,
 } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
-import { auth, db, missingConfig } from "./firebase.js";
+import { auth, db, ensureUserDocument, missingConfig } from "./firebase.js";
 
 function getParam(name) {
   const params = new URLSearchParams(location.search);
@@ -33,6 +33,9 @@ const viewedUid = getParam("u");
 
 onAuthStateChanged(auth, async (user) => {
   currentUser = user;
+  if (user) {
+    await ensureUserDocument(user);
+  }
   renderProfileHeader();
   await loadLists();
 });
