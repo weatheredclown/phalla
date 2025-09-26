@@ -404,6 +404,56 @@ td.thead, div.thead { padding: 0px 4px; }
   gap: 4px;
 }
 
+.profile-card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+
+.profile-avatar {
+  width: 64px;
+  height: 64px;
+  border: 1px solid #6C78AB;
+  background: #1b2647;
+  object-fit: cover;
+}
+
+.profile-display-name {
+  font-size: 14px;
+  font-weight: bold;
+  color: #F9A906;
+}
+
+.profile-display-name.empty {
+  color: #DEE2F2;
+  font-weight: normal;
+  font-style: italic;
+}
+
+.profile-email {
+  font-size: 11px;
+  color: #DEE2F2;
+  margin-top: 2px;
+}
+
+.profile-form {
+  margin-top: 4px;
+}
+
+.profile-form table {
+  font-size: 11px;
+}
+
+.profile-form .bginput {
+  width: 200px;
+}
+
+.profile-status {
+  margin-top: 6px;
+  display: none;
+}
+
 /* ***** define margin and font-size for elements inside panels ***** */
 .fieldset { margin-bottom: 6px; }
 .fieldset, .fieldset td, .fieldset p, .fieldset li { font-size: 11px; }

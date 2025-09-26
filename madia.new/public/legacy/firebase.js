@@ -10,6 +10,7 @@ import {
   serverTimestamp,
   setDoc,
 } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+import { getStorage } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-storage.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyDLVQ_ncruYo7Xd0tCzh8RIvlmzhrQYt_8",
@@ -29,6 +30,7 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 const provider = new GoogleAuthProvider();
+const storage = getStorage(app);
 
 async function ensureUserDocument(user, overrides = {}) {
   if (!user || missingConfig) {
@@ -83,4 +85,5 @@ export {
   firebaseConfig,
   missingConfig,
   ensureUserDocument,
+  storage,
 };
