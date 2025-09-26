@@ -34,6 +34,36 @@
 
           <div id="postsContainer" style="margin-top:10px;"></div>
 
+          <div
+            id="voteTalliesSection"
+            class="smallfont"
+            style="display:none; margin-top:12px;"
+          >
+            <div id="voteTalliesStatus" style="margin-bottom:4px;"></div>
+            <table
+              class="tborder"
+              cellpadding="4"
+              cellspacing="1"
+              border="0"
+              width="100%"
+              align="center"
+            >
+              <thead>
+                <tr align="center">
+                  <td class="thead" width="45%" align="left">Player</td>
+                  <td class="thead" width="120">Alive</td>
+                  <td class="thead" width="80">Votes</td>
+                  <td class="thead" align="left">Voters</td>
+                </tr>
+              </thead>
+              <tbody id="voteTalliesBody">
+                <tr>
+                  <td class="alt1" colspan="4" align="center">Loading votes…</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
           <!-- Quick reply / actions -->
           <div style="margin-top:12px;">
             <div id="ownerControls" class="smallfont" style="display:none; margin-bottom:8px;">
@@ -52,11 +82,23 @@
               <form id="privateActionForm" class="stacked-form">
                 <label>
                   Action name
-                  <input id="privateActionName" class="bginput" />
+                  <select id="privateActionName" class="bginput"></select>
+                  <input
+                    id="privateActionNameCustom"
+                    class="bginput"
+                    style="display:none; margin-top:6px;"
+                    placeholder="Enter action name"
+                  />
                 </label>
                 <label>
                   Target name
-                  <input id="privateActionTarget" class="bginput" />
+                  <select id="privateActionTarget" class="bginput"></select>
+                  <input
+                    id="privateActionTargetCustom"
+                    class="bginput"
+                    style="display:none; margin-top:6px;"
+                    placeholder="Enter target name"
+                  />
                 </label>
                 <label>
                   Day
@@ -106,6 +148,13 @@
                 <div><button class="button" type="submit">Save notebook entry</button></div>
               </form>
               <div id="playerToolsStatus" style="display:none; margin-top:6px; color:#F9A906;"></div>
+              <div
+                id="actionHistorySection"
+                style="display:none; margin-top:12px;"
+              >
+                <div><strong>Action History</strong></div>
+                <div id="actionHistoryContent" style="margin-top:6px;"></div>
+              </div>
             </div>
             <div id="moderatorPanel" class="smallfont" style="display:none; margin-bottom:12px;">
               <div><strong>Moderator Player Management</strong></div>

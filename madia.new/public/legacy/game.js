@@ -28,6 +28,8 @@ const header = initLegacyHeader();
 
 
 const CUSTOM_ROLE_OPTION_VALUE = "__custom-role__";
+const CUSTOM_ACTION_OPTION_VALUE = "__custom-action__";
+const CUSTOM_TARGET_OPTION_VALUE = "__custom-target__";
 
 const ACTION_LIMIT_ERROR_CODE = "action-limit-exceeded";
 const ACTION_RULE_KEYS = [
@@ -66,9 +68,14 @@ const els = {
   privateChannelsSection: document.getElementById("privateChannelsSection"),
   privateChannelsContainer: document.getElementById("privateChannelsContainer"),
   privateChannelsStatus: document.getElementById("privateChannelsStatus"),
+  voteTalliesSection: document.getElementById("voteTalliesSection"),
+  voteTalliesStatus: document.getElementById("voteTalliesStatus"),
+  voteTalliesBody: document.getElementById("voteTalliesBody"),
   privateActionForm: document.getElementById("privateActionForm"),
   privateActionName: document.getElementById("privateActionName"),
+  privateActionNameCustom: document.getElementById("privateActionNameCustom"),
   privateActionTarget: document.getElementById("privateActionTarget"),
+  privateActionTargetCustom: document.getElementById("privateActionTargetCustom"),
   privateActionDay: document.getElementById("privateActionDay"),
   voteRecordForm: document.getElementById("voteRecordForm"),
   voteTarget: document.getElementById("voteTarget"),
@@ -85,6 +92,8 @@ const els = {
   moderatorStatus: document.getElementById("moderatorStatus"),
   moderatorRows: document.getElementById("moderatorRows"),
   playerListLink: document.getElementById("playerListLink"),
+  actionHistorySection: document.getElementById("actionHistorySection"),
+  actionHistoryContent: document.getElementById("actionHistoryContent"),
 };
 els.ubbButtons = document.querySelectorAll(".ubb-button[data-ubb-tag]");
 
@@ -123,6 +132,14 @@ if (els.ubbButtons?.length) {
   els.ubbButtons.forEach((button) => {
     button.addEventListener("click", () => applyUbbTag(button.dataset.ubbTag));
   });
+}
+
+if (els.privateActionName) {
+  els.privateActionName.addEventListener("change", handlePrivateActionNameChange);
+}
+
+if (els.privateActionTarget) {
+  els.privateActionTarget.addEventListener("change", handlePrivateActionTargetChange);
 }
 
 function createMetaRow(html) {
@@ -282,7 +299,9 @@ async function loadGame() {
   const playerCount = gamePlayers.length;
   await ensureRolesLoaded();
   populatePlayerSelects();
+  populatePrivateActionOptions();
   renderModeratorPanel();
+  await renderVoteTallies();
 
   let lastPost = null;
   try {
@@ -781,8 +800,12 @@ async function refreshMembershipAndControls() {
     setDisplay(els.leaveButton, "none");
     setDisplay(els.playerTools, "none");
     setPlayerToolsStatus("");
+    if (els.actionHistorySection) {
+      els.actionHistorySection.style.display = "none";
+    }
     currentPlayer = null;
     clearPrivateChannels();
+    populatePrivateActionOptions();
     return;
   }
   try {
@@ -796,6 +819,8 @@ async function refreshMembershipAndControls() {
     setDisplay(els.playerTools, joined || ownerView ? "block" : "none");
   } catch {}
   await loadPrivateChannels();
+  await renderActionHistory();
+  populatePrivateActionOptions();
 }
 
 els.joinButton?.addEventListener("click", async () => {
@@ -874,16 +899,32 @@ els.privateActionForm?.addEventListener("submit", async (event) => {
     header?.openAuthPanel("login");
     return;
   }
-  const actionName = (els.privateActionName?.value || "").trim();
-  const targetNameInput = (els.privateActionTarget?.value || "").trim();
+  const rawActionValue = els.privateActionName?.value || "";
+  const actionName =
+    rawActionValue === CUSTOM_ACTION_OPTION_VALUE
+      ? (els.privateActionNameCustom?.value || "").trim()
+      : (rawActionValue || "").trim();
+  const targetSelectValue = els.privateActionTarget?.value || "";
+  let targetPlayerId = "";
+  let targetName = "";
+  if (targetSelectValue === CUSTOM_TARGET_OPTION_VALUE) {
+    const customTarget = (els.privateActionTargetCustom?.value || "").trim();
+    if (customTarget) {
+      const matchedCustom = findPlayerByName(customTarget);
+      targetPlayerId = matchedCustom?.id || "";
+      targetName = matchedCustom?.name || customTarget;
+    }
+  } else if (targetSelectValue) {
+    targetPlayerId = targetSelectValue;
+    const selectedOption = els.privateActionTarget?.selectedOptions?.[0];
+    const optionName = selectedOption?.dataset?.playerName || selectedOption?.textContent || "";
+    targetName = optionName || findPlayerById(targetPlayerId)?.name || "";
+  }
   const day = parseDayInput(els.privateActionDay);
   if (!actionName) {
     setPlayerToolsStatus("Enter an action name to record.", "error");
     return;
   }
-  const matchedTarget = targetNameInput ? findPlayerByName(targetNameInput) : null;
-  const targetName = matchedTarget?.name || targetNameInput;
-  const targetPlayerId = matchedTarget?.id || "";
   try {
     await recordAction({
       category: "private",
@@ -896,6 +937,11 @@ els.privateActionForm?.addEventListener("submit", async (event) => {
     if (els.privateActionTarget) {
       els.privateActionTarget.value = "";
     }
+    await renderActionHistory();
+    if (els.privateActionTargetCustom) {
+      els.privateActionTargetCustom.value = "";
+    }
+    handlePrivateActionTargetChange();
   } catch (error) {
     if (error?.code === ACTION_LIMIT_ERROR_CODE) {
       const limit = typeof error.limit === "number" ? error.limit : null;
@@ -944,6 +990,8 @@ els.voteRecordForm?.addEventListener("submit", async (event) => {
     if (els.voteNotes) {
       els.voteNotes.value = "";
     }
+    await renderVoteTallies();
+    await renderActionHistory();
   } catch (error) {
     console.error("Failed to record vote", error);
     setPlayerToolsStatus("Unable to record vote.", "error");
@@ -973,6 +1021,7 @@ els.claimRecordForm?.addEventListener("submit", async (event) => {
     if (els.claimRole) {
       els.claimRole.value = "";
     }
+    await renderActionHistory();
   } catch (error) {
     console.error("Failed to record claim", error);
     setPlayerToolsStatus("Unable to record claim.", "error");
@@ -1007,6 +1056,7 @@ els.notebookRecordForm?.addEventListener("submit", async (event) => {
     if (els.notebookNotes) {
       els.notebookNotes.value = "";
     }
+    await renderActionHistory();
   } catch (error) {
     console.error("Failed to record notebook entry", error);
     setPlayerToolsStatus("Unable to record notebook entry.", "error");
@@ -1434,12 +1484,18 @@ function findPlayerByName(name) {
   );
 }
 
+function getPlayerDisplayName(playerId) {
+  const match = findPlayerById(playerId);
+  return match?.name || "";
+}
+
 function populatePlayerSelects() {
   const selects = [
-    { element: els.voteTarget, placeholder: "-- select player --" },
-    { element: els.notebookTarget, placeholder: "-- select player --" },
+    { element: els.privateActionTarget, placeholder: "-- choose target --", allowCustom: true },
+    { element: els.voteTarget, placeholder: "-- select player --", allowCustom: false },
+    { element: els.notebookTarget, placeholder: "-- select player --", allowCustom: false },
   ];
-  selects.forEach(({ element, placeholder }) => {
+  selects.forEach(({ element, placeholder, allowCustom }) => {
     if (!element) return;
     const previous = element.value;
     element.innerHTML = "";
@@ -1451,12 +1507,161 @@ function populatePlayerSelects() {
       const option = document.createElement("option");
       option.value = player.id;
       option.textContent = player.name;
-      if (player.id === previous) {
-        option.selected = true;
-      }
+      option.dataset.playerName = player.name;
       element.appendChild(option);
     });
+    if (allowCustom) {
+      const customOption = document.createElement("option");
+      customOption.value = CUSTOM_TARGET_OPTION_VALUE;
+      customOption.textContent = "Custom target…";
+      element.appendChild(customOption);
+    }
+    if (previous) {
+      element.value = previous;
+      if (element.value !== previous) {
+        const normalizedPrevious = normalizeIdentifier(previous);
+        const match = gamePlayers.find(
+          (player) => normalizeIdentifier(player.id) === normalizedPrevious
+        );
+        if (match) {
+          element.value = match.id;
+        } else if (allowCustom && normalizedPrevious === CUSTOM_TARGET_OPTION_VALUE) {
+          element.value = CUSTOM_TARGET_OPTION_VALUE;
+        } else if (allowCustom && previous === CUSTOM_TARGET_OPTION_VALUE) {
+          element.value = CUSTOM_TARGET_OPTION_VALUE;
+        }
+      }
+    }
   });
+  handlePrivateActionTargetChange();
+}
+
+function handlePrivateActionNameChange() {
+  const input = els.privateActionNameCustom;
+  if (!input) {
+    return;
+  }
+  const isCustom = (els.privateActionName?.value || "") === CUSTOM_ACTION_OPTION_VALUE;
+  setDisplay(input, isCustom ? "block" : "none");
+  if (!isCustom) {
+    input.value = "";
+  }
+}
+
+function handlePrivateActionTargetChange() {
+  const input = els.privateActionTargetCustom;
+  if (!input) {
+    return;
+  }
+  const isCustom = (els.privateActionTarget?.value || "") === CUSTOM_TARGET_OPTION_VALUE;
+  setDisplay(input, isCustom ? "block" : "none");
+  if (!isCustom) {
+    input.value = "";
+  }
+}
+
+function getAvailablePrivateActionNames() {
+  const names = new Map();
+  const visited = new WeakSet();
+
+  function addName(name) {
+    if (typeof name !== "string") {
+      return;
+    }
+    const trimmed = name.trim();
+    if (!trimmed) {
+      return;
+    }
+    const normalized = normalizeActionName(trimmed);
+    if (!normalized || names.has(normalized)) {
+      return;
+    }
+    names.set(normalized, trimmed);
+  }
+
+  function inspect(value) {
+    if (!value) {
+      return;
+    }
+    if (typeof value === "string") {
+      addName(value);
+      return;
+    }
+    if (typeof value === "number" || typeof value === "boolean") {
+      return;
+    }
+    if (Array.isArray(value)) {
+      value.forEach(inspect);
+      return;
+    }
+    if (typeof value === "object") {
+      if (visited.has(value)) {
+        return;
+      }
+      visited.add(value);
+      addName(
+        value.actionName ||
+          value.name ||
+          value.action ||
+          value.label ||
+          value.title ||
+          value.key ||
+          value.id ||
+          value.slug
+      );
+      if (Array.isArray(value.aliases)) {
+        value.aliases.forEach(addName);
+      }
+      Object.values(value).forEach(inspect);
+    }
+  }
+
+  getActionRuleSources().forEach(inspect);
+
+  const result = Array.from(names.values());
+  result.sort((a, b) => a.localeCompare(b, undefined, { sensitivity: "base" }));
+  return result;
+}
+
+function populatePrivateActionOptions() {
+  const select = els.privateActionName;
+  if (!select) {
+    return;
+  }
+  const previous = select.value;
+  const options = getAvailablePrivateActionNames();
+  select.innerHTML = "";
+
+  const blank = document.createElement("option");
+  blank.value = "";
+  blank.textContent = "-- select action --";
+  select.appendChild(blank);
+
+  options.forEach((name) => {
+    const option = document.createElement("option");
+    option.value = name;
+    option.textContent = name;
+    select.appendChild(option);
+  });
+
+  const customOption = document.createElement("option");
+  customOption.value = CUSTOM_ACTION_OPTION_VALUE;
+  customOption.textContent = "Custom action…";
+  select.appendChild(customOption);
+
+  if (previous) {
+    if (previous === CUSTOM_ACTION_OPTION_VALUE) {
+      select.value = CUSTOM_ACTION_OPTION_VALUE;
+    } else {
+      const normalizedPrevious = normalizeActionName(previous);
+      const match = options.find((name) => normalizeActionName(name) === normalizedPrevious);
+      if (match) {
+        select.value = match;
+      }
+    }
+  }
+
+  handlePrivateActionNameChange();
 }
 
 function getKnownRoleNames() {
@@ -1665,6 +1870,362 @@ function renderModeratorPanel() {
     tr.appendChild(actionsTd);
     rows.appendChild(tr);
   });
+}
+
+async function renderVoteTallies() {
+  const section = els.voteTalliesSection;
+  const body = els.voteTalliesBody;
+  const status = els.voteTalliesStatus;
+  if (!section || !body) {
+    return;
+  }
+  if (!currentGame || missingConfig) {
+    section.style.display = "none";
+    body.innerHTML = "";
+    if (status) {
+      status.textContent = "";
+    }
+    return;
+  }
+  section.style.display = "block";
+  body.innerHTML = "";
+  const day = currentGame.day ?? 0;
+  if (status) {
+    status.textContent = `Vote tally · Day ${day}`;
+  }
+  if (!gamePlayers.length) {
+    const row = document.createElement("tr");
+    const td = document.createElement("td");
+    td.colSpan = 4;
+    td.className = "alt1";
+    td.style.textAlign = "center";
+    td.textContent = "No players joined yet.";
+    row.appendChild(td);
+    body.appendChild(row);
+    return;
+  }
+  let snapshot;
+  try {
+    const gameRef = doc(db, "games", gameId);
+    snapshot = await getDocs(query(collection(gameRef, "actions"), where("category", "==", "vote")));
+  } catch (error) {
+    console.warn("Failed to load vote tallies", error);
+    const row = document.createElement("tr");
+    const td = document.createElement("td");
+    td.colSpan = 4;
+    td.className = "alt1";
+    td.style.textAlign = "center";
+    td.textContent = "Unable to load votes.";
+    row.appendChild(td);
+    body.appendChild(row);
+    return;
+  }
+  const tallies = new Map();
+  gamePlayers.forEach((player) => {
+    tallies.set(player.id, {
+      id: player.id,
+      name: player.name,
+      alive: playerIsAlive(player.data),
+      voters: new Map(),
+    });
+  });
+  const extraTargets = new Map();
+  snapshot.forEach((docSnap) => {
+    const data = docSnap.data() || {};
+    if ((data.day ?? 0) !== day) {
+      return;
+    }
+    if (data.valid === false) {
+      return;
+    }
+    const targetId = normalizeIdentifier(data.targetPlayerId);
+    const fallbackName = data.targetName || getPlayerDisplayName(targetId) || "";
+    let entry;
+    if (targetId && tallies.has(targetId)) {
+      entry = tallies.get(targetId);
+    } else {
+      const keyBase = normalizeActionName(fallbackName) || targetId || "unknown";
+      const key = targetId ? `id:${targetId}` : `name:${keyBase}`;
+      if (!extraTargets.has(key)) {
+        extraTargets.set(key, {
+          id: targetId || keyBase,
+          name: fallbackName || targetId || "(no target)",
+          alive: null,
+          voters: new Map(),
+        });
+      }
+      entry = extraTargets.get(key);
+    }
+    if (!entry) {
+      return;
+    }
+    const voterId = normalizeIdentifier(data.playerId);
+    const voterName =
+      data.username ||
+      data.playerName ||
+      getPlayerDisplayName(voterId) ||
+      (typeof data.playerDisplayName === "string" ? data.playerDisplayName : "");
+    const voterKey =
+      voterId ||
+      (voterName ? `name:${normalizeActionName(voterName)}` : `doc:${docSnap.id}`);
+    if (!entry.voters.has(voterKey)) {
+      entry.voters.set(voterKey, voterName || "Unknown");
+    }
+  });
+  const combined = [
+    ...tallies.values(),
+    ...Array.from(extraTargets.values()).filter((entry) => entry.voters.size > 0),
+  ];
+  if (!combined.length) {
+    const row = document.createElement("tr");
+    const td = document.createElement("td");
+    td.colSpan = 4;
+    td.className = "alt1";
+    td.style.textAlign = "center";
+    td.textContent = "No votes recorded yet.";
+    row.appendChild(td);
+    body.appendChild(row);
+    return;
+  }
+  const formatted = combined.map((entry) => ({
+    ...entry,
+    voters: Array.from(entry.voters.values()).sort((a, b) =>
+      a.localeCompare(b, undefined, { sensitivity: "base" })
+    ),
+  }));
+  formatted.sort((a, b) => {
+    if (b.voters.length !== a.voters.length) {
+      return b.voters.length - a.voters.length;
+    }
+    return (a.name || "").localeCompare(b.name || "", undefined, { sensitivity: "base" });
+  });
+  let alt = false;
+  formatted.forEach((entry) => {
+    alt = !alt;
+    const row = document.createElement("tr");
+    row.setAttribute("align", "center");
+    const primary = alt ? "alt1" : "alt2";
+    const secondary = alt ? "alt2" : "alt1";
+    const nameCell = document.createElement("td");
+    nameCell.className = primary;
+    nameCell.setAttribute("align", "left");
+    nameCell.innerHTML = `<strong>${escapeHtml(entry.name || "Unknown")}</strong>`;
+    const aliveCell = document.createElement("td");
+    aliveCell.className = secondary;
+    aliveCell.textContent =
+      entry.alive === null || entry.alive === undefined ? "—" : entry.alive ? "Yes" : "No";
+    const countCell = document.createElement("td");
+    countCell.className = primary;
+    countCell.textContent = String(entry.voters.length);
+    const votersCell = document.createElement("td");
+    votersCell.className = secondary;
+    votersCell.setAttribute("align", "left");
+    votersCell.textContent = entry.voters.length ? entry.voters.join(", ") : "—";
+    row.append(nameCell, aliveCell, countCell, votersCell);
+    body.appendChild(row);
+  });
+}
+
+function extractFirstStringValue(source, keys = []) {
+  if (!source) {
+    return "";
+  }
+  for (const key of keys) {
+    if (!key) continue;
+    const value = source[key];
+    if (typeof value === "string") {
+      const trimmed = value.trim();
+      if (trimmed) {
+        return trimmed;
+      }
+    }
+  }
+  return "";
+}
+
+function describeActionStatus(action = {}) {
+  const explicit = extractFirstStringValue(action, [
+    "statusText",
+    "status",
+    "resultText",
+    "result",
+    "outcome",
+    "resolution",
+    "resolutionText",
+  ]);
+  if (explicit) {
+    return explicit;
+  }
+  if (action.valid === false) {
+    return "Invalidated";
+  }
+  if (action.pending === true) {
+    return "Pending";
+  }
+  if (typeof action.success === "boolean") {
+    return action.success ? "Success" : "Failed";
+  }
+  const category = normalizeActionName(action.category);
+  const day = action.day ?? 0;
+  const currentDay = currentGame?.day ?? 0;
+  if (category === "vote") {
+    return day === currentDay ? "Pending" : "Counted";
+  }
+  if (category === "claim") {
+    return day === currentDay ? "Pending" : "Recorded";
+  }
+  if (category === "notebook") {
+    return "Saved";
+  }
+  if (isTrustAction(action.actionName) && day === currentDay) {
+    return "Trusted";
+  }
+  if (day === currentDay) {
+    return "Pending";
+  }
+  return "Recorded";
+}
+
+function timestampToMillis(value) {
+  if (!value) {
+    return 0;
+  }
+  if (typeof value.toMillis === "function") {
+    try {
+      return value.toMillis();
+    } catch {}
+  }
+  if (typeof value.toDate === "function") {
+    const date = value.toDate();
+    if (date instanceof Date) {
+      return date.getTime();
+    }
+  }
+  if (value instanceof Date) {
+    return value.getTime();
+  }
+  const parsed = Date.parse(value);
+  return Number.isFinite(parsed) ? parsed : 0;
+}
+
+function formatActionTarget(action = {}) {
+  const pieces = [];
+  const primary =
+    action.targetName ||
+    getPlayerDisplayName(action.targetPlayerId) ||
+    (action.targetPlayerId ? String(action.targetPlayerId) : "");
+  if (primary) {
+    pieces.push(`<div>${escapeHtml(primary)}</div>`);
+  } else {
+    pieces.push("<div>—</div>");
+  }
+  const note = extractFirstStringValue(action, ["notes", "detail", "details", "extraNotes"]);
+  if (note) {
+    pieces.push(`<div class="smallfont">${escapeHtml(note)}</div>`);
+  }
+  return pieces.join("");
+}
+
+async function renderActionHistory() {
+  const section = els.actionHistorySection;
+  const content = els.actionHistoryContent;
+  if (!section || !content) {
+    return;
+  }
+  if (!currentUser || !currentPlayer || missingConfig) {
+    section.style.display = "none";
+    content.innerHTML = "";
+    return;
+  }
+  let snapshot;
+  try {
+    const actionsRef = collection(db, "games", gameId, "actions");
+    snapshot = await getDocs(query(actionsRef, where("playerId", "==", currentUser.uid)));
+  } catch (error) {
+    console.warn("Failed to load action history", error);
+    section.style.display = "block";
+    content.innerHTML =
+      '<div class="smallfont" style="text-align:center;color:#ff7676;">Unable to load actions.</div>';
+    return;
+  }
+  const actions = snapshot.docs.map((docSnap) => ({ id: docSnap.id, ...docSnap.data() }));
+  if (!actions.length) {
+    section.style.display = "block";
+    content.innerHTML =
+      '<div class="smallfont" style="text-align:center;">No recorded actions yet.</div>';
+    return;
+  }
+  actions.sort((a, b) => {
+    const dayDiff = (b.day ?? 0) - (a.day ?? 0);
+    if (dayDiff !== 0) {
+      return dayDiff;
+    }
+    return timestampToMillis(b.updatedAt || b.createdAt) - timestampToMillis(a.updatedAt || a.createdAt);
+  });
+  const grouped = new Map();
+  actions.forEach((action) => {
+    const dayValue = action.day ?? 0;
+    if (!grouped.has(dayValue)) {
+      grouped.set(dayValue, []);
+    }
+    grouped.get(dayValue).push(action);
+  });
+  const fragment = document.createDocumentFragment();
+  const days = Array.from(grouped.keys()).sort((a, b) => b - a);
+  days.forEach((dayValue) => {
+    const table = document.createElement("table");
+    table.className = "tborder";
+    table.setAttribute("cellpadding", "4");
+    table.setAttribute("cellspacing", "1");
+    table.setAttribute("border", "0");
+    table.style.marginTop = "6px";
+    table.style.width = "100%";
+    const thead = document.createElement("thead");
+    thead.innerHTML = `
+      <tr align="center">
+        <td class="thead" colspan="4" align="left">Day ${dayValue}</td>
+      </tr>
+      <tr align="center">
+        <td class="thead" width="180">Action</td>
+        <td class="thead" width="220">Target</td>
+        <td class="thead" width="140">Status</td>
+        <td class="thead" align="left">Updated</td>
+      </tr>
+    `;
+    table.appendChild(thead);
+    const tbody = document.createElement("tbody");
+    const dayActions = grouped.get(dayValue) || [];
+    let alt = false;
+    dayActions.forEach((action) => {
+      alt = !alt;
+      const row = document.createElement("tr");
+      row.setAttribute("align", "center");
+      const primary = alt ? "alt1" : "alt2";
+      const secondary = alt ? "alt2" : "alt1";
+      const actionCell = document.createElement("td");
+      actionCell.className = primary;
+      actionCell.setAttribute("align", "left");
+      actionCell.innerHTML = `<strong>${escapeHtml(action.actionName || action.category || "Action")}</strong>`;
+      const targetCell = document.createElement("td");
+      targetCell.className = secondary;
+      targetCell.setAttribute("align", "left");
+      targetCell.innerHTML = formatActionTarget(action);
+      const statusCell = document.createElement("td");
+      statusCell.className = primary;
+      statusCell.textContent = describeActionStatus(action);
+      const updatedCell = document.createElement("td");
+      updatedCell.className = secondary;
+      updatedCell.setAttribute("align", "left");
+      updatedCell.textContent = formatDate(action.updatedAt || action.createdAt) || "—";
+      row.append(actionCell, targetCell, statusCell, updatedCell);
+      tbody.appendChild(row);
+    });
+    table.appendChild(tbody);
+    fragment.appendChild(table);
+  });
+  section.style.display = "block";
+  content.innerHTML = "";
+  content.appendChild(fragment);
 }
 
 function setModeratorStatus(message, type = "info") {
