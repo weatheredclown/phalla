@@ -63,6 +63,9 @@ const els = {
   daySummary: document.getElementById("daySummary"),
   playerTools: document.getElementById("playerTools"),
   playerToolsStatus: document.getElementById("playerToolsStatus"),
+  privateChannelsSection: document.getElementById("privateChannelsSection"),
+  privateChannelsContainer: document.getElementById("privateChannelsContainer"),
+  privateChannelsStatus: document.getElementById("privateChannelsStatus"),
   privateActionForm: document.getElementById("privateActionForm"),
   privateActionName: document.getElementById("privateActionName"),
   privateActionTarget: document.getElementById("privateActionTarget"),
@@ -347,6 +350,7 @@ async function loadGame() {
   });
 
   await refreshMembershipAndControls();
+  await loadPrivateChannels();
 }
 
 async function fetchUserThumbnails(userIds = []) {
@@ -376,6 +380,389 @@ async function fetchUserThumbnails(userIds = []) {
   return thumbnails;
 }
 
+function setPrivateChannelsStatus(message, type = "info") {
+  const el = els.privateChannelsStatus;
+  if (!el) {
+    return;
+  }
+  if (!message) {
+    el.style.display = "none";
+    el.textContent = "";
+    return;
+  }
+  el.style.display = "block";
+  el.textContent = message;
+  el.style.color =
+    type === "error" ? "#ff7676" : type === "success" ? "#6ee7b7" : "#F9A906";
+}
+
+function clearPrivateChannels() {
+  const container = els.privateChannelsContainer;
+  if (container) {
+    container.innerHTML = "";
+  }
+  if (els.privateChannelsSection) {
+    els.privateChannelsSection.style.display = "none";
+  }
+  setPrivateChannelsStatus("");
+}
+
+function collectIdSet(source, keys = []) {
+  const ids = new Set();
+  if (!source || typeof source !== "object") {
+    return ids;
+  }
+  keys.forEach((key) => {
+    const value = source[key];
+    if (!Array.isArray(value)) {
+      return;
+    }
+    value.forEach((item) => {
+      const normalized = normalizeIdentifier(item);
+      if (normalized) {
+        ids.add(normalized);
+      }
+    });
+  });
+  return ids;
+}
+
+function getChannelTitle(channel = {}) {
+  if (!channel || typeof channel !== "object") {
+    return "Private Discussion";
+  }
+  const rawTitle =
+    channel.title || channel.name || channel.rolename || channel.roleName || "";
+  const title = typeof rawTitle === "string" ? rawTitle.trim() : String(rawTitle || "");
+  return title || "Private Discussion";
+}
+
+function escapeHtml(value) {
+  if (value === null || value === undefined) {
+    return "";
+  }
+  return String(value)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
+function renderPrivateChannel(channel, posts, options = {}) {
+  const { canPost = false, emptyMessage = "No posts yet." } = options;
+  const container = document.createElement("div");
+  container.className = "private-channel";
+  container.style.marginTop = "12px";
+
+  const headerTable = document.createElement("table");
+  headerTable.className = "tborder";
+  headerTable.setAttribute("cellpadding", "4");
+  headerTable.setAttribute("cellspacing", "0");
+  headerTable.setAttribute("border", "0");
+  headerTable.setAttribute("width", "100%");
+  const description =
+    typeof channel.description === "string" && channel.description.trim()
+      ? `<div class="smallfont" style="font-weight:normal;">${escapeHtml(
+          channel.description.trim()
+        )}</div>`
+      : "";
+  headerTable.innerHTML = `
+    <tr>
+      <td class="thead">
+        <div>${escapeHtml(getChannelTitle(channel))}</div>
+        ${description}
+      </td>
+    </tr>
+  `;
+  container.appendChild(headerTable);
+
+  if (posts.length) {
+    let alt = false;
+    posts.forEach((post) => {
+      container.appendChild(postRow(post.id, post, alt));
+      alt = !alt;
+    });
+  } else {
+    const emptyTable = document.createElement("table");
+    emptyTable.className = "tborder";
+    emptyTable.setAttribute("cellpadding", "6");
+    emptyTable.setAttribute("cellspacing", "0");
+    emptyTable.setAttribute("border", "0");
+    emptyTable.setAttribute("width", "100%");
+    emptyTable.innerHTML = `
+      <tr>
+        <td class="alt1" align="center">${escapeHtml(emptyMessage)}</td>
+      </tr>
+    `;
+    container.appendChild(emptyTable);
+  }
+
+  if (canPost) {
+    const form = document.createElement("form");
+    form.dataset.channelId = channel.id;
+    form.innerHTML = `
+      <table cellpadding="4" cellspacing="0" border="0" width="100%" class="tborder" style="margin-top:6px;">
+        <tr>
+          <td class="alt2">
+            <div class="smallfont">Message (UBB)</div>
+            <textarea class="bginput" rows="4" style="width:98%;" data-private-body="${channel.id}"></textarea>
+            <div style="margin-top:8px;"><button class="button" type="submit">Post Reply</button></div>
+          </td>
+        </tr>
+      </table>
+      <div class="smallfont" style="display:none; margin-top:6px; color:#F9A906;" data-private-status="${channel.id}"></div>
+    `;
+    form.addEventListener("submit", handlePrivateReplySubmit);
+    container.appendChild(form);
+  }
+
+  return container;
+}
+
+async function loadPrivateChannels() {
+  if (!els.privateChannelsSection || !els.privateChannelsContainer) {
+    return;
+  }
+  if (missingConfig || !gameId) {
+    clearPrivateChannels();
+    return;
+  }
+
+  const user = auth.currentUser;
+  if (!user) {
+    clearPrivateChannels();
+    return;
+  }
+
+  const container = els.privateChannelsContainer;
+  container.innerHTML = "";
+  if (els.privateChannelsSection) {
+    els.privateChannelsSection.style.display = "block";
+  }
+  setPrivateChannelsStatus("Loading role discussions…");
+
+  const gameRef = doc(db, "games", gameId);
+  let channelSnapshot;
+  try {
+    channelSnapshot = await getDocs(collection(gameRef, "channels"));
+  } catch (error) {
+    console.error("Failed to load private channels", error);
+    const message =
+      error?.code === "permission-denied"
+        ? "You do not have permission to view private discussions."
+        : "Unable to load private discussions.";
+    setPrivateChannelsStatus(message, "error");
+    container.innerHTML = "";
+    return;
+  }
+
+  const userId = normalizeIdentifier(user.uid);
+  const ownerId = normalizeIdentifier(currentGame?.ownerUserId);
+
+  const accessibleChannels = [];
+  channelSnapshot.forEach((docSnap) => {
+    const data = docSnap.data() || {};
+    const memberIds = collectIdSet(data, [
+      "memberIds",
+      "members",
+      "writerIds",
+      "posterIds",
+      "writers",
+    ]);
+    const viewerIds = collectIdSet(data, [
+      "viewerIds",
+      "viewers",
+      "readerIds",
+      "spectatorIds",
+      "readonlyIds",
+      "readOnlyIds",
+    ]);
+    const extraViewers = collectIdSet(data, [
+      "extraViewerIds",
+      "additionalViewers",
+      "additionalReaderIds",
+      "observerIds",
+    ]);
+    const allowOwnerView =
+      data.allowOwner === undefined ? true : Boolean(data.allowOwner);
+    const allowOwnerPost =
+      data.allowOwnerPost === undefined ? allowOwnerView : Boolean(data.allowOwnerPost);
+
+    const canView =
+      (userId && memberIds.has(userId)) ||
+      (userId && viewerIds.has(userId)) ||
+      (userId && extraViewers.has(userId)) ||
+      (ownerId && userId === ownerId && allowOwnerView);
+
+    if (canView) {
+      accessibleChannels.push({
+        id: docSnap.id,
+        data,
+        memberIds,
+        allowOwnerPost,
+        allowOwnerView,
+      });
+    }
+  });
+
+  if (!accessibleChannels.length) {
+    const isOwner = ownerId && userId && userId === ownerId;
+    const message = currentPlayer || isOwner
+      ? "No private discussions available for your role yet."
+      : "Join the game to view your role discussions.";
+    container.innerHTML = "";
+    setPrivateChannelsStatus(message);
+    return;
+  }
+
+  accessibleChannels.sort((a, b) => {
+    const orderA =
+      typeof a.data.sortOrder === "number" ? a.data.sortOrder : Number.MAX_SAFE_INTEGER;
+    const orderB =
+      typeof b.data.sortOrder === "number" ? b.data.sortOrder : Number.MAX_SAFE_INTEGER;
+    if (orderA !== orderB) {
+      return orderA - orderB;
+    }
+    return getChannelTitle(a.data).localeCompare(getChannelTitle(b.data), undefined, {
+      sensitivity: "base",
+    });
+  });
+
+  const fragment = document.createDocumentFragment();
+
+  for (const channel of accessibleChannels) {
+    const channelData = channel.data;
+    const channelId = channel.id;
+    let postsSnapshot;
+    try {
+      postsSnapshot = await getDocs(
+        query(collection(gameRef, "channels", channelId, "posts"), orderBy("createdAt", "asc"))
+      );
+    } catch (error) {
+      console.warn(`Failed to load posts for channel ${channelId}`, error);
+      const fallback = renderPrivateChannel(
+        { id: channelId, ...channelData },
+        [],
+        { canPost: false, emptyMessage: "Unable to load posts for this discussion." }
+      );
+      fragment.appendChild(fallback);
+      continue;
+    }
+
+    const posts = [];
+    const authorIds = new Set();
+    postsSnapshot.forEach((docSnap) => {
+      const data = docSnap.data() || {};
+      posts.push({ id: docSnap.id, data });
+      if (data.authorId) {
+        authorIds.add(data.authorId);
+      }
+    });
+
+    const avatarMap = await fetchUserThumbnails(Array.from(authorIds));
+    const formattedPosts = posts.map((entry) => {
+      const data = entry.data;
+      return {
+        id: entry.id,
+        title: data.title || "",
+        body: data.body || "",
+        authorName: data.authorName || "",
+        authorId: data.authorId || "",
+        avatar: data.avatar || avatarMap.get(data.authorId || "") || "",
+        createdAt: formatDate(data.createdAt),
+        updatedAt: data.updatedAt || null,
+        editedByName: data.editedByName || "",
+        sig: data.sig || "",
+      };
+    });
+
+    const postingDisabled = channelData.closed === true || channelData.locked === true;
+    const canPost =
+      !postingDisabled &&
+      ((userId && channel.memberIds.has(userId)) ||
+        (ownerId && userId === ownerId && channel.allowOwnerPost));
+
+    const rendered = renderPrivateChannel(
+      { id: channelId, ...channelData },
+      formattedPosts,
+      { canPost }
+    );
+    fragment.appendChild(rendered);
+  }
+
+  container.innerHTML = "";
+  container.appendChild(fragment);
+  setPrivateChannelsStatus("");
+}
+
+async function handlePrivateReplySubmit(event) {
+  event.preventDefault();
+  const form = event.currentTarget;
+  if (!form) {
+    return;
+  }
+
+  const channelId = form.dataset.channelId;
+  if (!channelId) {
+    return;
+  }
+
+  if (!auth.currentUser) {
+    header?.openAuthPanel("login");
+    return;
+  }
+
+  const textarea = form.querySelector(`[data-private-body="${channelId}"]`);
+  const statusEl = form.querySelector(`[data-private-status="${channelId}"]`);
+  const body = (textarea?.value || "").trim();
+  if (!body) {
+    if (statusEl) {
+      statusEl.style.display = "block";
+      statusEl.style.color = "#ff7676";
+      statusEl.textContent = "Enter a message before posting.";
+    }
+    return;
+  }
+
+  if (statusEl) {
+    statusEl.style.display = "block";
+    statusEl.style.color = "#F9A906";
+    statusEl.textContent = "Posting message…";
+  }
+
+  try {
+    const user = auth.currentUser;
+    if (!user) {
+      header?.openAuthPanel("login");
+      return;
+    }
+    await addDoc(collection(doc(db, "games", gameId, "channels", channelId), "posts"), {
+      body,
+      authorId: user.uid,
+      authorName: user.displayName || "Unknown",
+      avatar: user.photoURL || "",
+      createdAt: serverTimestamp(),
+    });
+    if (textarea) {
+      textarea.value = "";
+    }
+    if (statusEl) {
+      statusEl.style.color = "#6ee7b7";
+      statusEl.textContent = "Message posted.";
+    }
+    await loadPrivateChannels();
+  } catch (error) {
+    console.error("Failed to post private message", error);
+    if (statusEl) {
+      statusEl.style.color = "#ff7676";
+      statusEl.textContent = "Unable to post message.";
+    } else {
+      alert("Unable to post message.");
+    }
+  }
+}
+
 loadGame().catch((e) => {
   els.gameTitle.textContent = `Error: ${e.message}`;
 });
@@ -395,6 +782,7 @@ async function refreshMembershipAndControls() {
     setDisplay(els.playerTools, "none");
     setPlayerToolsStatus("");
     currentPlayer = null;
+    clearPrivateChannels();
     return;
   }
   try {
@@ -407,6 +795,7 @@ async function refreshMembershipAndControls() {
     const ownerView = currentGame && currentGame.ownerUserId === user.uid;
     setDisplay(els.playerTools, joined || ownerView ? "block" : "none");
   } catch {}
+  await loadPrivateChannels();
 }
 
 els.joinButton?.addEventListener("click", async () => {
