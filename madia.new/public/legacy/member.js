@@ -1,4 +1,8 @@
-import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+import {
+  onAuthStateChanged,
+  signInWithPopup,
+  signOut,
+} from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
 import {
   collection,
   collectionGroup,
@@ -11,7 +15,23 @@ import {
   setDoc,
   getDoc,
 } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
-import { auth, db, missingConfig } from "./firebase.js";
+import { auth, db, missingConfig, provider } from "./firebase.js";
+import { initLegacyHeader } from "./header.js";
+
+const header = initLegacyHeader();
+
+if (header?.signInButton) {
+  header.signInButton.addEventListener("click", async () => {
+    await signInWithPopup(auth, provider);
+  });
+}
+
+if (header?.signOutLink) {
+  header.signOutLink.addEventListener("click", async (event) => {
+    event.preventDefault();
+    await signOut(auth);
+  });
+}
 
 function getParam(name) {
   const params = new URLSearchParams(location.search);
@@ -32,6 +52,7 @@ let currentUser = null;
 const viewedUid = getParam("u");
 
 onAuthStateChanged(auth, async (user) => {
+  header?.setUser(user);
   currentUser = user;
   renderProfileHeader();
   await loadLists();

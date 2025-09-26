@@ -18,19 +18,19 @@ import {
 } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 import { ubbToHtml } from "/legacy/ubb.js";
 import { auth, db, provider, missingConfig } from "./firebase.js";
+import { initLegacyHeader } from "./header.js";
 
 function getParam(name) {
   const params = new URLSearchParams(location.search);
   return params.get(name);
 }
 
+const header = initLegacyHeader();
+
 const els = {
   gameTitle: document.getElementById("gameTitle"),
   gameMeta: document.getElementById("gameMeta"),
   postsContainer: document.getElementById("postsContainer"),
-  signIn: document.getElementById("signIn"),
-  signOut: document.getElementById("signOut"),
-  userName: document.getElementById("userName"),
   replyForm: document.getElementById("replyForm"),
   replyTitle: document.getElementById("replyTitle"),
   replyBody: document.getElementById("replyBody"),
@@ -44,14 +44,23 @@ const els = {
   playerListLink: document.getElementById("playerListLink"),
 };
 
+if (header?.signInButton) {
+  header.signInButton.addEventListener("click", async () => {
+    await signInWithPopup(auth, provider);
+  });
+}
+
+if (header?.signOutLink) {
+  header.signOutLink.addEventListener("click", async (event) => {
+    event.preventDefault();
+    await signOut(auth);
+  });
+}
+
 onAuthStateChanged(auth, (user) => {
-  els.signIn.style.display = user ? "none" : "inline-block";
-  els.signOut.style.display = user ? "inline-block" : "none";
-  els.userName.textContent = user ? user.displayName : "";
+  header?.setUser(user);
   refreshMembershipAndControls();
 });
-els.signIn.addEventListener("click", async () => signInWithPopup(auth, provider));
-els.signOut.addEventListener("click", async () => signOut(auth));
 
 const gameId = getParam("g");
 if (!gameId) {

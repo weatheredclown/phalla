@@ -14,12 +14,12 @@ import {
   onSnapshot,
 } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 import { auth, db, provider, missingConfig } from "./firebase.js";
+import { initLegacyHeader } from "./header.js";
+
+const header = initLegacyHeader();
 
 const els = {
   gamesBody: document.getElementById("gamesBody"),
-  signIn: document.getElementById("signIn"),
-  signOut: document.getElementById("signOut"),
-  profileLink: document.getElementById("profileLink"),
 };
 
 let currentUser = null;
@@ -53,14 +53,22 @@ function stopWatchingGames({ signedOut = false } = {}) {
   }
 }
 
+if (header?.signInButton) {
+  header.signInButton.addEventListener("click", async () => {
+    await signInWithPopup(auth, provider);
+  });
+}
+
+if (header?.signOutLink) {
+  header.signOutLink.addEventListener("click", async (event) => {
+    event.preventDefault();
+    await signOut(auth);
+  });
+}
+
 onAuthStateChanged(auth, async (user) => {
   currentUser = user;
-  els.signIn.style.display = user ? "none" : "inline-block";
-  els.signOut.style.display = user ? "inline-block" : "none";
-  els.profileLink.style.display = user ? "inline-block" : "none";
-  if (user) {
-    els.profileLink.href = `/legacy/member.html?u=${encodeURIComponent(user.uid)}`;
-  }
+  header?.setUser(user);
   if (missingConfig) {
     stopWatchingGames();
     renderConfigWarning();
@@ -71,13 +79,6 @@ onAuthStateChanged(auth, async (user) => {
   } else {
     stopWatchingGames({ signedOut: true });
   }
-});
-
-els.signIn.addEventListener("click", async () => {
-  await signInWithPopup(auth, provider);
-});
-els.signOut.addEventListener("click", async () => {
-  await signOut(auth);
 });
 
 function sectionHeader(label) {
