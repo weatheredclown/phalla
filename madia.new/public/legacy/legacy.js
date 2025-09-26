@@ -19,6 +19,7 @@ const els = {
 
 let currentUser = null;
 let unsubscribeGames = null;
+let gamesRenderToken = 0;
 
 function showGamesMessage(message) {
   if (!els.gamesBody) return;
@@ -126,14 +127,16 @@ function gameRow(game, meta) {
 }
 
 function watchGames() {
+  gamesRenderToken += 1;
   if (unsubscribeGames) unsubscribeGames();
   showGamesMessage("Loading games…");
   const qGames = query(collection(db, "games"), orderBy("gamename"));
   unsubscribeGames = onSnapshot(
     qGames,
     async (snap) => {
-      els.gamesBody.innerHTML = "";
+      const snapshotToken = ++gamesRenderToken;
       if (snap.empty) {
+        if (snapshotToken !== gamesRenderToken) return;
         showGamesMessage("No games available yet.");
         return;
       }
@@ -148,17 +151,31 @@ function watchGames() {
       const sortByName = (a, b) =>
         String(a.gamename || "").localeCompare(String(b.gamename || ""));
 
-      if (groups.open.length) els.gamesBody.appendChild(sectionHeader("Open"));
-      for (const g of groups.open.sort(sortByName)) {
-        els.gamesBody.appendChild(await decorateRow(g));
-      }
-      if (groups.running.length) els.gamesBody.appendChild(sectionHeader("Running"));
-      for (const g of groups.running.sort(sortByName)) {
-        els.gamesBody.appendChild(await decorateRow(g));
-      }
-      if (groups.over.length) els.gamesBody.appendChild(sectionHeader("Game Over"));
-      for (const g of groups.over.sort(sortByName)) {
-        els.gamesBody.appendChild(await decorateRow(g));
+      const groupConfigs = [
+        { label: "Open", games: groups.open },
+        { label: "Running", games: groups.running },
+        { label: "Game Over", games: groups.over },
+      ];
+
+      const sections = await Promise.all(
+        groupConfigs.map(async ({ label, games }) => {
+          if (!games.length) return null;
+          const rows = await Promise.all(
+            games.sort(sortByName).map((g) => decorateRow(g))
+          );
+          return { label, rows };
+        })
+      );
+
+      if (snapshotToken !== gamesRenderToken) return;
+
+      els.gamesBody.innerHTML = "";
+      for (const section of sections) {
+        if (!section) continue;
+        els.gamesBody.appendChild(sectionHeader(section.label));
+        for (const row of section.rows) {
+          els.gamesBody.appendChild(row);
+        }
       }
     },
     (error) => {
