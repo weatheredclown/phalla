@@ -4,21 +4,20 @@ import {
 } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
 import {
   collection,
-  collectionGroup,
-  doc,
-  getDoc,
   getDocs,
   limit,
   orderBy,
   query,
 } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 import { auth, db, ensureUserDocument, missingConfig } from "./firebase.js";
+import { initLegacyHeader } from "./header.js";
 
 const summaryContent = document.getElementById("summaryContent");
 const signInButton = document.getElementById("signIn");
 const signOutButton = document.getElementById("signOut");
 const profileLink = document.getElementById("profileLink");
 const signUpLink = document.getElementById("signUpLink");
+const header = initLegacyHeader();
 
 if (missingConfig) {
   renderConfigWarning();
@@ -41,11 +40,22 @@ signUpLink?.addEventListener("click", (event) => {
   location.href = `/legacy/login.html?redirect=${redirect}#signup`;
 });
 
-signOutButton?.addEventListener("click", async () => {
-  await signOut(auth);
+// This listener is for the sign-out button within the main content
+signOutButton?.addEventListener("click", async (event) => {
+    event.preventDefault();
+    await signOut(auth);
 });
 
+// This listener is for the sign-out link in the refactored header
+if (header?.signOutLink) {
+  header.signOutLink.addEventListener("click", async (event) => {
+    event.preventDefault();
+    await signOut(auth);
+  });
+}
+
 onAuthStateChanged(auth, async (user) => {
+  // Update UI elements from the codex branch
   if (signInButton) signInButton.style.display = user ? "none" : "inline-block";
   if (signOutButton) signOutButton.style.display = user ? "inline-block" : "none";
   if (profileLink) {
@@ -58,6 +68,9 @@ onAuthStateChanged(auth, async (user) => {
   if (signUpLink) {
     signUpLink.style.display = user ? "none" : "inline";
   }
+  
+  // Also update the header component from the main branch
+  header?.setUser(user);
 
   if (missingConfig) {
     return;
@@ -193,75 +206,116 @@ function createRow(cells, color) {
 
 async function fetchLatestPosts() {
   const rows = [];
-  const gameCache = new Map();
-  const postsQuery = query(
-    collectionGroup(db, "posts"),
-    orderBy("createdAt", "desc"),
-    limit(5)
-  );
-  const postsSnap = await getDocs(postsQuery);
-  for (const snap of postsSnap.docs) {
-    const data = snap.data();
-    const pathParts = snap.ref.path.split("/");
-    const gameId = pathParts.length > 1 ? pathParts[1] : null;
-    let gameName = "";
-    if (gameId) {
-      if (!gameCache.has(gameId)) {
-        try {
-          const gameSnap = await getDoc(doc(db, "games", gameId));
-          gameCache.set(gameId, gameSnap.exists() ? gameSnap.data().gamename || "" : "");
-        } catch (err) {
-          gameCache.set(gameId, "");
-          console.warn("Failed to load game name", err);
-        }
-      }
-      gameName = gameCache.get(gameId) || "";
-    }
-    rows.push([
-      data.authorName || "Unknown",
-      gameName || gameId || "",
-      data.title || "(no title)",
-      truncate(stripHtml(data.body || ""), 80),
-    ]);
+  const posts = [];
+  let gamesSnap;
+  try {
+    gamesSnap = await getDocs(collection(db, "games"));
+  } catch (error) {
+    console.warn("Failed to load games for post summary", error);
+    return rows;
   }
+
+  await Promise.all(
+    gamesSnap.docs.map(async (gameDoc) => {
+      const gameData = gameDoc.data();
+      const gameName = gameData.gamename || "";
+      try {
+        const postsSnap = await getDocs(
+          query(
+            collection(gameDoc.ref, "posts"),
+            orderBy("createdAt", "desc"),
+            limit(5)
+          )
+        );
+        postsSnap.forEach((postDoc) => {
+          posts.push({
+            gameId: gameDoc.id,
+            gameName,
+            data: postDoc.data(),
+          });
+        });
+      } catch (error) {
+        console.warn(`Failed to load posts for game ${gameDoc.id}`, error);
+      }
+    })
+  );
+
+  posts
+    .sort((a, b) => coerceMillis(b.data) - coerceMillis(a.data))
+    .slice(0, 5)
+    .forEach((entry) => {
+      rows.push([
+        entry.data.authorName || "Unknown",
+        entry.gameName || entry.gameId || "",
+        entry.data.title || "(no title)",
+        truncate(stripHtml(entry.data.body || ""), 80),
+      ]);
+    });
+
   return rows;
 }
 
 async function fetchLatestPlayers() {
   const rows = [];
-  const gameCache = new Map();
-  const playerSnaps = await getDocs(collectionGroup(db, "players"));
-  const docs = playerSnaps.docs
-    .map((snap) => ({
-      id: snap.id,
-      path: snap.ref.path,
-      data: snap.data(),
-    }))
-    .sort((a, b) => coerceMillis(b.data) - coerceMillis(a.data))
-    .slice(0, 5);
+  const players = [];
+  let gamesSnap;
+  try {
+    gamesSnap = await getDocs(collection(db, "games"));
+  } catch (error) {
+    console.warn("Failed to load games for player summary", error);
+    return rows;
+  }
 
-  for (const entry of docs) {
-    const pathParts = entry.path.split("/");
-    const gameId = pathParts.length > 1 ? pathParts[1] : null;
-    let gameName = "";
-    if (gameId) {
-      if (!gameCache.has(gameId)) {
+  await Promise.all(
+    gamesSnap.docs.map(async (gameDoc) => {
+      const gameData = gameDoc.data();
+      const gameName = gameData.gamename || "";
+      const playersCol = collection(gameDoc.ref, "players");
+      let snap;
+      try {
+        snap = await getDocs(
+          query(playersCol, orderBy("joinedAt", "desc"), limit(10))
+        );
+      } catch (error) {
+        console.warn(
+          `Falling back to unordered players for game ${gameDoc.id}`,
+          error
+        );
         try {
-          const gameSnap = await getDoc(doc(db, "games", gameId));
-          gameCache.set(gameId, gameSnap.exists() ? gameSnap.data().gamename || "" : "");
-        } catch (err) {
-          gameCache.set(gameId, "");
+          snap = await getDocs(playersCol);
+        } catch (innerError) {
+          console.warn(`Failed to load players for game ${gameDoc.id}`, innerError);
+          return;
         }
       }
-      gameName = gameCache.get(gameId) || "";
-    }
-    rows.push([
-      entry.id,
-      entry.data.name || entry.data.username || "Unknown",
-      gameName || gameId || "",
-      formatDate(entry.data.joinedAt || entry.data.createdAt || null),
-    ]);
-  }
+
+      snap.forEach((playerDoc) => {
+        players.push({
+          id: playerDoc.id,
+          gameId: gameDoc.id,
+          gameName,
+          data: playerDoc.data(),
+        });
+      });
+    })
+  );
+
+  players
+    .sort((a, b) => {
+      const diff = coerceMillis(b.data) - coerceMillis(a.data);
+      if (diff !== 0) return diff;
+      return a.id.localeCompare(b.id);
+    })
+    .slice(0, 5)
+    .forEach((entry) => {
+      rows.push([
+        entry.id,
+        entry.data.name || entry.data.username || "Unknown",
+        entry.gameName || entry.gameId || "",
+        formatDate(entry.data.joinedAt || entry.data.createdAt || null),
+      ]);
+    });
+
   return rows;
 }
 

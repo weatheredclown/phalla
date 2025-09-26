@@ -1,10 +1,35 @@
 import {
+  onAuthStateChanged,
+  signInWithPopup,
+  signOut,
+} from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+import {
   collection,
   doc,
   getDoc,
   getDocs,
 } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
-import { db, missingConfig } from "./firebase.js";
+import { auth, db, missingConfig, provider } from "./firebase.js";
+import { initLegacyHeader } from "./header.js";
+
+const header = initLegacyHeader();
+
+if (header?.signInButton) {
+  header.signInButton.addEventListener("click", async () => {
+    await signInWithPopup(auth, provider);
+  });
+}
+
+if (header?.signOutLink) {
+  header.signOutLink.addEventListener("click", async (event) => {
+    event.preventDefault();
+    await signOut(auth);
+  });
+}
+
+onAuthStateChanged(auth, (user) => {
+  header?.setUser(user);
+});
 
 const playerRows = document.getElementById("playerRows");
 const gameBreadcrumb = document.getElementById("gameBreadcrumb");

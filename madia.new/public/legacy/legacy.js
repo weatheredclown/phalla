@@ -12,8 +12,10 @@ import {
   limit,
   onSnapshot,
 } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
-import { auth, db, ensureUserDocument, missingConfig } from "./firebase.js";
+import { auth, db, provider, ensureUserDocument, missingConfig } from "./firebase.js";
+import { initLegacyHeader } from "./header.js";
 
+const header = initLegacyHeader();
 const els = {
   gamesBody: document.getElementById("gamesBody"),
   signIn: document.getElementById("signIn"),
@@ -53,8 +55,22 @@ function stopWatchingGames({ signedOut = false } = {}) {
   }
 }
 
+if (header?.signInButton) {
+  header.signInButton.addEventListener("click", async () => {
+    await signInWithPopup(auth, provider);
+  });
+}
+
+if (header?.signOutLink) {
+  header.signOutLink.addEventListener("click", async (event) => {
+    event.preventDefault();
+    await signOut(auth);
+  });
+}
+
 onAuthStateChanged(auth, async (user) => {
   currentUser = user;
+  header?.setUser(user);
   els.signIn.style.display = user ? "none" : "inline-block";
   els.signOut.style.display = user ? "inline-block" : "none";
   els.profileLink.style.display = user ? "inline-block" : "none";

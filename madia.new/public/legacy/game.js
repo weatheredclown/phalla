@@ -17,11 +17,14 @@ import {
 } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 import { ubbToHtml } from "/legacy/ubb.js";
 import { auth, db, ensureUserDocument, missingConfig } from "./firebase.js";
+import { initLegacyHeader } from "./header.js";
 
 function getParam(name) {
   const params = new URLSearchParams(location.search);
   return params.get(name);
 }
+
+const header = initLegacyHeader();
 
 const els = {
   gameTitle: document.getElementById("gameTitle"),
@@ -72,6 +75,24 @@ if (els.signUpLink) {
     location.href = `/legacy/login.html?redirect=${redirect}#signup`;
   });
 }
+
+if (header?.signInButton) {
+  header.signInButton.addEventListener("click", async () => {
+    await signInWithPopup(auth, provider);
+  });
+}
+
+if (header?.signOutLink) {
+  header.signOutLink.addEventListener("click", async (event) => {
+    event.preventDefault();
+    await signOut(auth);
+  });
+}
+
+onAuthStateChanged(auth, (user) => {
+  header?.setUser(user);
+  refreshMembershipAndControls();
+});
 
 const gameId = getParam("g");
 if (!gameId) {
