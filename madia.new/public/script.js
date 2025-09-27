@@ -202,14 +202,23 @@ async function ensurePlayerRecord(user) {
 
   const data = snapshot.data() || {};
   const updates = {};
-  if (!data.displayName && user.displayName) {
-    updates.displayName = user.displayName;
+
+  const existingDisplayName = (data.displayName || "").trim();
+  const authDisplayName = (user.displayName || "").trim();
+  if (existingDisplayName !== authDisplayName) {
+    updates.displayName = authDisplayName;
   }
-  if (!data.photoURL && user.photoURL) {
-    updates.photoURL = user.photoURL;
+
+  const existingPhotoURL = (data.photoURL || "").trim();
+  const authPhotoURL = (user.photoURL || "").trim();
+  if (existingPhotoURL !== authPhotoURL) {
+    updates.photoURL = authPhotoURL;
   }
-  if (!data.email && user.email) {
-    updates.email = user.email;
+
+  const existingEmail = (data.email || "").trim();
+  const authEmail = (user.email || "").trim();
+  if (existingEmail !== authEmail) {
+    updates.email = authEmail;
   }
 
   if (Object.keys(updates).length) {
