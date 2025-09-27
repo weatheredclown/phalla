@@ -2269,16 +2269,113 @@ function setPublicActionsStatus(message, type = "info") {
   el.style.color = type === "error" ? "#ff7676" : type === "success" ? "#6ee7b7" : "#F9A906";
 }
 
+function coerceBoolean(value, defaultValue = false) {
+  if (typeof value === "boolean") {
+    return value;
+  }
+  if (typeof value === "number") {
+    return value !== 0;
+  }
+  if (typeof value === "string") {
+    const normalized = value.trim().toLowerCase();
+    if (!normalized) {
+      return defaultValue;
+    }
+    if (["true", "yes", "1", "on", "open", "active"].includes(normalized)) {
+      return true;
+    }
+    if (["false", "no", "0", "off", "closed", "inactive", "locked"].includes(normalized)) {
+      return false;
+    }
+  }
+  return defaultValue;
+}
+
+function getCurrentGameDay() {
+  if (!currentGame) {
+    return 0;
+  }
+  const rawDay = currentGame.day;
+  if (typeof rawDay === "number") {
+    return rawDay;
+  }
+  if (typeof rawDay === "string") {
+    const parsed = parseInt(rawDay, 10);
+    return Number.isFinite(parsed) ? parsed : 0;
+  }
+  return 0;
+}
+
+function hasGameDayStarted() {
+  return getCurrentGameDay() > 0;
+}
+
+function isGameCurrentlyActive() {
+  if (!currentGame) {
+    return false;
+  }
+  if (Object.prototype.hasOwnProperty.call(currentGame, "active")) {
+    return coerceBoolean(currentGame.active, true);
+  }
+  return true;
+}
+
+function isGameLockedForPlayers() {
+  if (!currentGame) {
+    return false;
+  }
+  if (Object.prototype.hasOwnProperty.call(currentGame, "locked")) {
+    return coerceBoolean(currentGame.locked, false);
+  }
+  if (Object.prototype.hasOwnProperty.call(currentGame, "gamelocked")) {
+    return coerceBoolean(currentGame.gamelocked, false);
+  }
+  if (Object.prototype.hasOwnProperty.call(currentGame, "open")) {
+    return !coerceBoolean(currentGame.open, true);
+  }
+  return false;
+}
+
 function updatePlayerToolsFormsVisibility() {
-  const canUseTools = !!currentPlayer || isOwnerView;
-  if (!canUseTools) {
+  const joined = !!currentPlayer;
+  const ownerView = isOwnerView;
+  const playerActive = currentPlayer ? playerIsAlive(currentPlayer) : false;
+  const gameActive = isGameCurrentlyActive();
+  const dayStarted = hasGameDayStarted();
+  const lockedForPlayer = isGameLockedForPlayers() && !ownerView;
+
+  if (!joined && !ownerView) {
     setDisplay(els.privateActionForm, "none");
     setDisplay(els.voteRecordForm, "none");
     setDisplay(els.claimRecordForm, "none");
     setDisplay(els.notebookRecordForm, "none");
     hideReplacementControls();
+    setPlayerToolsStatus("");
     return;
   }
+
+  if (lockedForPlayer || !gameActive || !dayStarted || !playerActive) {
+    setDisplay(els.privateActionForm, "none");
+    setDisplay(els.voteRecordForm, "none");
+    setDisplay(els.claimRecordForm, "none");
+    setDisplay(els.notebookRecordForm, "none");
+    hideReplacementControls();
+
+    if (lockedForPlayer) {
+      setPlayerToolsStatus("This game is currently locked.");
+    } else if (!gameActive) {
+      setPlayerToolsStatus("Private tools are disabled while the game is inactive.");
+    } else if (!dayStarted) {
+      setPlayerToolsStatus("Private tools unlock once Day 1 begins.");
+    } else if (!playerActive && !ownerView) {
+      setPlayerToolsStatus("");
+    } else {
+      setPlayerToolsStatus("");
+    }
+    return;
+  }
+
+  setPlayerToolsStatus("");
 
   const privateActionsAvailable = getAvailablePrivateActionNames().length > 0;
   setDisplay(els.privateActionForm, privateActionsAvailable ? "block" : "none");
@@ -2291,7 +2388,7 @@ function updatePlayerToolsFormsVisibility() {
   const hasNotebookTargets = gamePlayers.length > 0;
   setDisplay(els.notebookRecordForm, hasNotebookTargets ? "block" : "none");
 
-  if (!isOwnerView) {
+  if (!ownerView) {
     hideReplacementControls();
   }
 }
@@ -2693,7 +2790,16 @@ function updatePublicActionControls() {
   if (!block) {
     return;
   }
-  const canUseActions = !!auth.currentUser && (currentPlayer || isOwnerView);
+  const playerActive = currentPlayer ? playerIsAlive(currentPlayer) : false;
+  const gameActive = isGameCurrentlyActive();
+  const dayStarted = hasGameDayStarted();
+  const lockedForPlayer = isGameLockedForPlayers() && !isOwnerView;
+  const canUseActions =
+    !!auth.currentUser &&
+    (playerActive || isOwnerView) &&
+    gameActive &&
+    dayStarted &&
+    !lockedForPlayer;
   if (!canUseActions) {
     block.style.display = "none";
     clearPublicActionSelections();
