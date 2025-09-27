@@ -2,9 +2,13 @@ name: Firebase preview deploy
 
 on:
   push:
+    branches:
+      - main
     paths:
       - 'madia.new/**'
   pull_request:
+    branches:
+      - main
     paths:
       - 'madia.new/**'
 
