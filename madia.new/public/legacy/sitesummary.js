@@ -240,11 +240,21 @@ async function fetchLatestPlayers() {
       }
 
       snap.forEach((playerDoc) => {
+        const data = playerDoc.data() || {};
+        const joinedAt =
+          data.joinedAt ||
+          data.createdAt ||
+          data.updatedAt ||
+          playerDoc.createTime ||
+          playerDoc.updateTime ||
+          null;
+        const normalizedData =
+          joinedAt && !data.joinedAt ? { ...data, joinedAt } : data;
         players.push({
           id: playerDoc.id,
           gameId: gameDoc.id,
           gameName,
-          data: playerDoc.data(),
+          data: normalizedData,
         });
       });
     })
