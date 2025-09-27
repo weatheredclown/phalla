@@ -47,6 +47,12 @@ const ACTION_RULE_KEYS = [
   "privateActionLimits",
 ];
 
+const DEFAULT_PUBLIC_ACTIONS = [
+  { name: "Vote", category: "vote", targetType: "player", targeted: true },
+  { name: "Unvote", category: "vote", targeted: false },
+  { name: "Claim", category: "claim", targetType: "role", targeted: true, allowCustomTarget: true },
+];
+
 
 const els = {
   gameTitle: document.getElementById("gameTitle"),
@@ -65,6 +71,9 @@ const els = {
   daySummary: document.getElementById("daySummary"),
   playerTools: document.getElementById("playerTools"),
   playerToolsStatus: document.getElementById("playerToolsStatus"),
+  publicActionsContainer: document.getElementById("publicActionsContainer"),
+  publicActionsList: document.getElementById("publicActionsList"),
+  publicActionsStatus: document.getElementById("publicActionsStatus"),
   privateChannelsSection: document.getElementById("privateChannelsSection"),
   privateChannelsContainer: document.getElementById("privateChannelsContainer"),
   privateChannelsStatus: document.getElementById("privateChannelsStatus"),
@@ -104,6 +113,7 @@ let gamePlayers = [];
 let isOwnerView = false;
 let availableRoles = [];
 let rolesLoadPromise = null;
+let publicActionInstances = [];
 
 onAuthStateChanged(auth, async (user) => {
   currentUser = user;
@@ -806,6 +816,7 @@ async function refreshMembershipAndControls() {
     currentPlayer = null;
     clearPrivateChannels();
     populatePrivateActionOptions();
+    renderPublicActionToggles();
     return;
   }
   try {
@@ -818,6 +829,7 @@ async function refreshMembershipAndControls() {
     const ownerView = currentGame && currentGame.ownerUserId === user.uid;
     setDisplay(els.playerTools, joined || ownerView ? "block" : "none");
   } catch {}
+  renderPublicActionToggles();
   await loadPrivateChannels();
   await renderActionHistory();
   populatePrivateActionOptions();
@@ -860,14 +872,24 @@ els.postReply.addEventListener("click", async () => {
   const title = (els.replyTitle.value || "").trim();
   const body = (els.replyBody.value || "").trim();
   if (!body) return;
-  await addDoc(collection(doc(db, "games", gameId), "posts"), {
-    title,
-    body, // store as UBB; render via ubbToHtml
-    authorId: user.uid,
-    authorName: user.displayName || "Unknown",
-    avatar: user.photoURL || "",
-    createdAt: serverTimestamp(),
-  });
+  const publicSelections = collectSelectedPublicActions();
+  if (publicSelections === null) {
+    return;
+  }
+  try {
+    await addDoc(collection(doc(db, "games", gameId), "posts"), {
+      title,
+      body, // store as UBB; render via ubbToHtml
+      authorId: user.uid,
+      authorName: user.displayName || "Unknown",
+      avatar: user.photoURL || "",
+      createdAt: serverTimestamp(),
+    });
+  } catch (error) {
+    console.error("Failed to post reply", error);
+    setPublicActionsStatus("Unable to post reply.", "error");
+    return;
+  }
   els.replyTitle.value = "";
   els.replyBody.value = "";
   if (!isOwner && currentPlayer && typeof currentPlayer.postsLeft === "number") {
@@ -880,6 +902,33 @@ els.postReply.addEventListener("click", async () => {
         console.warn("Failed to update postsLeft", error);
       }
     }
+  }
+  const actionDay = currentGame?.day ?? 0;
+  let actionFailed = false;
+  for (const selection of publicSelections) {
+    try {
+      await recordAction({
+        category: selection.category,
+        actionName: selection.actionName,
+        targetName: selection.targetName,
+        targetPlayerId: selection.targetPlayerId,
+        notes: selection.notes,
+        day: actionDay,
+      });
+    } catch (error) {
+      actionFailed = true;
+      console.error(`Failed to record public action ${selection.actionName}`, error);
+    }
+  }
+  if (actionFailed) {
+    setPublicActionsStatus("Reply posted, but some actions could not be recorded.", "error");
+  } else if (publicSelections.length) {
+    setPublicActionsStatus("Public actions recorded.", "success");
+  } else {
+    setPublicActionsStatus("");
+  }
+  if (!actionFailed) {
+    clearPublicActionSelections();
   }
   await loadGame();
 });
@@ -1137,6 +1186,21 @@ function parseDayInput(input) {
 function setPlayerToolsStatus(message, type = "info") {
   const el = els.playerToolsStatus;
   if (!el) return;
+  if (!message) {
+    el.style.display = "none";
+    el.textContent = "";
+    return;
+  }
+  el.style.display = "block";
+  el.textContent = message;
+  el.style.color = type === "error" ? "#ff7676" : type === "success" ? "#6ee7b7" : "#F9A906";
+}
+
+function setPublicActionsStatus(message, type = "info") {
+  const el = els.publicActionsStatus;
+  if (!el) {
+    return;
+  }
   if (!message) {
     el.style.display = "none";
     el.textContent = "";
@@ -1534,6 +1598,7 @@ function populatePlayerSelects() {
     }
   });
   handlePrivateActionTargetChange();
+  refreshPublicActionTargets();
 }
 
 function handlePrivateActionNameChange() {
@@ -1662,6 +1727,874 @@ function populatePrivateActionOptions() {
   }
 
   handlePrivateActionNameChange();
+}
+
+function getAvailablePublicActions() {
+  const definitions = new Map();
+  const visited = new WeakSet();
+
+  function inspect(value, fallbackName = "") {
+    if (value === null || value === undefined) {
+      return;
+    }
+    if (typeof value === "string") {
+      const definition = interpretPublicActionDefinition(value, fallbackName);
+      if (definition) {
+        addPublicActionDefinition(definitions, definition);
+      }
+      return;
+    }
+    if (typeof value === "number" || typeof value === "boolean") {
+      return;
+    }
+    if (Array.isArray(value)) {
+      value.forEach((entry) => inspect(entry, fallbackName));
+      return;
+    }
+    if (typeof value === "object") {
+      if (visited.has(value)) {
+        return;
+      }
+      visited.add(value);
+      const definition = interpretPublicActionDefinition(value, fallbackName);
+      if (definition) {
+        addPublicActionDefinition(definitions, definition);
+      }
+      Object.keys(value).forEach((key) => {
+        if (!key) {
+          return;
+        }
+        const nested = value[key];
+        if (nested === value) {
+          return;
+        }
+        inspect(nested, key);
+      });
+    }
+  }
+
+  getActionRuleSources().forEach((source) => inspect(source));
+
+  DEFAULT_PUBLIC_ACTIONS.forEach((defaultDefinition) => {
+    const normalized = normalizeActionName(defaultDefinition.name);
+    if (!normalized) {
+      return;
+    }
+    const baseDefinition = {
+      name: defaultDefinition.name,
+      rawName: defaultDefinition.name,
+      normalizedName: normalized,
+      category:
+        defaultDefinition.category ||
+        (normalized === "unvote" ? "vote" : normalized),
+      privateOnly: false,
+      ownerOnly: false,
+      targeted: !!defaultDefinition.targeted,
+      targetType:
+        defaultDefinition.targetType ||
+        (defaultDefinition.targeted
+          ? normalized === "claim"
+            ? "role"
+            : "player"
+          : ""),
+      allowCustomTarget: !!defaultDefinition.allowCustomTarget,
+      placeholder: "",
+      targetOptions: [],
+      roleOptions: [],
+    };
+    addPublicActionDefinition(definitions, baseDefinition);
+  });
+
+  const actions = Array.from(definitions.values()).filter((definition) => {
+    if (!definition || !definition.name || !definition.normalizedName) {
+      return false;
+    }
+    if (definition.privateOnly) {
+      return false;
+    }
+    const normalizedCategory = normalizeActionName(definition.category);
+    if (normalizedCategory === "private" || normalizedCategory === "notebook") {
+      return false;
+    }
+    if (definition.ownerOnly && !isOwnerView && !currentPlayer) {
+      return false;
+    }
+    return true;
+  });
+
+  actions.sort((a, b) => a.name.localeCompare(b.name, undefined, { sensitivity: "base" }));
+
+  return actions;
+}
+
+function interpretPublicActionDefinition(value, fallbackName = "") {
+  if (value === null || value === undefined) {
+    if (typeof fallbackName === "string" && fallbackName.trim()) {
+      const normalizedFallback = normalizeActionName(fallbackName);
+      if (!normalizedFallback) {
+        return null;
+      }
+      return {
+        name: fallbackName.trim(),
+        rawName: fallbackName.trim(),
+        normalizedName: normalizedFallback,
+        category: normalizedFallback === "unvote" ? "vote" : normalizedFallback,
+        privateOnly: false,
+        ownerOnly: false,
+        targeted: normalizedFallback !== "unvote",
+        targetType:
+          normalizedFallback === "claim"
+            ? "role"
+            : normalizedFallback === "vote"
+            ? "player"
+            : "",
+        allowCustomTarget: normalizedFallback === "claim",
+        placeholder: "",
+        targetOptions: [],
+        roleOptions: [],
+      };
+    }
+    return null;
+  }
+  if (typeof value === "string") {
+    const trimmed = value.trim();
+    if (!trimmed) {
+      return null;
+    }
+    const normalized = normalizeActionName(trimmed);
+    if (!normalized) {
+      return null;
+    }
+    return {
+      name: trimmed,
+      rawName: trimmed,
+      normalizedName: normalized,
+      category: normalized === "unvote" ? "vote" : normalized,
+      privateOnly: false,
+      ownerOnly: false,
+      targeted: normalized !== "unvote",
+      targetType:
+        normalized === "claim" ? "role" : normalized === "vote" ? "player" : "",
+      allowCustomTarget: normalized === "claim",
+      placeholder: "",
+      targetOptions: [],
+      roleOptions: [],
+    };
+  }
+  if (typeof value !== "object") {
+    return null;
+  }
+
+  const rawNameCandidates = ["actionName", "name", "action", "key", "id", "slug", "code"];
+  const labelCandidates = ["label", "title", "displayName", "text"];
+  const categoryCandidates = ["category", "type", "kind", "group", "groupName", "actionType"];
+  const privateKeys = ["private", "isPrivate", "privateOnly", "privateAction", "hidden", "secret"];
+  const ownerKeys = ["gmOnly", "hostOnly", "ownerOnly", "modOnly", "moderatorOnly", "adminOnly", "staffOnly"];
+  const targetedKeys = [
+    "targeted",
+    "requiresTarget",
+    "needsTarget",
+    "targetRequired",
+    "requireTarget",
+    "requiresPlayer",
+    "target",
+  ];
+  const targetTypeKeys = ["targetType", "targetKind", "targetCategory", "targetMode"];
+  const hintKeys = [
+    "targeted",
+    "requiresTarget",
+    "needsTarget",
+    "targetOptions",
+    "targets",
+    "roles",
+    "roleOptions",
+    "roleList",
+    "category",
+    "type",
+    "private",
+    "isPrivate",
+    "allowCustomTarget",
+  ];
+
+  let rawName = extractStringProperty(value, rawNameCandidates);
+  if (!rawName && typeof fallbackName === "string" && fallbackName) {
+    const hasHint = hintKeys.some((key) => Object.prototype.hasOwnProperty.call(value, key));
+    if (hasHint) {
+      rawName = fallbackName;
+    }
+  }
+  if (!rawName) {
+    return null;
+  }
+  const normalizedName = normalizeActionName(rawName);
+  if (!normalizedName) {
+    return null;
+  }
+
+  const displayName =
+    extractStringProperty(value, labelCandidates) ||
+    extractStringProperty(value, rawNameCandidates) ||
+    fallbackName ||
+    rawName ||
+    normalizedName;
+
+  let category =
+    normalizeActionName(extractStringProperty(value, categoryCandidates)) ||
+    (normalizedName === "unvote" ? "vote" : normalizedName);
+  if (normalizedName === "unvote") {
+    category = "vote";
+  }
+
+  let targetType = (extractStringProperty(value, targetTypeKeys) || "").toLowerCase();
+  if (targetType.includes("role")) {
+    targetType = "role";
+  } else if (targetType.includes("player") || targetType.includes("user") || targetType.includes("person")) {
+    targetType = "player";
+  } else if (targetType.includes("option")) {
+    targetType = "options";
+  } else if (
+    targetType.includes("text") ||
+    targetType.includes("string") ||
+    targetType.includes("note") ||
+    targetType.includes("free")
+  ) {
+    targetType = "text";
+  } else {
+    targetType = "";
+  }
+
+  const targetOptions = collectStringArray(value, ["targetOptions", "targets", "options", "choices"]);
+  const roleOptions = collectStringArray(value, ["roles", "roleOptions", "roleList"]);
+
+  if (!targetType && targetOptions.length) {
+    targetType = "options";
+  }
+  if (!targetType && roleOptions.length) {
+    targetType = "role";
+  }
+
+  const targetedFlag = extractBooleanProperty(value, targetedKeys);
+  let targeted = targetedFlag !== null ? targetedFlag : undefined;
+  if (targeted === undefined) {
+    targeted =
+      targetType === "player" ||
+      targetType === "role" ||
+      targetType === "text" ||
+      targetType === "options" ||
+      targetOptions.length > 0;
+  }
+  if (normalizedName === "unvote") {
+    targeted = false;
+    targetType = "";
+  }
+  if (!targetType && targeted) {
+    if (normalizedName === "claim") {
+      targetType = "role";
+    } else {
+      targetType = "player";
+    }
+  }
+
+  const allowCustomTarget =
+    extractBooleanProperty(value, [
+      "allowCustomTarget",
+      "allowCustom",
+      "customTarget",
+      "freeformTarget",
+      "allowCustomChoice",
+      "allowFreeformTarget",
+    ]) === true;
+
+  const placeholder =
+    extractStringProperty(value, ["placeholder", "targetPlaceholder", "prompt", "hint"]) || "";
+  const privateOnly = extractBooleanProperty(value, privateKeys) === true;
+  const ownerOnly = extractBooleanProperty(value, ownerKeys) === true;
+
+  return {
+    name: displayName,
+    rawName: rawName,
+    normalizedName,
+    category,
+    privateOnly,
+    ownerOnly,
+    targeted: !!targeted,
+    targetType,
+    allowCustomTarget,
+    placeholder,
+    targetOptions,
+    roleOptions,
+  };
+}
+
+function addPublicActionDefinition(map, definition) {
+  if (!definition || !definition.normalizedName) {
+    return;
+  }
+  if (map.has(definition.normalizedName)) {
+    const merged = mergePublicActionDefinitions(map.get(definition.normalizedName), definition);
+    map.set(definition.normalizedName, merged);
+  } else {
+    map.set(definition.normalizedName, {
+      ...definition,
+      targetOptions: mergeUniqueStrings(definition.targetOptions, []),
+      roleOptions: mergeUniqueStrings(definition.roleOptions, []),
+    });
+  }
+}
+
+function mergePublicActionDefinitions(existing, incoming) {
+  const result = { ...existing };
+  result.name = chooseBetterActionName(existing.name, incoming.name, existing.normalizedName);
+  if (!result.rawName && incoming.rawName) {
+    result.rawName = incoming.rawName;
+  } else if (incoming.rawName && incoming.rawName.length > (result.rawName || "").length) {
+    result.rawName = incoming.rawName;
+  }
+  result.category = existing.category || incoming.category;
+  result.privateOnly = existing.privateOnly || incoming.privateOnly;
+  result.ownerOnly = existing.ownerOnly || incoming.ownerOnly;
+  result.targeted = (existing.targeted ?? false) || (incoming.targeted ?? false);
+  result.allowCustomTarget = existing.allowCustomTarget || incoming.allowCustomTarget;
+  result.placeholder = existing.placeholder || incoming.placeholder;
+  result.targetType = pickTargetType(existing.targetType, incoming.targetType);
+  result.targetOptions = mergeUniqueStrings(existing.targetOptions, incoming.targetOptions);
+  result.roleOptions = mergeUniqueStrings(existing.roleOptions, incoming.roleOptions);
+  return result;
+}
+
+function pickTargetType(currentType, nextType) {
+  const priority = { player: 4, role: 3, options: 2, text: 1, "": 0 };
+  const currentPriority = priority[currentType || ""] ?? 0;
+  const nextPriority = priority[nextType || ""] ?? 0;
+  if (nextPriority > currentPriority) {
+    return nextType;
+  }
+  return currentType || nextType || "";
+}
+
+function chooseBetterActionName(currentName, nextName, normalized) {
+  if (!nextName) {
+    return currentName;
+  }
+  if (!currentName) {
+    return nextName;
+  }
+  const currentLower = currentName.trim().toLowerCase();
+  const nextLower = nextName.trim().toLowerCase();
+  if (currentLower === normalized && nextLower !== normalized) {
+    return nextName;
+  }
+  const currentAllLower = currentName === currentName.toLowerCase();
+  const nextAllLower = nextName === nextName.toLowerCase();
+  if (currentAllLower && !nextAllLower) {
+    return nextName;
+  }
+  if (nextName.length > currentName.length && currentLower === nextLower) {
+    return nextName;
+  }
+  return currentName;
+}
+
+function mergeUniqueStrings(primary = [], secondary = []) {
+  const unique = new Set();
+  (primary || []).forEach((value) => {
+    if (typeof value === "string") {
+      const trimmed = value.trim();
+      if (trimmed) {
+        unique.add(trimmed);
+      }
+    }
+  });
+  (secondary || []).forEach((value) => {
+    if (typeof value === "string") {
+      const trimmed = value.trim();
+      if (trimmed) {
+        unique.add(trimmed);
+      }
+    }
+  });
+  return Array.from(unique);
+}
+
+function collectStringArray(source, keys = []) {
+  const values = [];
+  if (!source || typeof source !== "object") {
+    return values;
+  }
+  keys.forEach((key) => {
+    if (!key || !Object.prototype.hasOwnProperty.call(source, key)) {
+      return;
+    }
+    const candidate = source[key];
+    if (!Array.isArray(candidate)) {
+      return;
+    }
+    candidate.forEach((entry) => {
+      if (typeof entry !== "string") {
+        return;
+      }
+      const trimmed = entry.trim();
+      if (!trimmed) {
+        return;
+      }
+      if (!values.includes(trimmed)) {
+        values.push(trimmed);
+      }
+    });
+  });
+  return values;
+}
+
+function parseBooleanLike(value) {
+  if (value === null || value === undefined) {
+    return null;
+  }
+  if (typeof value === "boolean") {
+    return value;
+  }
+  if (typeof value === "number") {
+    if (!Number.isFinite(value)) {
+      return null;
+    }
+    return value !== 0;
+  }
+  if (typeof value === "string") {
+    const normalized = value.trim().toLowerCase();
+    if (!normalized) {
+      return null;
+    }
+    if (["true", "yes", "y", "on", "1"].includes(normalized)) {
+      return true;
+    }
+    if (["false", "no", "n", "off", "0"].includes(normalized)) {
+      return false;
+    }
+  }
+  return null;
+}
+
+function extractBooleanProperty(source, keys = []) {
+  if (!source || typeof source !== "object") {
+    return null;
+  }
+  for (const key of keys) {
+    if (!key) {
+      continue;
+    }
+    if (!Object.prototype.hasOwnProperty.call(source, key)) {
+      continue;
+    }
+    const parsed = parseBooleanLike(source[key]);
+    if (parsed !== null) {
+      return parsed;
+    }
+  }
+  return null;
+}
+
+function extractStringProperty(source, keys = []) {
+  if (!source || typeof source !== "object") {
+    return "";
+  }
+  for (const key of keys) {
+    if (!key) {
+      continue;
+    }
+    if (!Object.prototype.hasOwnProperty.call(source, key)) {
+      continue;
+    }
+    const value = source[key];
+    if (typeof value === "string") {
+      const trimmed = value.trim();
+      if (trimmed) {
+        return trimmed;
+      }
+    }
+  }
+  return "";
+}
+
+function renderPublicActionToggles() {
+  const container = els.publicActionsContainer;
+  const list = els.publicActionsList;
+  publicActionInstances = [];
+  if (!container || !list) {
+    return;
+  }
+  list.innerHTML = "";
+  const canPost = !!currentUser && (!!currentPlayer || isOwnerView);
+  if (!canPost) {
+    container.style.display = "none";
+    setPublicActionsStatus("");
+    return;
+  }
+  const actions = getAvailablePublicActions();
+  if (!actions.length) {
+    container.style.display = "none";
+    setPublicActionsStatus("");
+    return;
+  }
+  container.style.display = "block";
+  actions.forEach((action) => {
+    const row = document.createElement("div");
+    row.className = "public-action-row";
+    row.style.display = "flex";
+    row.style.flexWrap = "wrap";
+    row.style.alignItems = "center";
+    row.style.gap = "6px";
+    row.style.marginTop = "4px";
+
+    const label = document.createElement("label");
+    label.className = "smallfont";
+    label.style.display = "inline-flex";
+    label.style.alignItems = "center";
+    label.style.gap = "4px";
+
+    const checkbox = document.createElement("input");
+    checkbox.type = "checkbox";
+    checkbox.dataset.actionName = action.rawName || action.name;
+    checkbox.dataset.normalizedAction = action.normalizedName || "";
+    label.appendChild(checkbox);
+
+    const text = document.createElement("span");
+    text.textContent = action.name;
+    label.appendChild(text);
+    row.appendChild(label);
+
+    const instance = {
+      action,
+      container: row,
+      checkbox,
+      targetSelect: null,
+      targetInput: null,
+      customTargetInput: null,
+      customRoleInput: null,
+    };
+
+    if (action.targetType === "player") {
+      const select = document.createElement("select");
+      select.className = "bginput public-action-target";
+      select.style.minWidth = "160px";
+      select.dataset.actionName = action.rawName || action.name;
+      row.appendChild(select);
+      instance.targetSelect = select;
+      if (action.allowCustomTarget) {
+        const customInput = document.createElement("input");
+        customInput.className = "bginput public-action-target-custom";
+        customInput.style.minWidth = "160px";
+        customInput.style.display = "none";
+        customInput.placeholder = "Enter target";
+        row.appendChild(customInput);
+        instance.customTargetInput = customInput;
+        select.addEventListener("change", () => handlePublicActionPlayerChange(instance));
+      }
+    } else if (action.targetType === "role") {
+      const select = document.createElement("select");
+      select.className = "bginput public-action-target";
+      select.style.minWidth = "160px";
+      select.dataset.actionName = action.rawName || action.name;
+      row.appendChild(select);
+      instance.targetSelect = select;
+      const customRole = document.createElement("input");
+      customRole.className = "bginput public-action-role-custom";
+      customRole.style.minWidth = "160px";
+      customRole.style.display = "none";
+      customRole.placeholder = "Enter role";
+      row.appendChild(customRole);
+      instance.customRoleInput = customRole;
+      select.addEventListener("change", () => handlePublicActionRoleChange(instance));
+    } else if (action.targetType === "text") {
+      const input = document.createElement("input");
+      input.className = "bginput public-action-target";
+      input.style.minWidth = "200px";
+      input.placeholder = action.placeholder || "Enter value";
+      row.appendChild(input);
+      instance.targetInput = input;
+    } else if (action.targetType === "options") {
+      const select = document.createElement("select");
+      select.className = "bginput public-action-target";
+      select.style.minWidth = "160px";
+      select.dataset.actionName = action.rawName || action.name;
+      row.appendChild(select);
+      instance.targetSelect = select;
+    }
+
+    list.appendChild(row);
+    publicActionInstances.push(instance);
+  });
+
+  refreshPublicActionTargets();
+}
+
+function populatePublicActionPlayerSelect(select, action = {}) {
+  if (!select) {
+    return;
+  }
+  const previous = select.value;
+  select.innerHTML = "";
+  const placeholderOption = document.createElement("option");
+  placeholderOption.value = "";
+  placeholderOption.textContent = action.placeholder || "-- select player --";
+  select.appendChild(placeholderOption);
+  gamePlayers.forEach((player) => {
+    const option = document.createElement("option");
+    option.value = player.id;
+    option.textContent = player.name;
+    option.dataset.playerName = player.name;
+    select.appendChild(option);
+  });
+  if (action.allowCustomTarget) {
+    const customOption = document.createElement("option");
+    customOption.value = CUSTOM_TARGET_OPTION_VALUE;
+    customOption.textContent = "Custom target…";
+    select.appendChild(customOption);
+  }
+  if (previous) {
+    select.value = previous;
+    if (select.value !== previous) {
+      const match = gamePlayers.find(
+        (player) => normalizeIdentifier(player.id) === normalizeIdentifier(previous)
+      );
+      if (match) {
+        select.value = match.id;
+      } else if (action.allowCustomTarget && previous === CUSTOM_TARGET_OPTION_VALUE) {
+        select.value = CUSTOM_TARGET_OPTION_VALUE;
+      } else {
+        select.value = "";
+      }
+    }
+  }
+}
+
+function populatePublicActionRoleSelect(select, action = {}) {
+  if (!select) {
+    return;
+  }
+  const previous = select.value;
+  select.innerHTML = "";
+  const placeholderOption = document.createElement("option");
+  placeholderOption.value = "";
+  placeholderOption.textContent = action.placeholder || "-- select role --";
+  select.appendChild(placeholderOption);
+  const options = mergeUniqueStrings(action.roleOptions || [], getKnownRoleNames());
+  options.forEach((role) => {
+    const option = document.createElement("option");
+    option.value = role;
+    option.textContent = role;
+    select.appendChild(option);
+  });
+  const allowCustom = action.allowCustomTarget !== false;
+  if (allowCustom) {
+    const customOption = document.createElement("option");
+    customOption.value = CUSTOM_ROLE_OPTION_VALUE;
+    customOption.textContent = "Custom role…";
+    select.appendChild(customOption);
+  }
+  if (previous) {
+    select.value = previous;
+    if (select.value !== previous) {
+      if (allowCustom && previous === CUSTOM_ROLE_OPTION_VALUE) {
+        select.value = CUSTOM_ROLE_OPTION_VALUE;
+      } else if (!options.includes(previous)) {
+        select.value = "";
+      }
+    }
+  }
+}
+
+function populatePublicActionOptionsSelect(select, action = {}) {
+  if (!select) {
+    return;
+  }
+  const previous = select.value;
+  select.innerHTML = "";
+  const placeholderOption = document.createElement("option");
+  placeholderOption.value = "";
+  placeholderOption.textContent = action.placeholder || "-- select option --";
+  select.appendChild(placeholderOption);
+  (action.targetOptions || []).forEach((optionValue) => {
+    const option = document.createElement("option");
+    option.value = optionValue;
+    option.textContent = optionValue;
+    select.appendChild(option);
+  });
+  if (previous) {
+    select.value = previous;
+    if (select.value !== previous) {
+      select.value = "";
+    }
+  }
+}
+
+function handlePublicActionPlayerChange(instance) {
+  if (!instance || !instance.targetSelect || !instance.customTargetInput) {
+    return;
+  }
+  const isCustom = instance.targetSelect.value === CUSTOM_TARGET_OPTION_VALUE;
+  setDisplay(instance.customTargetInput, isCustom ? "inline-block" : "none");
+  if (!isCustom) {
+    instance.customTargetInput.value = "";
+  }
+}
+
+function handlePublicActionRoleChange(instance) {
+  if (!instance || !instance.targetSelect || !instance.customRoleInput) {
+    return;
+  }
+  const isCustom = instance.targetSelect.value === CUSTOM_ROLE_OPTION_VALUE;
+  setDisplay(instance.customRoleInput, isCustom ? "inline-block" : "none");
+  if (!isCustom) {
+    instance.customRoleInput.value = "";
+  }
+}
+
+function refreshPublicActionTargets() {
+  publicActionInstances.forEach((instance) => {
+    if (!instance || !instance.action) {
+      return;
+    }
+    if (instance.action.targetType === "player" && instance.targetSelect) {
+      populatePublicActionPlayerSelect(instance.targetSelect, instance.action);
+      if (instance.customTargetInput) {
+        handlePublicActionPlayerChange(instance);
+      }
+    } else if (instance.action.targetType === "role" && instance.targetSelect) {
+      populatePublicActionRoleSelect(instance.targetSelect, instance.action);
+      handlePublicActionRoleChange(instance);
+    } else if (instance.action.targetType === "options" && instance.targetSelect) {
+      populatePublicActionOptionsSelect(instance.targetSelect, instance.action);
+    }
+  });
+}
+
+function collectSelectedPublicActions() {
+  const selections = [];
+  for (const instance of publicActionInstances) {
+    if (!instance?.checkbox?.checked || !instance.action) {
+      continue;
+    }
+    const action = instance.action;
+    const selection = {
+      actionName: action.rawName || action.name || action.normalizedName || "Action",
+      category:
+        normalizeActionName(action.category) ||
+        (action.normalizedName === "unvote" ? "vote" : action.normalizedName || "public"),
+      targetName: "",
+      targetPlayerId: "",
+      notes: "",
+    };
+
+    if (action.targetType === "player") {
+      const select = instance.targetSelect;
+      if (!select) {
+        setPublicActionsStatus(`Select a target for ${action.name}.`, "error");
+        return null;
+      }
+      const value = select.value || "";
+      if (!value) {
+        setPublicActionsStatus(`Select a target for ${action.name}.`, "error");
+        select.focus();
+        return null;
+      }
+      if (value === CUSTOM_TARGET_OPTION_VALUE) {
+        const customValue = (instance.customTargetInput?.value || "").trim();
+        if (!customValue) {
+          setPublicActionsStatus(`Enter a custom target for ${action.name}.`, "error");
+          instance.customTargetInput?.focus();
+          return null;
+        }
+        const match = findPlayerByName(customValue);
+        selection.targetPlayerId = match?.id || "";
+        selection.targetName = match?.name || customValue;
+      } else {
+        selection.targetPlayerId = value;
+        const option = select.selectedOptions?.[0];
+        selection.targetName =
+          option?.dataset?.playerName ||
+          option?.textContent ||
+          findPlayerById(value)?.name ||
+          "";
+      }
+    } else if (action.targetType === "role") {
+      const select = instance.targetSelect;
+      if (!select) {
+        setPublicActionsStatus(`Select a role for ${action.name}.`, "error");
+        return null;
+      }
+      let roleValue = select.value || "";
+      if (!roleValue) {
+        setPublicActionsStatus(`Select a role for ${action.name}.`, "error");
+        select.focus();
+        return null;
+      }
+      if (roleValue === CUSTOM_ROLE_OPTION_VALUE) {
+        roleValue = (instance.customRoleInput?.value || "").trim();
+        if (!roleValue) {
+          setPublicActionsStatus(`Enter a role for ${action.name}.`, "error");
+          instance.customRoleInput?.focus();
+          return null;
+        }
+      }
+      selection.targetName = roleValue;
+      selection.notes = roleValue;
+    } else if (action.targetType === "text") {
+      const input = instance.targetInput;
+      const value = (input?.value || "").trim();
+      if (!value) {
+        setPublicActionsStatus(`Enter a value for ${action.name}.`, "error");
+        input?.focus();
+        return null;
+      }
+      selection.targetName = value;
+      selection.notes = value;
+    } else if (action.targetType === "options") {
+      const select = instance.targetSelect;
+      if (!select) {
+        setPublicActionsStatus(`Choose an option for ${action.name}.`, "error");
+        return null;
+      }
+      const value = select.value || "";
+      if (!value) {
+        setPublicActionsStatus(`Choose an option for ${action.name}.`, "error");
+        select.focus();
+        return null;
+      }
+      selection.targetName = value;
+      selection.notes = value;
+    }
+
+    if (!selection.category) {
+      selection.category = action.normalizedName === "unvote" ? "vote" : action.normalizedName || "public";
+    }
+    selections.push(selection);
+  }
+  setPublicActionsStatus("");
+  return selections;
+}
+
+function clearPublicActionSelections() {
+  publicActionInstances.forEach((instance) => {
+    if (!instance) {
+      return;
+    }
+    if (instance.checkbox) {
+      instance.checkbox.checked = false;
+    }
+    if (instance.targetSelect) {
+      instance.targetSelect.value = "";
+    }
+    if (instance.customTargetInput) {
+      instance.customTargetInput.value = "";
+      setDisplay(instance.customTargetInput, "none");
+    }
+    if (instance.customRoleInput) {
+      instance.customRoleInput.value = "";
+      setDisplay(instance.customRoleInput, "none");
+    }
+    if (instance.targetInput) {
+      instance.targetInput.value = "";
+    }
+  });
 }
 
 function getKnownRoleNames() {
