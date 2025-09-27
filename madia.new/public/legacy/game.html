@@ -113,7 +113,15 @@
                 </label>
                 <label>
                   Day
-                  <input id="voteDay" type="number" class="bginput" min="0" />
+                  <input
+                    id="voteDay"
+                    type="number"
+                    class="bginput"
+                    min="0"
+                    disabled
+                    aria-readonly="true"
+                    title="Votes are recorded for the current day"
+                  />
                 </label>
                 <label>
                   Notes
