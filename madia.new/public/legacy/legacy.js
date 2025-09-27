@@ -88,6 +88,23 @@ function gameRow(game, meta) {
     : meta.joined ? "/images/inactiveplayed_game.gif" : "/images/inactive_game.gif";
   const rowClass = game.day > 0 ? "alt1Active" : "alt3";
 
+  const hasLastPost = meta.postCount > 0 && !!meta.lastPost;
+  const lastPostHtml = hasLastPost
+    ? `
+      <div class="smallfont" align="left">
+        <a title="not clickable"><strong>${meta.lastPostTitle || ""}</strong></a>
+      </div>
+      <div style="width:260px;" class="smallfont">
+        <div style="float:left;width:120px;text-align:left;">by <a href="#/member/${
+          meta.lastPostUserId || "unknown"
+        }" rel="nofollow">${meta.lastPostUser || ""}</a></div>
+        <div style="text-align:right;" class="smallfont"><span class="time">${
+          meta.lastPostTime || ""
+        }</span></div>
+      </div>
+    `
+    : '<div class="smallfont" style="text-align:left;"><em>none</em></div>';
+
   const tr = document.createElement("tr");
   tr.setAttribute("align", "center");
   tr.innerHTML = `
@@ -105,19 +122,7 @@ function gameRow(game, meta) {
         game.description || ""
       }</div>
     </td>
-    <td class="alt2" nowrap="nowrap">
-      <div class="smallfont" align="left">
-        <a title="not clickable"><strong>${meta.lastPostTitle || ""}</strong></a>
-      </div>
-      <div style="width:260px;" class="smallfont">
-        <div style="float:left;width:120px;text-align:left;">by <a href="#/member/${
-          meta.lastPostUserId || "unknown"
-        }" rel="nofollow">${meta.lastPostUser || ""}</a></div>
-        <div style="text-align:right;" class="smallfont"><span class="time">${
-          meta.lastPostTime || ""
-        }</span></div>
-      </div>
-    </td>
+    <td class="alt2" nowrap="nowrap">${lastPostHtml}</td>
     <td class="alt1">${meta.postCount ?? 0}</td>
     <td class="alt2">${meta.playerCount ?? 0}</td>
     <td class="alt1">${game.day ?? 0}</td>
@@ -218,6 +223,7 @@ async function decorateRow(game) {
   const meta = {
     playerCount,
     postCount,
+    lastPost,
     lastPostTitle: lastPost?.title || (lastPost?.body ? String(lastPost.body).slice(0, 15) + "..." : ""),
     lastPostUser: lastPost?.authorName || "",
     lastPostUserId: lastPost?.authorId || "",
