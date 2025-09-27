@@ -1,0 +1,12 @@
+actiontypeid,actionname
+1,"vote"
+2,"mafiavote"
+3,"seer"
+4,"guardian"
+11,"execute"
+12,"masonpost"
+13,"track"
+14,"claim"
+15,"block"
+16,"trust"
+17,"notebook"

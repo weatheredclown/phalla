@@ -1,0 +1,12 @@
+roleid,rolename,protown
+1,"villager",1
+2,"mafia",0
+3,"seer",1
+4,"guardian",1
+5,"observer",1
+12,"vigilante",1
+13,"mason",1
+14,"tracker",1
+15,"one-shot vigilante",1
+16,"roleblocker",1
+17,"godfather",0
