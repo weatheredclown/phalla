@@ -68,14 +68,51 @@
           <div style="margin-top:12px;">
             <div id="ownerControls" class="smallfont" style="display:none; margin-bottom:8px;">
               <b>Owner Controls:</b>
-              <button id="toggleOpen" class="button">Toggle Open</button>
-              <button id="toggleActive" class="button">Toggle Active</button>
-              <button id="nextDay" class="button">Next Day</button>
-              <button id="daySummary" class="button">Day Summary</button>
+              <button
+                id="toggleOpen"
+                class="button"
+                title="Flip whether the game is listed as open for new signups or closed to recruiting. This updates lobby status only—it does not automatically block players from joining."
+              >
+                Toggle Open
+              </button>
+              <button
+                id="toggleActive"
+                class="button"
+                title="Mark the game as running or finished so listings and headers show the correct state. This flag is informational and does not stop players from posting or taking actions."
+              >
+                Toggle Active
+              </button>
+              <button
+                id="nextDay"
+                class="button"
+                title="Increase the day counter when you advance the story. The new value drives vote tallies, action logs, and moderator tools that track progress."
+              >
+                Next Day
+              </button>
+              <button
+                id="daySummary"
+                class="button"
+                title="Open the moderator control panel to review recorded actions and use owner tools like resets, game-over posts, or clearing the thread."
+              >
+                Day Summary
+              </button>
             </div>
             <div class="smallfont" style="margin-bottom:8px;">
-              <button id="joinButton" class="button">Join Game</button>
-              <button id="leaveButton" class="button" style="display:none;">Leave Game</button>
+              <button
+                id="joinButton"
+                class="button"
+                title="Add yourself to the roster so you can post, record actions, and receive any private access the host assigns."
+              >
+                Join Game
+              </button>
+              <button
+                id="leaveButton"
+                class="button"
+                style="display:none;"
+                title="Withdraw from the roster if you can no longer participate. Leaving immediately frees the slot and removes your private tools."
+              >
+                Leave Game
+              </button>
             </div>
             <div id="playerTools" class="smallfont" style="display:none; margin-bottom:12px;">
               <div><strong>Private Game Tools</strong></div>
@@ -104,7 +141,15 @@
                   Day
                   <input id="privateActionDay" type="number" class="bginput" min="0" />
                 </label>
-                <div><button class="button" type="submit">Record private action</button></div>
+                <div>
+                  <button
+                    class="button"
+                    type="submit"
+                    title="Record this private action so it appears in your log and the host's day summary, keeping night powers documented."
+                  >
+                    Record private action
+                  </button>
+                </div>
               </form>
               <form id="voteRecordForm" class="stacked-form">
                 <label>
@@ -115,7 +160,15 @@
                   Notes
                   <input id="voteNotes" class="bginput" />
                 </label>
-                <div><button class="button" type="submit">Record vote</button></div>
+                <div>
+                  <button
+                    class="button"
+                    type="submit"
+                    title="Save your current vote target, update the shared tally, and keep optional notes in your private history (visible to you and the host)."
+                  >
+                    Record vote
+                  </button>
+                </div>
               </form>
               <form id="claimRecordForm" class="stacked-form">
                 <label>
@@ -128,7 +181,15 @@
                     placeholder="Enter role name"
                   />
                 </label>
-                <div><button class="button" type="submit">Record claim</button></div>
+                <div>
+                  <button
+                    class="button"
+                    type="submit"
+                    title="Log the role you're claiming so it appears in your private history and the moderator's records without broadcasting a public announcement."
+                  >
+                    Record claim
+                  </button>
+                </div>
               </form>
               <form id="notebookRecordForm" class="stacked-form">
                 <label>
@@ -139,7 +200,15 @@
                   Notes
                   <input id="notebookNotes" class="bginput" />
                 </label>
-                <div><button class="button" type="submit">Save notebook entry</button></div>
+                <div>
+                  <button
+                    class="button"
+                    type="submit"
+                    title="Store a private notebook entry about the selected player so you can revisit your deductions or reminders later without sharing them publicly."
+                  >
+                    Save notebook entry
+                  </button>
+                </div>
               </form>
               <div id="playerToolsStatus" style="display:none; margin-top:6px; color:#F9A906;"></div>
               <div
@@ -171,8 +240,23 @@
                   />
                 </label>
                 <div style="margin-top:6px;">
-                  <button class="button" id="confirmReplaceButton" type="button">Confirm replace</button>
-                  <button class="button" id="cancelReplaceButton" type="button" style="margin-left:4px;">Cancel</button>
+                  <button
+                    class="button"
+                    id="confirmReplaceButton"
+                    type="button"
+                    title="Finalize swapping in the selected replacement player. Confirming immediately updates rosters, permissions, and role assignments."
+                  >
+                    Confirm replace
+                  </button>
+                  <button
+                    class="button"
+                    id="cancelReplaceButton"
+                    type="button"
+                    style="margin-left:4px;"
+                    title="Back out of the replacement flow without making any changes, letting you revisit the decision or choose someone else."
+                  >
+                    Cancel
+                  </button>
                 </div>
               </div>
               <table class="tborder" cellpadding="4" cellspacing="1" border="0" width="100%" style="margin-top:6px;">
@@ -201,9 +285,30 @@
                     <input id="replyTitle" class="bginput" style="width:98%" />
                     <div class="smallfont" style="margin-top:6px;">Message (UBB)</div>
                     <div class="ubb-toolbar">
-                      <button type="button" class="ubb-button" data-ubb-tag="b" title="Bold">B</button>
-                      <button type="button" class="ubb-button" data-ubb-tag="i" title="Italic">I</button>
-                      <button type="button" class="ubb-button" data-ubb-tag="u" title="Underline">U</button>
+                      <button
+                        type="button"
+                        class="ubb-button"
+                        data-ubb-tag="b"
+                        title="Wrap the highlighted text in [b] tags so it appears in bold when your post is published, helping important points stand out."
+                      >
+                        B
+                      </button>
+                      <button
+                        type="button"
+                        class="ubb-button"
+                        data-ubb-tag="i"
+                        title="Surround the selected text with [i] tags so it renders in italics, ideal for emphasis or quoting other players."
+                      >
+                        I
+                      </button>
+                      <button
+                        type="button"
+                        class="ubb-button"
+                        data-ubb-tag="u"
+                        title="Place [u] tags around the chosen text to underline it in the final post, drawing attention to critical statements or votes."
+                      >
+                        U
+                      </button>
                     </div>
                     <textarea id="replyBody" class="bginput" rows="6" style="width:98%"></textarea>
                     <div
@@ -267,7 +372,15 @@
                         style="display:none; margin-top:6px; color:#F9A906;"
                       ></div>
                     </div>
-                    <div style="margin-top:8px;"><button id="postReply" class="button">Post Reply</button></div>
+                    <div style="margin-top:8px;">
+                      <button
+                        id="postReply"
+                        class="button"
+                        title="Publish your reply to the game thread along with any selected public actions, making your message and moves visible to everyone."
+                      >
+                        Post Reply
+                      </button>
+                    </div>
                   </td>
                 </tr>
               </table>
