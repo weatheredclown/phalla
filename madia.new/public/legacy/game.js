@@ -160,6 +160,8 @@ function postRow(postId, post, alt) {
     editedMeta.push(`Edited by ${editor} · ${formatDate(post.updatedAt)}`);
   }
 
+  const actionsHtml = renderPostActionBadges(post.actions || []);
+
   const container = document.createElement("div");
   container.innerHTML = `
   <table class="tborder" cellpadding="4" cellspacing="0" border="0" width="100%" align="center" style="margin-top:-5px;">
@@ -196,6 +198,9 @@ function postRow(postId, post, alt) {
         <table width="100%" cellspacing="0"><tr>
           <td class="${altClass}" width="90%">
             ${post.sig ? `<div>__________________<br /><font size="1">${ubbToHtml(post.sig)}</font></div>` : "&nbsp;"}
+          </td>
+          <td class="${altClass}" style="${altStyle}" align="right">
+            ${actionsHtml || "&nbsp;"}
           </td>
         </tr></table>
       </td>
@@ -246,6 +251,134 @@ function postRow(postId, post, alt) {
   }
 
   return container;
+}
+
+function renderPostActionBadges(actions = []) {
+  if (!Array.isArray(actions) || !actions.length) {
+    return "";
+  }
+  const formatted = actions
+    .map((action) => renderSingleActionBadge(action))
+    .filter(Boolean);
+  if (!formatted.length) {
+    return "";
+  }
+  return `<div class="action-badges">${formatted.join("")}</div>`;
+}
+
+function renderSingleActionBadge(action = {}) {
+  const category = normalizeActionName(action.category || action.actionName);
+  switch (category) {
+    case "vote":
+      return renderVoteActionBadge(action);
+    case "claim":
+      return renderClaimActionBadge(action);
+    default:
+      return renderGenericActionBadge(action);
+  }
+}
+
+function renderVoteActionBadge(action = {}) {
+  const valid = action.valid !== false;
+  const base = valid ? "!vote" : "!retracted vote";
+  const target = escapeHtml(
+    action.targetName || getPlayerDisplayName(normalizeIdentifier(action.targetPlayerId)) || ""
+  );
+  const note = getActionNote(action, { includeFor: "vote" });
+  const classes = ["action-badge", "action-badge-vote", valid ? "action-badge-active" : "action-badge-retracted"];
+  return `<div class="${classes.join(" ")}">${base}${target ? ` ${target}` : ""}${note}</div>`;
+}
+
+function renderClaimActionBadge(action = {}) {
+  const valid = action.valid !== false;
+  const verb = valid ? "claim" : "unclaim";
+  const detail = escapeHtml(action.notes || action.targetName || action.actionName || "");
+  const classes = ["action-badge", "action-badge-claim", valid ? "action-badge-active" : "action-badge-retracted"];
+  return `<div class="${classes.join(" ")}"><span class="action-badge-verb">${verb}</span>${
+    detail ? ` ${detail}` : ""
+  }</div>`;
+}
+
+function renderGenericActionBadge(action = {}) {
+  const name = escapeHtml(action.actionName || action.category || "Action");
+  const target = escapeHtml(action.targetName || getPlayerDisplayName(normalizeIdentifier(action.targetPlayerId)) || "");
+  const note = getActionNote(action, { includeFor: "generic" });
+  const classes = ["action-badge", "action-badge-generic"];
+  return `<div class="${classes.join(" ")}"><span class="action-badge-verb">${name}</span>${
+    target ? ` ${target}` : ""
+  }${note}</div>`;
+}
+
+function getActionNote(action = {}, options = {}) {
+  const rawNote = typeof action.notes === "string" ? action.notes.trim() : "";
+  if (!rawNote) {
+    return "";
+  }
+  if (options.includeFor === "vote") {
+    return ` <span class="action-badge-note">(${escapeHtml(rawNote)})</span>`;
+  }
+  if (options.includeFor === "generic") {
+    return ` <span class="action-badge-note">(${escapeHtml(rawNote)})</span>`;
+  }
+  return "";
+}
+
+function extractActionPostId(action = {}) {
+  const candidates = [
+    action.postId,
+    action.post,
+    action.postRef,
+    action.postDocumentId,
+    action.postDocId,
+    action.postKey,
+  ];
+  for (const candidate of candidates) {
+    const normalized = normalizeActionPostCandidate(candidate);
+    if (normalized) {
+      return normalized;
+    }
+  }
+  return "";
+}
+
+function normalizeActionPostCandidate(candidate) {
+  if (!candidate) {
+    return "";
+  }
+  if (typeof candidate === "string") {
+    return candidate.trim();
+  }
+  if (typeof candidate === "object") {
+    if (typeof candidate.id === "string") {
+      return candidate.id.trim();
+    }
+    if (typeof candidate.postId === "string") {
+      return candidate.postId.trim();
+    }
+    if (typeof candidate.path === "string") {
+      const parts = candidate.path.split("/").filter(Boolean);
+      if (parts.length) {
+        return parts[parts.length - 1].trim();
+      }
+    }
+  }
+  return "";
+}
+
+function toMillis(value) {
+  if (!value) {
+    return 0;
+  }
+  if (typeof value.toMillis === "function") {
+    return value.toMillis();
+  }
+  if (value instanceof Date) {
+    return value.getTime();
+  }
+  if (typeof value === "number") {
+    return value;
+  }
+  return 0;
 }
 
 async function loadGame() {
@@ -303,6 +436,8 @@ async function loadGame() {
   renderModeratorPanel();
   await renderVoteTallies();
 
+  const actionsByPostId = await loadActionsByPost(gameRef);
+
   let lastPost = null;
   try {
     const postsSnap = await getDocs(query(collection(gameRef, "posts"), orderBy("createdAt", "desc")));
@@ -352,6 +487,7 @@ async function loadGame() {
   let alt = false;
   postEntries.forEach((entry) => {
     const data = entry.data;
+    const actions = actionsByPostId.get(entry.id) || [];
     const post = {
       id: entry.id,
       title: data.title || "",
@@ -363,6 +499,7 @@ async function loadGame() {
       updatedAt: data.updatedAt || null,
       editedByName: data.editedByName || "",
       sig: data.sig || "",
+      actions,
     };
     els.postsContainer.appendChild(postRow(post.id, post, alt));
     alt = !alt;
@@ -370,6 +507,34 @@ async function loadGame() {
 
   await refreshMembershipAndControls();
   await loadPrivateChannels();
+}
+
+async function loadActionsByPost(gameRef) {
+  const map = new Map();
+  if (!gameRef || missingConfig) {
+    return map;
+  }
+  let snapshot;
+  try {
+    snapshot = await getDocs(collection(gameRef, "actions"));
+  } catch (error) {
+    console.warn("Failed to load post actions", error);
+    return map;
+  }
+  snapshot.forEach((docSnap) => {
+    const data = docSnap.data() || {};
+    const postId = extractActionPostId(data);
+    if (!postId) {
+      return;
+    }
+    const list = map.get(postId) || [];
+    list.push({ id: docSnap.id, ...data });
+    map.set(postId, list);
+  });
+  map.forEach((list) => {
+    list.sort((a, b) => toMillis(a.createdAt) - toMillis(b.createdAt));
+  });
+  return map;
 }
 
 async function fetchUserThumbnails(userIds = []) {

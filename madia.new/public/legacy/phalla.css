@@ -156,14 +156,55 @@ textarea, .bginput
 }
 .button
 {
-	background: #5a5a5a;
-	color: #ffffff;
-	font: 11px verdana, geneva, lucida, 'lucida grande', arial, helvetica, sans-serif;
-	border-width:1px; border-right: 1px solid #FAB60C; border-bottom: 1px solid #FAB60C;
+        background: #5a5a5a;
+        color: #ffffff;
+        font: 11px verdana, geneva, lucida, 'lucida grande', arial, helvetica, sans-serif;
+        border-width:1px; border-right: 1px solid #FAB60C; border-bottom: 1px solid #FAB60C;
+}
+.action-badges
+{
+        display: flex;
+        flex-direction: column;
+        align-items: flex-end;
+        gap: 2px;
+}
+.action-badge
+{
+        display: inline-block;
+        font: bold 11px verdana, geneva, lucida, 'lucida grande', arial, helvetica, sans-serif;
+        text-transform: none;
+}
+.action-badge-note
+{
+        display: inline-block;
+        margin-left: 4px;
+        font-weight: normal;
+        font-style: italic;
+        color: #F9A906;
+}
+.action-badge-vote.action-badge-active
+{
+        color: #ff7676;
+}
+.action-badge-vote.action-badge-retracted
+{
+        color: #6ee7b7;
+}
+.action-badge-claim.action-badge-active
+{
+        color: #ffe46b;
+}
+.action-badge-claim.action-badge-retracted
+{
+        color: #6ee7b7;
+}
+.action-badge-generic
+{
+        color: #DEE2F2;
 }
 select
 {
-	font: 11px verdana, geneva, lucida, 'lucida grande', arial, helvetica, sans-serif;
+        font: 11px verdana, geneva, lucida, 'lucida grande', arial, helvetica, sans-serif;
 }
 option, optgroup
 {
