@@ -8,6 +8,44 @@ Phalla is a game of social deduction played in the low light of the internet's c
 nightly votes decide who leaves the conversation. This manual is your invitation to play with confidence, grace, and just enough
 mischief.
 
+## Getting Started on the Site
+
+The legacy interface keeps things simple—almost every flow begins on the **List of Games** page. If you're ever lost, click the
+"List of Games" link in the top navigation or return to `games.asp` from the footer links.
+
+### Create an Account
+
+1. Click **Login** in the navigation bar (or browse directly to `login.asp`), then follow the **sign up!** link underneath the login form.
+2. Fill in the **Username**, **Password**, **Retype Password**, and (optionally) **Email Address** fields.
+3. Press the **Sign Up!** button. A cyan status line above the form confirms success or explains what to fix before signing in.
+
+### Sign In
+
+1. From any page, choose **Login** (or go straight to `login.asp` from the navigation or footer links).
+2. Enter your username and password, optionally check **remember**, and submit the form.
+3. Successful login redirects you to the games list so you can join or manage games right away.
+
+### Join an Existing Game
+
+1. Visit **List of Games** to browse open, running, and completed games.
+2. Click the game name (for example, `gamedisplay.asp?g=42`) to open the public thread.
+3. Use the **Join Game** button in the game header; once joined you can vote, post, and access the **my game** view for private
+   actions.
+
+### Create and Host a Game
+
+1. Open your profile by clicking your username in the header or visiting `member.asp`.
+2. Scroll to the **Games You Own** panel and locate the **Create Game** section.
+3. Provide a title, description, and initial settings, then press **create game**. The new game appears on the games list marked
+   as **Open**, ready for players to sign up.
+
+### Navigate Your Game Tools
+
+- **Public Thread (`gamedisplay.asp`)** – Post updates, record votes, and moderate day/night transitions.
+- **My Game (`mygame.asp`)** – Submit private actions, track vote history, and review role information.
+- **Player List (`playerlist.asp`)** – Review the roster, status icons, and hidden roles (for hosts).
+- **Replace Player (`replaceplayer.asp`)** – Host-only form to swap inactive players.
+
 ## The Cast & Their Callings
 
 - **Villagers** – Honest folk trying to survive long enough to expose the villains. Their strength is in voting together and
