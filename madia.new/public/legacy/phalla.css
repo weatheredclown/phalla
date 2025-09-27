@@ -161,6 +161,20 @@ textarea, .bginput
         font: 11px verdana, geneva, lucida, 'lucida grande', arial, helvetica, sans-serif;
         border-width:1px; border-right: 1px solid #FAB60C; border-bottom: 1px solid #FAB60C;
 }
+a.button {
+        display: inline-block;
+        padding: 2px 8px;
+        text-decoration: none;
+        color: #ffffff;
+}
+a.button:hover,
+a.button:focus {
+        color: #ffffff;
+        text-decoration: none;
+}
+.legacy-control-link {
+        text-transform: none;
+}
 .action-badges
 {
         display: flex;

@@ -67,6 +67,7 @@ const els = {
   postsList: document.getElementById("postsList"),
   replyForm: document.getElementById("replyForm"),
   replyBody: document.getElementById("replyBody"),
+  cancelReplyButton: document.getElementById("cancelReplyButton"),
   deleteThread: document.getElementById("deleteThread"),
   refreshThread: document.getElementById("refreshThread"),
   recordVoteButton: document.getElementById("recordVoteButton"),
@@ -265,6 +266,12 @@ function resetThreadSelection(message, postsMessage = "Select a thread to view p
   els.threadTitle.textContent = message;
   els.threadMetadata.textContent = "";
   showPostsMessage(postsMessage);
+  if (els.replyBody) {
+    els.replyBody.value = "";
+  }
+  if (els.replyForm) {
+    els.replyForm.hidden = true;
+  }
 }
 
 function stopRealtimeSubscriptions({ showSignedOutState = false } = {}) {
@@ -536,20 +543,30 @@ if (!missingConfig) {
   els.newThreadButton.addEventListener("click", requireAuth(() => {
     els.threadDialog.showModal();
   }));
-  els.threadForm.addEventListener("close", () => {
-    if (els.threadForm.returnValue === "default") {
-      const title = els.threadTitleInput.value.trim();
-      const body = els.threadBodyInput.value.trim();
-      if (title && body) {
-        createThread(title, body).catch((error) => {
-          console.error(error);
-          alert("Unable to create thread.");
-        });
+  if (els.threadDialog) {
+    els.threadDialog.addEventListener("close", () => {
+      if (els.threadDialog.returnValue === "default") {
+        const title = els.threadTitleInput.value.trim();
+        const body = els.threadBodyInput.value.trim();
+        if (title && body) {
+          createThread(title, body).catch((error) => {
+            console.error(error);
+            alert("Unable to create thread.");
+          });
+        }
       }
-    }
-    els.threadTitleInput.value = "";
-    els.threadBodyInput.value = "";
-  });
+      if (els.threadForm) {
+        els.threadForm.reset();
+      } else {
+        if (els.threadTitleInput) {
+          els.threadTitleInput.value = "";
+        }
+        if (els.threadBodyInput) {
+          els.threadBodyInput.value = "";
+        }
+      }
+    });
+  }
   els.deleteThread.addEventListener("click", requireAuth(deleteCurrentThread));
   els.replyForm.addEventListener("submit", requireAuth(submitReply));
   els.refreshThread.addEventListener("click", () => {
@@ -560,22 +577,41 @@ if (!missingConfig) {
   els.recordVoteButton.addEventListener("click", requireAuth(() => {
     els.voteDialog.showModal();
   }));
-  els.voteForm.addEventListener("close", () => {
-    if (els.voteForm.returnValue === "default") {
-      const player = els.votePlayerInput.value.trim();
-      const votes = parseInt(els.voteCountInput.value, 10) || 0;
-      const notes = els.voteNotesInput.value.trim();
-      if (player) {
-        recordVote(player, votes, notes).catch((error) => {
-          console.error(error);
-          alert("Unable to record vote.");
-        });
+  if (els.voteDialog) {
+    els.voteDialog.addEventListener("close", () => {
+      if (els.voteDialog.returnValue === "default") {
+        const player = els.votePlayerInput.value.trim();
+        const votes = parseInt(els.voteCountInput.value, 10) || 0;
+        const notes = els.voteNotesInput.value.trim();
+        if (player) {
+          recordVote(player, votes, notes).catch((error) => {
+            console.error(error);
+            alert("Unable to record vote.");
+          });
+        }
       }
-    }
-    els.votePlayerInput.value = "";
-    els.voteCountInput.value = "1";
-    els.voteNotesInput.value = "";
-  });
+      if (els.voteForm) {
+        els.voteForm.reset();
+      } else {
+        if (els.votePlayerInput) {
+          els.votePlayerInput.value = "";
+        }
+        if (els.voteCountInput) {
+          els.voteCountInput.value = "1";
+        }
+        if (els.voteNotesInput) {
+          els.voteNotesInput.value = "";
+        }
+      }
+    });
+  }
+
+  if (els.cancelReplyButton && els.replyBody) {
+    els.cancelReplyButton.addEventListener("click", () => {
+      els.replyBody.value = "";
+      els.replyBody.blur();
+    });
+  }
 
   onAuthStateChanged(auth, async (user) => {
     currentUser = user;

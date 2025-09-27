@@ -198,6 +198,80 @@ button.secondary {
   border-color: rgba(148, 163, 184, 0.2);
 }
 
+.reply-form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.reply-form label {
+  font-weight: 600;
+}
+
+.reply-form .panel-actions {
+  justify-content: flex-end;
+}
+
+.table-wrapper {
+  max-height: 360px;
+  overflow-y: auto;
+  border: 1px solid var(--panel-border);
+  border-radius: 0.75rem;
+}
+
+.vote-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.vote-table th,
+.vote-table td {
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid rgba(148, 163, 184, 0.15);
+  text-align: left;
+}
+
+.vote-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+dialog {
+  border: 1px solid var(--panel-border);
+  border-radius: 1rem;
+  background: rgba(15, 23, 42, 0.95);
+  color: inherit;
+  padding: 0;
+  width: min(480px, 90vw);
+}
+
+dialog::backdrop {
+  background: rgba(15, 23, 42, 0.6);
+}
+
+.dialog-form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  padding: 1.5rem;
+}
+
+.dialog-form label {
+  font-weight: 600;
+}
+
+.dialog-form textarea {
+  resize: vertical;
+}
+
+.dialog-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.75rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
 button.danger {
   background: linear-gradient(135deg, #ef4444, #f97316);
   box-shadow: 0 10px 25px -10px rgba(239, 68, 68, 0.8);
