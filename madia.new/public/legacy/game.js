@@ -756,15 +756,12 @@ const els = {
   privateActionDay: document.getElementById("privateActionDay"),
   voteRecordForm: document.getElementById("voteRecordForm"),
   voteTarget: document.getElementById("voteTarget"),
-  voteDay: document.getElementById("voteDay"),
   voteNotes: document.getElementById("voteNotes"),
   claimRecordForm: document.getElementById("claimRecordForm"),
   claimRoleSelect: document.getElementById("claimRoleSelect"),
   claimRoleCustom: document.getElementById("claimRoleCustom"),
-  claimDay: document.getElementById("claimDay"),
   notebookRecordForm: document.getElementById("notebookRecordForm"),
   notebookTarget: document.getElementById("notebookTarget"),
-  notebookDay: document.getElementById("notebookDay"),
   notebookNotes: document.getElementById("notebookNotes"),
   moderatorPanel: document.getElementById("moderatorPanel"),
   moderatorStatus: document.getElementById("moderatorStatus"),
@@ -1127,17 +1124,6 @@ async function loadGame() {
   }
   if (els.privateActionDay) {
     els.privateActionDay.value = g.day ?? 0;
-  }
-  if (els.voteDay) {
-    els.voteDay.value = g.day ?? 0;
-    els.voteDay.disabled = true;
-    els.voteDay.title = "Votes are recorded for the current day.";
-  }
-  if (els.claimDay) {
-    els.claimDay.value = g.day ?? 0;
-  }
-  if (els.notebookDay) {
-    els.notebookDay.value = g.day ?? 0;
   }
 
   // Meta row (last post, players, day, open)
@@ -2074,7 +2060,7 @@ els.voteRecordForm?.addEventListener("submit", async (event) => {
   const target = targetId ? findPlayerById(targetId) : null;
   const targetName = target?.name || "";
   const notes = (els.voteNotes?.value || "").trim();
-  const day = currentGame?.day ?? parseDayInput(els.voteDay);
+  const day = currentGame?.day ?? 0;
   if (!targetId) {
     setPlayerToolsStatus("Enter a vote target first.", "error");
     return;
@@ -2114,7 +2100,7 @@ els.claimRecordForm?.addEventListener("submit", async (event) => {
     selectedRole === CUSTOM_ROLE_OPTION_VALUE
       ? (els.claimRoleCustom?.value || "").trim()
       : selectedRole.trim();
-  const day = parseDayInput(els.claimDay);
+  const day = currentGame?.day ?? 0;
   if (!role) {
     setPlayerToolsStatus("Enter a role to claim.", "error");
     return;
@@ -2151,7 +2137,7 @@ els.notebookRecordForm?.addEventListener("submit", async (event) => {
   const target = targetId ? findPlayerById(targetId) : null;
   const targetName = target?.name || "";
   const notes = (els.notebookNotes?.value || "").trim();
-  const day = parseDayInput(els.notebookDay);
+  const day = currentGame?.day ?? 0;
   if (!targetId) {
     setPlayerToolsStatus("Choose a notebook target first.", "error");
     return;
