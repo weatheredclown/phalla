@@ -1126,11 +1126,12 @@ async function refreshMembershipAndControls() {
   try {
     const p = await getDoc(doc(db, "games", gameId, "players", user.uid));
     const joined = p.exists();
-    setDisplay(els.replyForm, joined ? "block" : "none");
-    setDisplay(els.joinButton, joined ? "none" : "inline-block");
+    const ownerView = currentGame && currentGame.ownerUserId === user.uid;
+    setDisplay(els.replyForm, joined || ownerView ? "block" : "none");
+    const canShowJoin = !!currentGame && !joined && !ownerView;
+    setDisplay(els.joinButton, canShowJoin ? "inline-block" : "none");
     setDisplay(els.leaveButton, joined ? "inline-block" : "none");
     currentPlayer = joined ? { id: p.id, ...p.data() } : null;
-    const ownerView = currentGame && currentGame.ownerUserId === user.uid;
     setDisplay(els.playerTools, joined || ownerView ? "block" : "none");
     updatePlayerToolsFormsVisibility();
     updatePublicActionControls();
@@ -1148,6 +1149,20 @@ els.joinButton?.addEventListener("click", async () => {
   const user = auth.currentUser;
   if (!user) {
     header?.openAuthPanel("login");
+    return;
+  }
+  let ownerId = currentGame?.ownerUserId || "";
+  if (!ownerId && gameId) {
+    try {
+      const snapshot = await getDoc(doc(db, "games", gameId));
+      ownerId = snapshot.exists() ? snapshot.data()?.ownerUserId || "" : "";
+    } catch (error) {
+      console.warn("Failed to verify game owner before joining", error);
+    }
+  }
+  if (ownerId && ownerId === user.uid) {
+    alert("Game owners manage players but do not join the roster.");
+    await refreshMembershipAndControls();
     return;
   }
   await setDoc(
