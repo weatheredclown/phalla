@@ -196,10 +196,11 @@ function watchGames() {
 
 async function decorateRow(game) {
   // Fetch meta similar to games.asp (counts, last post)
+  const ownerId = game.ownerUserId || "";
   let playerCount = 0;
   try {
     const playersSnap = await getDocs(collection(doc(db, "games", game.id), "players"));
-    playerCount = playersSnap.size;
+    playerCount = playersSnap.docs.filter((docSnap) => !ownerId || docSnap.id !== ownerId).length;
   } catch {}
 
   let postCount = 0;
@@ -216,7 +217,7 @@ async function decorateRow(game) {
   try {
     if (currentUser) {
       const pDoc = await getDoc(doc(db, "games", game.id, "players", currentUser.uid));
-      joined = pDoc.exists();
+      joined = pDoc.exists() && (!ownerId || pDoc.id !== ownerId);
     }
   } catch {}
 

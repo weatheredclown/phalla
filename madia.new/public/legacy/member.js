@@ -11,7 +11,6 @@ import {
   addDoc,
   doc,
   serverTimestamp,
-  setDoc,
   getDoc,
 } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 import {
@@ -535,7 +534,13 @@ async function loadLists() {
   for (const gid of gameIds) {
     try {
       const d = await getDoc(doc(db, "games", gid));
-      if (d.exists()) plays.push({ id: gid, ...d.data() });
+      if (d.exists()) {
+        const data = d.data();
+        if (data.ownerUserId === viewedUid) {
+          continue;
+        }
+        plays.push({ id: gid, ...data });
+      }
     } catch (error) {
       if (isPermissionDenied(error)) {
         handleListError(error);
@@ -587,16 +592,6 @@ els.createBtn.addEventListener("click", async () => {
     day: 0,
     createdAt: serverTimestamp(),
   });
-  // Auto-join owner
-  await setDoc(
-    doc(db, "games", newDoc.id, "players", currentUser.uid),
-    {
-      uid: currentUser.uid,
-      name: currentUser.displayName || "",
-      joinedAt: serverTimestamp(),
-    },
-    { merge: true }
-  );
   location.href = `/legacy/game.html?g=${newDoc.id}`;
 });
 

@@ -247,12 +247,15 @@ els.resetForm?.addEventListener("submit", async (event) => {
     });
     await deleteCollectionDocs(collection(gameRef, "actions"));
     const players = await getDocs(collection(gameRef, "players"));
+    const ownerId = currentGame?.ownerUserId || "";
     await Promise.all(
-      players.docs.map((docSnap) =>
-        updateDoc(docSnap.ref, { postsLeft: -1, active: true }).catch((error) => {
-          console.warn("Failed to reset player", docSnap.id, error);
-        })
-      )
+      players.docs
+        .filter((docSnap) => !ownerId || docSnap.id !== ownerId)
+        .map((docSnap) =>
+          updateDoc(docSnap.ref, { postsLeft: -1, active: true }).catch((error) => {
+            console.warn("Failed to reset player", docSnap.id, error);
+          })
+        )
     );
     await createSystemPost("Day 0 (game reset!)");
     setStatus("Game reset to Day 0.", "success");

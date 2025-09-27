@@ -167,6 +167,10 @@ let currentGame = null;
 let rosterById = new Map();
 let editingPlayerId = null;
 
+function normalizeId(value) {
+  return typeof value === "string" ? value.trim() : "";
+}
+
 async function ensurePlayerRecord(user) {
   if (!user) return null;
   const userRef = doc(db, "users", user.uid);
@@ -937,15 +941,19 @@ function showRosterMessage(message) {
 }
 
 function renderRoster(players) {
-  rosterById = new Map(players.map((player) => [player.id, player]));
+  const ownerId = normalizeId(currentGame?.ownerUserId);
+  const filteredPlayers = ownerId
+    ? players.filter((player) => normalizeId(player.id) !== ownerId)
+    : players;
+  rosterById = new Map(filteredPlayers.map((player) => [player.id, player]));
   if (!els.rosterTableBody) return;
   els.rosterTableBody.innerHTML = "";
-  if (!players.length) {
+  if (!filteredPlayers.length) {
     showRosterMessage("No players joined yet.");
     return;
   }
   const canEdit = isCurrentUserGameOwner();
-  players.forEach((player) => {
+  filteredPlayers.forEach((player) => {
     const row = document.createElement("tr");
     row.dataset.playerId = player.id;
 

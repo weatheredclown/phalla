@@ -44,24 +44,26 @@ async function loadPlayers() {
   playerRows.innerHTML = "";
   const gameRef = doc(db, "games", gameId);
   const gameSnap = await getDoc(gameRef);
+  const ownerId = gameSnap.exists() ? gameSnap.data().ownerUserId || "" : "";
   if (gameSnap.exists()) {
     const gameName = gameSnap.data().gamename || "(no name)";
     gameBreadcrumb.innerHTML = `&gt; <a href="/legacy/game.html?g=${encodeURIComponent(gameId)}">${escapeHtml(gameName)}</a>`;
   }
 
   const playersSnap = await getDocs(collection(gameRef, "players"));
-  if (playersSnap.empty) {
-    playerRows.innerHTML = '<tr><td class="alt1" colspan="3" align="center"><i>No players joined.</i></td></tr>';
-    return;
-  }
-
   const entries = playersSnap.docs
+    .filter((snap) => !ownerId || snap.id !== ownerId)
     .map((snap) => ({ id: snap.id, data: snap.data() }))
     .sort((a, b) => {
       const aName = (a.data.name || a.data.username || "").toLowerCase();
       const bName = (b.data.name || b.data.username || "").toLowerCase();
       return aName.localeCompare(bName);
     });
+
+  if (!entries.length) {
+    playerRows.innerHTML = '<tr><td class="alt1" colspan="3" align="center"><i>No players joined.</i></td></tr>';
+    return;
+  }
 
   entries.forEach((entry, idx) => {
     playerRows.appendChild(renderRow(entry, idx % 2 === 0));

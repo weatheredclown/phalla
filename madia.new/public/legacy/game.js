@@ -496,7 +496,9 @@ async function loadGame() {
   // Meta row (last post, players, day, open)
   try {
     const playersSnap = await getDocs(collection(gameRef, "players"));
+    const ownerId = g.ownerUserId || "";
     gamePlayers = playersSnap.docs
+      .filter((docSnap) => !ownerId || docSnap.id !== ownerId)
       .map((docSnap) => {
         const data = docSnap.data() || {};
         const name = data.name || data.username || data.displayName || docSnap.id;
@@ -1124,13 +1126,13 @@ async function refreshMembershipAndControls() {
     return;
   }
   try {
-    const p = await getDoc(doc(db, "games", gameId, "players", user.uid));
-    const joined = p.exists();
-    setDisplay(els.replyForm, joined ? "block" : "none");
-    setDisplay(els.joinButton, joined ? "none" : "inline-block");
-    setDisplay(els.leaveButton, joined ? "inline-block" : "none");
-    currentPlayer = joined ? { id: p.id, ...p.data() } : null;
+    const playerDoc = await getDoc(doc(db, "games", gameId, "players", user.uid));
     const ownerView = currentGame && currentGame.ownerUserId === user.uid;
+    const joined = playerDoc.exists() && (!ownerView || playerDoc.id !== currentGame.ownerUserId);
+    currentPlayer = joined ? { id: playerDoc.id, ...playerDoc.data() } : null;
+    setDisplay(els.replyForm, joined || ownerView ? "block" : "none");
+    setDisplay(els.joinButton, ownerView ? "none" : joined ? "none" : "inline-block");
+    setDisplay(els.leaveButton, ownerView ? "none" : joined ? "inline-block" : "none");
     setDisplay(els.playerTools, joined || ownerView ? "block" : "none");
     updatePlayerToolsFormsVisibility();
     updatePublicActionControls();
@@ -1710,6 +1712,12 @@ function updatePlayerToolsFormsVisibility() {
   const gameActive = isGameCurrentlyActive();
   const dayStarted = hasGameDayStarted();
   const lockedForPlayer = isGameLockedForPlayers() && !ownerView;
+  const canUseTools =
+    (joined || ownerView) &&
+    !lockedForPlayer &&
+    gameActive &&
+    dayStarted &&
+    (playerActive || ownerView);
 
   if (!joined && !ownerView) {
     setDisplay(els.privateActionForm, "none");
@@ -1721,7 +1729,7 @@ function updatePlayerToolsFormsVisibility() {
     return;
   }
 
-  if (lockedForPlayer || !gameActive || !dayStarted || !playerActive) {
+  if (!canUseTools) {
     setDisplay(els.privateActionForm, "none");
     setDisplay(els.voteRecordForm, "none");
     setDisplay(els.claimRecordForm, "none");
@@ -3207,6 +3215,7 @@ function populateReplacementSelect() {
   if (!select) {
     return;
   }
+  const ownerId = normalizeIdentifier(currentGame?.ownerUserId);
   const previous = select.value;
   select.innerHTML = "";
 
@@ -3218,6 +3227,9 @@ function populateReplacementSelect() {
   const currentIds = new Set(gamePlayers.map((player) => player.id));
   replacementCandidates.forEach(({ id, name }) => {
     if (currentIds.has(id)) {
+      return;
+    }
+    if (ownerId && normalizeIdentifier(id) === ownerId) {
       return;
     }
     const option = document.createElement("option");
@@ -3494,6 +3506,13 @@ async function executeModeratorReplacement(playerId, userDoc) {
   const newUserId = userDoc.id;
   if (!newUserId) {
     setModeratorStatus("Replacement player not found.", "error");
+    return;
+  }
+  if (
+    currentGame?.ownerUserId &&
+    normalizeIdentifier(newUserId) === normalizeIdentifier(currentGame.ownerUserId)
+  ) {
+    setModeratorStatus("The game owner cannot join as a player.", "error");
     return;
   }
   if (gamePlayers.some((player) => player.id === newUserId)) {

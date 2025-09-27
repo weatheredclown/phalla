@@ -241,6 +241,9 @@ async function fetchLatestPlayers() {
 
       snap.forEach((playerDoc) => {
         const data = playerDoc.data() || {};
+        if (gameData?.ownerUserId && playerDoc.id === gameData.ownerUserId) {
+          return;
+        }
         const joinedAt =
           data.joinedAt ||
           data.createdAt ||
