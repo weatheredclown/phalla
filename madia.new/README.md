@@ -145,6 +145,10 @@ service cloud.firestore {
       allow read: if true;
       allow write: if request.auth != null && request.auth.uid == userId;
     }
+
+    match /roles/{roleId} {
+      allow read: if true;
+    }
   }
 }
 ```
