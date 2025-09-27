@@ -1,6 +1,61 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isGameOwner(gameId) {
+      return isSignedIn()
+        && get(/databases/$(database)/documents/games/$(gameId)).data.ownerUserId == request.auth.uid;
+    }
+
+    function listContains(data, field, value) {
+      return field in data && data[field] is list && data[field].hasAny([value]);
+    }
+
+    function allowOwnerView(channel) {
+      return !("allowOwner" in channel) || channel.allowOwner == true;
+    }
+
+    function allowOwnerPost(channel) {
+      return ("allowOwnerPost" in channel ? channel.allowOwnerPost == true : allowOwnerView(channel));
+    }
+
+    function canViewChannel(gameId, channel) {
+      return isSignedIn()
+        && (
+          listContains(channel, "memberIds", request.auth.uid)
+          || listContains(channel, "members", request.auth.uid)
+          || listContains(channel, "writerIds", request.auth.uid)
+          || listContains(channel, "posterIds", request.auth.uid)
+          || listContains(channel, "writers", request.auth.uid)
+          || listContains(channel, "viewerIds", request.auth.uid)
+          || listContains(channel, "viewers", request.auth.uid)
+          || listContains(channel, "readerIds", request.auth.uid)
+          || listContains(channel, "spectatorIds", request.auth.uid)
+          || listContains(channel, "readonlyIds", request.auth.uid)
+          || listContains(channel, "readOnlyIds", request.auth.uid)
+          || listContains(channel, "extraViewerIds", request.auth.uid)
+          || listContains(channel, "additionalViewers", request.auth.uid)
+          || listContains(channel, "additionalReaderIds", request.auth.uid)
+          || listContains(channel, "observerIds", request.auth.uid)
+          || (allowOwnerView(channel) && isGameOwner(gameId))
+        );
+    }
+
+    function canPostToChannel(gameId, channel) {
+      return isSignedIn()
+        && (
+          listContains(channel, "memberIds", request.auth.uid)
+          || listContains(channel, "members", request.auth.uid)
+          || listContains(channel, "writerIds", request.auth.uid)
+          || listContains(channel, "posterIds", request.auth.uid)
+          || listContains(channel, "writers", request.auth.uid)
+          || (allowOwnerPost(channel) && isGameOwner(gameId))
+        );
+    }
+
     match /games/{gameId} {
       allow read: if true;
       allow create: if request.auth != null && request.resource.data.ownerUserId == request.auth.uid;
@@ -37,6 +92,20 @@ service cloud.firestore {
         allow update: if request.auth != null && request.auth.uid == resource.data.playerId;
         allow delete: if request.auth != null
           && get(/databases/$(database)/documents/games/$(gameId)).data.ownerUserId == request.auth.uid;
+      }
+
+      match /channels/{channelId} {
+        allow read: if canViewChannel(gameId, resource.data);
+        allow create, update, delete: if isGameOwner(gameId);
+
+        match /posts/{postId} {
+          allow read: if canViewChannel(gameId, get(/databases/$(database)/documents/games/$(gameId)/channels/$(channelId)).data);
+          allow create: if canPostToChannel(gameId, get(/databases/$(database)/documents/games/$(gameId)/channels/$(channelId)).data)
+            && request.auth.uid == request.resource.data.authorId;
+          allow update: if request.auth != null
+            && (request.auth.uid == resource.data.authorId || isGameOwner(gameId));
+          allow delete: if request.auth != null && isGameOwner(gameId);
+        }
       }
     }
 
