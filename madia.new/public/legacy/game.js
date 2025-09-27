@@ -15,7 +15,7 @@ import {
   deleteField,
   runTransaction,
 } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
-import { ubbToHtml } from "/legacy/ubb.js";
+import { escapeHtml as baseEscapeHtml, ubbToHtml } from "/legacy/ubb.js";
 import { auth, db, ensureUserDocument, missingConfig } from "./firebase.js";
 import { initLegacyHeader } from "./header.js";
 
@@ -673,12 +673,7 @@ function escapeHtml(value) {
   if (value === null || value === undefined) {
     return "";
   }
-  return String(value)
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;")
-    .replace(/'/g, "&#39;");
+  return baseEscapeHtml(value);
 }
 
 function renderPrivateChannel(channel, posts, options = {}) {
@@ -3224,15 +3219,6 @@ function playerIsAlive(data = {}) {
     }
   }
   return true;
-}
-
-function escapeHtml(value) {
-  return String(value)
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;")
-    .replace(/'/g, "&#39;");
 }
 
 async function handleEditPost(postId, post) {
