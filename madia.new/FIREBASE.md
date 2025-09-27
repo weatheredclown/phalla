@@ -46,6 +46,9 @@ players:
   (all strings), `email` (string), `photoURL` (optional string), and
   timestamps (`createdAt`, `lastLoginAt`). The login page looks up
   `usernameLower` to support username-based sign-in.
+- Role suggestions in the moderator tools are now drawn from a fixed
+  client-side list, so there is no need to seed a `/roles` collection in
+  Firestore.
 
 The retro login experience lives at `/legacy/login.html` and mimics the
 classic ASP form. Ensure the Firebase Authentication Email/Password
