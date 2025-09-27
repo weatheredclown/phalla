@@ -1,0 +1,68 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /games/{gameId} {
+      allow read: if true;
+      allow create: if request.auth != null && request.resource.data.ownerUserId == request.auth.uid;
+      allow update, delete: if request.auth != null && resource.data.ownerUserId == request.auth.uid;
+
+      match /players/{playerId} {
+        allow read: if true;
+        allow create, delete: if request.auth != null && request.auth.uid == playerId;
+        allow update: if request.auth != null && (
+          request.auth.uid == playerId ||
+          get(/databases/$(database)/documents/games/$(gameId)).data.ownerUserId == request.auth.uid
+        );
+      }
+
+      match /posts/{postId} {
+        allow read: if true;
+        allow create: if request.auth != null
+          && exists(/databases/$(database)/documents/games/$(gameId)/players/$(request.auth.uid));
+        allow update: if request.auth != null && (
+          request.auth.uid == resource.data.authorId ||
+          get(/databases/$(database)/documents/games/$(gameId)).data.ownerUserId == request.auth.uid
+        );
+        allow delete: if request.auth != null
+          && get(/databases/$(database)/documents/games/$(gameId)).data.ownerUserId == request.auth.uid;
+      }
+
+      match /actions/{actionId} {
+        allow read: if request.auth != null && (
+          request.auth.uid == resource.data.playerId ||
+          get(/databases/$(database)/documents/games/$(gameId)).data.ownerUserId == request.auth.uid
+        );
+        allow create: if request.auth != null && request.resource.data.playerId == request.auth.uid;
+        allow update: if request.auth != null && request.auth.uid == resource.data.playerId;
+        allow delete: if request.auth != null
+          && get(/databases/$(database)/documents/games/$(gameId)).data.ownerUserId == request.auth.uid;
+      }
+    }
+
+    match /threads/{threadId} {
+      allow read: if true;
+      allow create: if request.auth != null && request.resource.data.createdBy == request.auth.uid;
+      allow update, delete: if request.auth != null && resource.data.createdBy == request.auth.uid;
+
+      match /posts/{postId} {
+        allow read: if true;
+        allow create: if request.auth != null && request.resource.data.author == request.auth.uid;
+      }
+    }
+
+    match /votes/{voteId} {
+      allow read: if true;
+      allow create: if request.auth != null && request.resource.data.recordedBy == request.auth.uid;
+      allow delete: if request.auth != null && resource.data.recordedBy == request.auth.uid;
+    }
+
+    match /users/{userId} {
+      allow read: if true;
+      allow write: if request.auth != null && request.auth.uid == userId;
+    }
+
+    match /roles/{roleId} {
+      allow read: if true;
+    }
+  }
+}
