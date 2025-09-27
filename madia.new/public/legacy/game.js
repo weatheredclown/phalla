@@ -1246,22 +1246,44 @@ async function loadActionsByPost(gameRef) {
   if (!gameRef || missingConfig) {
     return map;
   }
-  let snapshot;
+
+  const actionsRef = collection(gameRef, "actions");
+  const snapshots = [];
+
   try {
-    snapshot = await getDocs(collection(gameRef, "actions"));
+    if (isOwnerView) {
+      snapshots.push(await getDocs(actionsRef));
+    } else {
+      snapshots.push(
+        await getDocs(query(actionsRef, where("category", "==", "vote")))
+      );
+      if (currentUser) {
+        snapshots.push(
+          await getDocs(query(actionsRef, where("playerId", "==", currentUser.uid)))
+        );
+      }
+    }
   } catch (error) {
     console.warn("Failed to load post actions", error);
     return map;
   }
-  snapshot.forEach((docSnap) => {
-    const data = docSnap.data() || {};
-    const postId = extractActionPostId(data);
-    if (!postId) {
-      return;
-    }
-    const list = map.get(postId) || [];
-    list.push({ id: docSnap.id, ...data });
-    map.set(postId, list);
+
+  const seen = new Set();
+  snapshots.forEach((snapshot) => {
+    snapshot.forEach((docSnap) => {
+      if (seen.has(docSnap.id)) {
+        return;
+      }
+      seen.add(docSnap.id);
+      const data = docSnap.data() || {};
+      const postId = extractActionPostId(data);
+      if (!postId) {
+        return;
+      }
+      const list = map.get(postId) || [];
+      list.push({ id: docSnap.id, ...data });
+      map.set(postId, list);
+    });
   });
   map.forEach((list) => {
     list.sort((a, b) => toMillis(a.createdAt) - toMillis(b.createdAt));
