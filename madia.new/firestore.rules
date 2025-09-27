@@ -30,7 +30,8 @@ service cloud.firestore {
       match /actions/{actionId} {
         allow read: if request.auth != null && (
           request.auth.uid == resource.data.playerId ||
-          get(/databases/$(database)/documents/games/$(gameId)).data.ownerUserId == request.auth.uid
+          get(/databases/$(database)/documents/games/$(gameId)).data.ownerUserId == request.auth.uid ||
+          (resource.data.category == "vote" && exists(/databases/$(database)/documents/games/$(gameId)/players/$(request.auth.uid)))
         );
         allow create: if request.auth != null && request.resource.data.playerId == request.auth.uid;
         allow update: if request.auth != null && request.auth.uid == resource.data.playerId;
