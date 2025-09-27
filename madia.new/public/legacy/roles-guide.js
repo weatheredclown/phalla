@@ -63,13 +63,6 @@ function createRoleCard(role) {
 
   headCell.appendChild(heading);
 
-  if (Array.isArray(role.tags) && role.tags.length) {
-    const tags = document.createElement("div");
-    tags.className = "role-card__tags smallfont";
-    tags.textContent = `Tags: ${role.tags.join(", ")}`;
-    headCell.appendChild(tags);
-  }
-
   headRow.appendChild(headCell);
   thead.appendChild(headRow);
   table.appendChild(thead);
@@ -230,10 +223,6 @@ function renderActions(actions, emptyMessage) {
     if (action.notes) {
       details.push(`Notes: ${action.notes}`);
     }
-    if (Array.isArray(action.tags) && action.tags.length) {
-      details.push(`Tags: ${action.tags.join(", ")}`);
-    }
-
     if (details.length) {
       const meta = document.createElement("div");
       meta.className = "smallfont role-card__action-meta";
