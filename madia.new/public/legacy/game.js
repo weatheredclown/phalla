@@ -452,6 +452,8 @@ async function loadGame() {
   }
   if (els.voteDay) {
     els.voteDay.value = g.day ?? 0;
+    els.voteDay.disabled = true;
+    els.voteDay.title = "Votes are recorded for the current day.";
   }
   if (els.claimDay) {
     els.claimDay.value = g.day ?? 0;
@@ -1322,7 +1324,7 @@ els.voteRecordForm?.addEventListener("submit", async (event) => {
   const target = targetId ? findPlayerById(targetId) : null;
   const targetName = target?.name || "";
   const notes = (els.voteNotes?.value || "").trim();
-  const day = parseDayInput(els.voteDay);
+  const day = currentGame?.day ?? parseDayInput(els.voteDay);
   if (!targetId) {
     setPlayerToolsStatus("Enter a vote target first.", "error");
     return;
