@@ -51,6 +51,19 @@ madia.new/
     └── styles.css       # Modernized styling
 ```
 
+### Syncing legacy role data
+
+The retro moderator tools load canonical role definitions and action
+metadata from the classic `phalla.mdb` exports under `docs/db_exports/`.
+Whenever those CSV files change, regenerate the browser bundle with:
+
+```bash
+node scripts/build-legacy-game-data.mjs
+```
+
+This command rewrites `public/legacy/roles-data.js` with the latest
+roles, action types, and rule metadata.
+
 ## Prerequisites
 
 - Node.js 18+ (for the Firebase CLI)

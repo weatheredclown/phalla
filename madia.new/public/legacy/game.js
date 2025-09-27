@@ -18,7 +18,11 @@ import {
 import { escapeHtml as baseEscapeHtml, ubbToHtml } from "/legacy/ubb.js";
 import { auth, db, ensureUserDocument, missingConfig } from "./firebase.js";
 import { initLegacyHeader } from "./header.js";
-import { ROLE_NAMES, getCanonicalRoleDefinition } from "./roles-data.js";
+import {
+  ROLE_NAMES,
+  getCanonicalRoleDefinition,
+  getActionTypeDefinition,
+} from "./roles-data.js";
 
 function getParam(name) {
   const params = new URLSearchParams(location.search);
@@ -367,7 +371,23 @@ function renderClaimActionBadge(action = {}) {
 }
 
 function renderGenericActionBadge(action = {}) {
-  const name = escapeHtml(action.actionName || action.category || "Action");
+  let resolved = null;
+  if (typeof action.actionTypeId === "number") {
+    resolved = getActionTypeDefinition(action.actionTypeId);
+  }
+  if (!resolved) {
+    const normalized = normalizeActionName(action.actionName || action.category);
+    if (normalized) {
+      resolved = getActionTypeDefinition(normalized);
+    }
+  }
+  const displayName =
+    resolved?.label ||
+    resolved?.name ||
+    action.actionName ||
+    action.category ||
+    "Action";
+  const name = escapeHtml(displayName);
   const target = escapeHtml(action.targetName || getPlayerDisplayName(normalizeIdentifier(action.targetPlayerId)) || "");
   const note = getActionNote(action, { includeFor: "generic" });
   const classes = ["action-badge", "action-badge-generic"];
