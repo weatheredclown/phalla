@@ -131,6 +131,8 @@ let replacementCandidates = [];
 let replacementCandidateDocs = new Map();
 let replacementCandidatesPromise = null;
 let pendingReplacementPlayerId = null;
+let postCache = new Map();
+let pendingQuote = null;
 
 onAuthStateChanged(auth, async (user) => {
   currentUser = user;
@@ -149,6 +151,11 @@ onAuthStateChanged(auth, async (user) => {
 const gameId = getParam("g");
 if (!gameId) {
   els.gameTitle.textContent = "Missing game id";
+}
+
+const initialQuotePostId = getParam("q");
+if (initialQuotePostId) {
+  queueQuote(initialQuotePostId, { scroll: true, updateUrl: false });
 }
 
 if (els.playerListLink && gameId) {
@@ -270,28 +277,39 @@ function postRow(postId, post, alt) {
   const canDelete =
     !!currentUser && currentGame?.ownerUserId === currentUser.uid;
 
-  if (canEdit || canDelete) {
+  const actionButtons = [];
+
+  if (canEdit) {
+    const editButton = document.createElement("button");
+    editButton.type = "button";
+    editButton.className = "button";
+    editButton.textContent = "Edit Post";
+    editButton.addEventListener("click", () => handleEditPost(postId, post));
+    actionButtons.push(editButton);
+  }
+
+  if (canDelete) {
+    const deleteButton = document.createElement("button");
+    deleteButton.type = "button";
+    deleteButton.className = "button";
+    deleteButton.textContent = "Delete Post";
+    deleteButton.addEventListener("click", () => handleDeletePost(postId));
+    actionButtons.push(deleteButton);
+  }
+
+  if (canCurrentUserPost()) {
+    const quoteButton = document.createElement("button");
+    quoteButton.type = "button";
+    quoteButton.className = "button";
+    quoteButton.textContent = "Quote";
+    quoteButton.addEventListener("click", () => handleQuotePost(postId));
+    actionButtons.push(quoteButton);
+  }
+
+  if (actionButtons.length) {
     const actions = document.createElement("div");
     actions.className = "post-actions";
-
-    if (canEdit) {
-      const editButton = document.createElement("button");
-      editButton.type = "button";
-      editButton.className = "button";
-      editButton.textContent = "Edit Post";
-      editButton.addEventListener("click", () => handleEditPost(postId, post));
-      actions.appendChild(editButton);
-    }
-
-    if (canDelete) {
-      const deleteButton = document.createElement("button");
-      deleteButton.type = "button";
-      deleteButton.className = "button";
-      deleteButton.textContent = "Delete Post";
-      deleteButton.addEventListener("click", () => handleDeletePost(postId));
-      actions.appendChild(deleteButton);
-    }
-
+    actionButtons.forEach((button) => actions.appendChild(button));
     container.appendChild(actions);
   }
 
@@ -535,6 +553,7 @@ async function loadGame() {
   const avatarMap = await fetchUserThumbnails(Array.from(authorIds));
 
   let alt = false;
+  postCache = new Map();
   postEntries.forEach((entry) => {
     const data = entry.data;
     const actions = actionsByPostId.get(entry.id) || [];
@@ -551,9 +570,12 @@ async function loadGame() {
       sig: data.sig || "",
       actions,
     };
+    postCache.set(entry.id, post);
     els.postsContainer.appendChild(postRow(post.id, post, alt));
     alt = !alt;
   });
+
+  attemptApplyPendingQuote();
 
   await refreshMembershipAndControls();
   await loadPrivateChannels();
@@ -1065,6 +1087,7 @@ async function refreshMembershipAndControls() {
   populateClaimRoleOptions();
   updatePlayerToolsFormsVisibility();
   updatePublicActionControls();
+  attemptApplyPendingQuote();
 }
 
 els.joinButton?.addEventListener("click", async () => {
@@ -1075,6 +1098,7 @@ els.joinButton?.addEventListener("click", async () => {
   }
   await setDoc(doc(db, "games", gameId, "players", user.uid), { uid: user.uid, name: user.displayName || "" });
   await refreshMembershipAndControls();
+  await loadGame();
 });
 
 els.leaveButton?.addEventListener("click", async () => {
@@ -1086,6 +1110,7 @@ els.leaveButton?.addEventListener("click", async () => {
   // Delete player doc keyed by uid
   await deleteDoc(doc(db, "games", gameId, "players", user.uid));
   await refreshMembershipAndControls();
+  await loadGame();
 });
 
 els.postReply.addEventListener("click", async () => {
@@ -2118,6 +2143,125 @@ function toggleClaimRoleCustom(selectEl, inputEl) {
   if (!isCustom) {
     inputEl.value = "";
   }
+}
+
+function handleQuotePost(postId) {
+  if (!postId) {
+    return;
+  }
+  queueQuote(postId, { scroll: true, updateUrl: true, focus: true });
+}
+
+function queueQuote(postId, options = {}) {
+  if (!postId) {
+    return;
+  }
+  pendingQuote = { postId, ...options };
+  attemptApplyPendingQuote();
+}
+
+function attemptApplyPendingQuote() {
+  if (!pendingQuote) {
+    return;
+  }
+  const post = postCache.get(pendingQuote.postId);
+  if (!post) {
+    return;
+  }
+  if (!canCurrentUserPost()) {
+    return;
+  }
+  applyQuoteToReply(pendingQuote.postId, post, pendingQuote);
+  pendingQuote = null;
+}
+
+function applyQuoteToReply(postId, post, options = {}) {
+  if (!els.replyBody) {
+    return;
+  }
+  const { scroll = false, updateUrl = true, focus = false, append = true } = options;
+  const quoteTitle = buildQuoteTitle(post);
+  if (quoteTitle && els.replyTitle && !els.replyTitle.value.trim()) {
+    els.replyTitle.value = quoteTitle;
+  }
+  const quoteBlock = buildQuoteBlock(post);
+  if (!quoteBlock) {
+    return;
+  }
+  const existing = els.replyBody.value || "";
+  const trimmedExisting = existing.replace(/\s*$/, "");
+  const nextValue = append && trimmedExisting
+    ? `${trimmedExisting}\n\n${quoteBlock}`
+    : quoteBlock;
+  els.replyBody.value = nextValue;
+  if (focus) {
+    setReplyCursorToEnd();
+  }
+  if (scroll) {
+    scrollReplyFormIntoView();
+  }
+  if (updateUrl) {
+    updateQuoteParam(postId, { setHash: true });
+  }
+}
+
+function buildQuoteTitle(post = {}) {
+  const title = typeof post.title === "string" ? post.title.trim() : "";
+  if (!title) {
+    return "";
+  }
+  if (/^re:/i.test(title)) {
+    return title;
+  }
+  return `RE: ${title}`;
+}
+
+function buildQuoteBlock(post = {}) {
+  const rawBody =
+    typeof post.body === "string" ? post.body : post.body ? String(post.body) : "";
+  return `[quote]${rawBody}[/quote]\n\n`;
+}
+
+function scrollReplyFormIntoView() {
+  const anchor = document.getElementById("reply") || els.replyForm;
+  anchor?.scrollIntoView({ behavior: "smooth", block: "start" });
+}
+
+function setReplyCursorToEnd() {
+  if (!els.replyBody) {
+    return;
+  }
+  const length = els.replyBody.value.length;
+  els.replyBody.focus();
+  els.replyBody.setSelectionRange(length, length);
+}
+
+function updateQuoteParam(postId, options = {}) {
+  const { setHash = false } = options;
+  try {
+    const url = new URL(window.location.href);
+    if (postId) {
+      url.searchParams.set("q", postId);
+    } else {
+      url.searchParams.delete("q");
+    }
+    if (setHash) {
+      url.hash = "#reply";
+    }
+    history.replaceState({}, "", url.toString());
+  } catch (error) {
+    console.warn("Failed to update quote param", error);
+  }
+}
+
+function canCurrentUserPost() {
+  if (!auth.currentUser) {
+    return false;
+  }
+  if (isOwnerView) {
+    return true;
+  }
+  return !!currentPlayer;
 }
 
 function getAvailablePrivateActionNames() {
