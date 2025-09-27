@@ -217,6 +217,67 @@
                       <button type="button" class="ubb-button" data-ubb-tag="u" title="Underline">U</button>
                     </div>
                     <textarea id="replyBody" class="bginput" rows="6" style="width:98%"></textarea>
+                    <div
+                      id="publicActionsBlock"
+                      class="smallfont"
+                      style="margin-top:12px; display:none;"
+                    >
+                      <div><strong>Actions</strong></div>
+                      <div class="public-actions-list">
+                        <div id="publicActionVoteRow" class="public-action-row">
+                          <label>
+                            <input type="checkbox" id="publicActionVote" />
+                            Vote
+                          </label>
+                          <select
+                            id="publicActionVoteTarget"
+                            class="bginput"
+                            style="margin-left:6px;"
+                          ></select>
+                        </div>
+                        <div id="publicActionUnvoteRow" class="public-action-row">
+                          <label>
+                            <input type="checkbox" id="publicActionUnvote" />
+                            Unvote
+                          </label>
+                        </div>
+                        <div id="publicActionClaimRow" class="public-action-row">
+                          <label>
+                            <input type="checkbox" id="publicActionClaim" />
+                            Claim
+                          </label>
+                          <div style="margin-top:4px;">
+                            <select id="publicClaimRoleSelect" class="bginput"></select>
+                            <input
+                              id="publicClaimRoleCustom"
+                              class="bginput"
+                              style="display:none; margin-top:6px; width:250px;"
+                              placeholder="Enter role name"
+                            />
+                          </div>
+                        </div>
+                        <div id="publicActionNotebookRow" class="public-action-row">
+                          <label>
+                            <input type="checkbox" id="publicActionNotebook" />
+                            Notebook
+                          </label>
+                          <div style="margin-top:4px;">
+                            <select id="publicNotebookTarget" class="bginput"></select>
+                            <input
+                              id="publicNotebookNotes"
+                              class="bginput"
+                              style="margin-top:6px; width:250px;"
+                              placeholder="Notes (optional)"
+                            />
+                          </div>
+                        </div>
+                      </div>
+                      <div
+                        id="publicActionsStatus"
+                        class="smallfont"
+                        style="display:none; margin-top:6px; color:#F9A906;"
+                      ></div>
+                    </div>
                     <div style="margin-top:8px;"><button id="postReply" class="button">Post Reply</button></div>
                   </td>
                 </tr>
