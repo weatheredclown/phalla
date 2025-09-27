@@ -788,6 +788,8 @@ async function loadPrivateChannels() {
   const ownerId = normalizeIdentifier(currentGame?.ownerUserId);
 
   const accessibleChannels = [];
+  const hasAnyChannels = channelSnapshot.size > 0;
+
   channelSnapshot.forEach((docSnap) => {
     const data = docSnap.data() || {};
     const memberIds = collectIdSet(data, [
@@ -816,13 +818,16 @@ async function loadPrivateChannels() {
     const allowOwnerPost =
       data.allowOwnerPost === undefined ? allowOwnerView : Boolean(data.allowOwnerPost);
 
+    const isOwner = ownerId && userId && userId === ownerId;
     const canView =
       (userId && memberIds.has(userId)) ||
       (userId && viewerIds.has(userId)) ||
       (userId && extraViewers.has(userId)) ||
-      (ownerId && userId === ownerId && allowOwnerView);
+      (isOwner && allowOwnerView);
 
-    if (canView) {
+    const ownerOverride = isOwner && !canView;
+
+    if (canView || ownerOverride) {
       accessibleChannels.push({
         id: docSnap.id,
         data,
@@ -835,11 +840,24 @@ async function loadPrivateChannels() {
 
   if (!accessibleChannels.length) {
     const isOwner = ownerId && userId && userId === ownerId;
-    const message = currentPlayer || isOwner
-      ? "No private discussions available for your role yet."
-      : "Join the game to view your role discussions.";
+    if (isOwner) {
+      container.innerHTML = "";
+      setPrivateChannelsStatus("No private discussions configured yet.");
+      return;
+    }
+
+    if (currentPlayer) {
+      if (hasAnyChannels) {
+        clearPrivateChannels();
+        return;
+      }
+      container.innerHTML = "";
+      setPrivateChannelsStatus("No private discussions available for your role yet.");
+      return;
+    }
+
     container.innerHTML = "";
-    setPrivateChannelsStatus(message);
+    setPrivateChannelsStatus("Join the game to view your role discussions.");
     return;
   }
 
