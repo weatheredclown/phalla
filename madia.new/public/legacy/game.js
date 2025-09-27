@@ -30,6 +30,7 @@ const header = initLegacyHeader();
 const CUSTOM_ROLE_OPTION_VALUE = "__custom-role__";
 const CUSTOM_ACTION_OPTION_VALUE = "__custom-action__";
 const CUSTOM_TARGET_OPTION_VALUE = "__custom-target__";
+const CUSTOM_REPLACEMENT_OPTION_VALUE = "__custom-replacement__";
 
 const ACTION_LIMIT_ERROR_CODE = "action-limit-exceeded";
 const ACTION_RULE_KEYS = [
@@ -82,7 +83,8 @@ const els = {
   voteDay: document.getElementById("voteDay"),
   voteNotes: document.getElementById("voteNotes"),
   claimRecordForm: document.getElementById("claimRecordForm"),
-  claimRole: document.getElementById("claimRole"),
+  claimRoleSelect: document.getElementById("claimRoleSelect"),
+  claimRoleCustom: document.getElementById("claimRoleCustom"),
   claimDay: document.getElementById("claimDay"),
   notebookRecordForm: document.getElementById("notebookRecordForm"),
   notebookTarget: document.getElementById("notebookTarget"),
@@ -91,6 +93,12 @@ const els = {
   moderatorPanel: document.getElementById("moderatorPanel"),
   moderatorStatus: document.getElementById("moderatorStatus"),
   moderatorRows: document.getElementById("moderatorRows"),
+  replacePlayerControls: document.getElementById("replacePlayerControls"),
+  replacePlayerName: document.getElementById("replacePlayerName"),
+  replacePlayerSelect: document.getElementById("replacePlayerSelect"),
+  replacePlayerCustom: document.getElementById("replacePlayerCustom"),
+  confirmReplaceButton: document.getElementById("confirmReplaceButton"),
+  cancelReplaceButton: document.getElementById("cancelReplaceButton"),
   playerListLink: document.getElementById("playerListLink"),
   actionHistorySection: document.getElementById("actionHistorySection"),
   actionHistoryContent: document.getElementById("actionHistoryContent"),
@@ -104,6 +112,10 @@ let gamePlayers = [];
 let isOwnerView = false;
 let availableRoles = [];
 let rolesLoadPromise = null;
+let replacementCandidates = [];
+let replacementCandidateDocs = new Map();
+let replacementCandidatesPromise = null;
+let pendingReplacementPlayerId = null;
 
 onAuthStateChanged(auth, async (user) => {
   currentUser = user;
@@ -141,6 +153,17 @@ if (els.privateActionName) {
 if (els.privateActionTarget) {
   els.privateActionTarget.addEventListener("change", handlePrivateActionTargetChange);
 }
+
+if (els.claimRoleSelect) {
+  els.claimRoleSelect.addEventListener("change", handleClaimRoleSelectChange);
+}
+
+if (els.replacePlayerSelect) {
+  els.replacePlayerSelect.addEventListener("change", handleReplaceSelectChange);
+}
+
+els.confirmReplaceButton?.addEventListener("click", confirmReplaceSelection);
+els.cancelReplaceButton?.addEventListener("click", cancelReplaceSelection);
 
 function createMetaRow(html) {
   const tr = document.createElement("tr");
@@ -300,6 +323,8 @@ async function loadGame() {
   await ensureRolesLoaded();
   populatePlayerSelects();
   populatePrivateActionOptions();
+  populateClaimRoleOptions();
+  updatePlayerToolsFormsVisibility();
   renderModeratorPanel();
   await renderVoteTallies();
 
@@ -806,6 +831,8 @@ async function refreshMembershipAndControls() {
     currentPlayer = null;
     clearPrivateChannels();
     populatePrivateActionOptions();
+    populateClaimRoleOptions();
+    updatePlayerToolsFormsVisibility();
     return;
   }
   try {
@@ -817,10 +844,13 @@ async function refreshMembershipAndControls() {
     currentPlayer = joined ? { id: p.id, ...p.data() } : null;
     const ownerView = currentGame && currentGame.ownerUserId === user.uid;
     setDisplay(els.playerTools, joined || ownerView ? "block" : "none");
+    updatePlayerToolsFormsVisibility();
   } catch {}
   await loadPrivateChannels();
   await renderActionHistory();
   populatePrivateActionOptions();
+  populateClaimRoleOptions();
+  updatePlayerToolsFormsVisibility();
 }
 
 els.joinButton?.addEventListener("click", async () => {
@@ -1004,7 +1034,11 @@ els.claimRecordForm?.addEventListener("submit", async (event) => {
     header?.openAuthPanel("login");
     return;
   }
-  const role = (els.claimRole?.value || "").trim();
+  const selectedRole = els.claimRoleSelect?.value || "";
+  const role =
+    selectedRole === CUSTOM_ROLE_OPTION_VALUE
+      ? (els.claimRoleCustom?.value || "").trim()
+      : selectedRole.trim();
   const day = parseDayInput(els.claimDay);
   if (!role) {
     setPlayerToolsStatus("Enter a role to claim.", "error");
@@ -1018,9 +1052,13 @@ els.claimRecordForm?.addEventListener("submit", async (event) => {
       day,
     });
     setPlayerToolsStatus("Claim recorded.", "success");
-    if (els.claimRole) {
-      els.claimRole.value = "";
+    if (els.claimRoleSelect) {
+      els.claimRoleSelect.value = "";
     }
+    if (els.claimRoleCustom) {
+      els.claimRoleCustom.value = "";
+    }
+    handleClaimRoleSelectChange();
     await renderActionHistory();
   } catch (error) {
     console.error("Failed to record claim", error);
@@ -1145,6 +1183,33 @@ function setPlayerToolsStatus(message, type = "info") {
   el.style.display = "block";
   el.textContent = message;
   el.style.color = type === "error" ? "#ff7676" : type === "success" ? "#6ee7b7" : "#F9A906";
+}
+
+function updatePlayerToolsFormsVisibility() {
+  const canUseTools = !!currentPlayer || isOwnerView;
+  if (!canUseTools) {
+    setDisplay(els.privateActionForm, "none");
+    setDisplay(els.voteRecordForm, "none");
+    setDisplay(els.claimRecordForm, "none");
+    setDisplay(els.notebookRecordForm, "none");
+    hideReplacementControls();
+    return;
+  }
+
+  const privateActionsAvailable = getAvailablePrivateActionNames().length > 0;
+  setDisplay(els.privateActionForm, privateActionsAvailable ? "block" : "none");
+
+  const hasVoteTargets = gamePlayers.some((player) => player.id !== currentPlayer?.id);
+  setDisplay(els.voteRecordForm, hasVoteTargets ? "block" : "none");
+
+  setDisplay(els.claimRecordForm, "block");
+
+  const hasNotebookTargets = gamePlayers.length > 0;
+  setDisplay(els.notebookRecordForm, hasNotebookTargets ? "block" : "none");
+
+  if (!isOwnerView) {
+    hideReplacementControls();
+  }
 }
 
 function normalizeActionName(name) {
@@ -1560,6 +1625,18 @@ function handlePrivateActionTargetChange() {
   }
 }
 
+function handleClaimRoleSelectChange() {
+  const input = els.claimRoleCustom;
+  if (!input) {
+    return;
+  }
+  const isCustom = (els.claimRoleSelect?.value || "") === CUSTOM_ROLE_OPTION_VALUE;
+  setDisplay(input, isCustom ? "block" : "none");
+  if (!isCustom) {
+    input.value = "";
+  }
+}
+
 function getAvailablePrivateActionNames() {
   const names = new Map();
   const visited = new WeakSet();
@@ -1662,6 +1739,47 @@ function populatePrivateActionOptions() {
   }
 
   handlePrivateActionNameChange();
+}
+
+function populateClaimRoleOptions() {
+  const select = els.claimRoleSelect;
+  if (!select) {
+    return;
+  }
+  const previous = select.value;
+  select.innerHTML = "";
+
+  const placeholder = document.createElement("option");
+  placeholder.value = "";
+  placeholder.textContent = "-- choose role --";
+  select.appendChild(placeholder);
+
+  const roles = getKnownRoleNames();
+  roles.forEach((role) => {
+    const option = document.createElement("option");
+    option.value = role;
+    option.textContent = role;
+    select.appendChild(option);
+  });
+
+  const customOption = document.createElement("option");
+  customOption.value = CUSTOM_ROLE_OPTION_VALUE;
+  customOption.textContent = "Custom role…";
+  select.appendChild(customOption);
+
+  if (previous) {
+    if (previous === CUSTOM_ROLE_OPTION_VALUE) {
+      select.value = CUSTOM_ROLE_OPTION_VALUE;
+    } else {
+      const normalizedPrevious = previous.trim().toLowerCase();
+      const match = roles.find((role) => role.trim().toLowerCase() === normalizedPrevious);
+      if (match) {
+        select.value = match;
+      }
+    }
+  }
+
+  handleClaimRoleSelectChange();
 }
 
 function getKnownRoleNames() {
@@ -2241,6 +2359,148 @@ function setModeratorStatus(message, type = "info") {
   el.style.color = type === "error" ? "#ff7676" : type === "success" ? "#6ee7b7" : "#F9A906";
 }
 
+function hideReplacementControls() {
+  pendingReplacementPlayerId = null;
+  if (els.replacePlayerSelect) {
+    els.replacePlayerSelect.value = "";
+  }
+  if (els.replacePlayerCustom) {
+    els.replacePlayerCustom.value = "";
+  }
+  setDisplay(els.replacePlayerCustom, "none");
+  setDisplay(els.replacePlayerControls, "none");
+}
+
+function handleReplaceSelectChange() {
+  const input = els.replacePlayerCustom;
+  if (!input) {
+    return;
+  }
+  const isCustom = (els.replacePlayerSelect?.value || "") === CUSTOM_REPLACEMENT_OPTION_VALUE;
+  setDisplay(input, isCustom ? "block" : "none");
+  if (!isCustom) {
+    input.value = "";
+  }
+}
+
+function cancelReplaceSelection() {
+  hideReplacementControls();
+  setModeratorStatus("", "info");
+}
+
+async function ensureReplacementCandidates() {
+  if (replacementCandidatesPromise) {
+    return replacementCandidatesPromise;
+  }
+  replacementCandidatesPromise = (async () => {
+    const list = [];
+    const map = new Map();
+    try {
+      const snapshot = await getDocs(collection(db, "users"));
+      snapshot.forEach((docSnap) => {
+        const data = docSnap.data() || {};
+        const name =
+          (data.displayName || data.username || data.name || data.email || docSnap.id || "").toString().trim() || docSnap.id;
+        list.push({ id: docSnap.id, name, doc: docSnap });
+        map.set(docSnap.id, docSnap);
+      });
+      list.sort((a, b) => a.name.localeCompare(b.name, undefined, { sensitivity: "base" }));
+      replacementCandidates = list;
+      replacementCandidateDocs = map;
+      return list;
+    } catch (error) {
+      console.error("Failed to load replacement candidates", error);
+      replacementCandidates = [];
+      replacementCandidateDocs = new Map();
+      throw error;
+    }
+  })();
+  try {
+    return await replacementCandidatesPromise;
+  } catch (error) {
+    replacementCandidatesPromise = null;
+    throw error;
+  }
+}
+
+function populateReplacementSelect() {
+  const select = els.replacePlayerSelect;
+  if (!select) {
+    return;
+  }
+  const previous = select.value;
+  select.innerHTML = "";
+
+  const placeholder = document.createElement("option");
+  placeholder.value = "";
+  placeholder.textContent = "-- choose replacement --";
+  select.appendChild(placeholder);
+
+  const currentIds = new Set(gamePlayers.map((player) => player.id));
+  replacementCandidates.forEach(({ id, name }) => {
+    if (currentIds.has(id)) {
+      return;
+    }
+    const option = document.createElement("option");
+    option.value = id;
+    option.textContent = name;
+    select.appendChild(option);
+  });
+
+  const customOption = document.createElement("option");
+  customOption.value = CUSTOM_REPLACEMENT_OPTION_VALUE;
+  customOption.textContent = "Custom user…";
+  select.appendChild(customOption);
+
+  if (previous) {
+    if (previous === CUSTOM_REPLACEMENT_OPTION_VALUE) {
+      select.value = CUSTOM_REPLACEMENT_OPTION_VALUE;
+    } else if (!currentIds.has(previous) && replacementCandidateDocs.has(previous)) {
+      select.value = previous;
+    }
+  }
+
+  handleReplaceSelectChange();
+}
+
+async function confirmReplaceSelection() {
+  if (!pendingReplacementPlayerId) {
+    setModeratorStatus("Select a player to replace first.", "error");
+    return;
+  }
+  const selected = els.replacePlayerSelect?.value || "";
+  if (!selected) {
+    setModeratorStatus("Choose a replacement player first.", "error");
+    return;
+  }
+  let userDoc = null;
+  if (selected === CUSTOM_REPLACEMENT_OPTION_VALUE) {
+    const identifier = (els.replacePlayerCustom?.value || "").trim();
+    if (!identifier) {
+      setModeratorStatus("Enter a replacement player identifier.", "error");
+      return;
+    }
+    try {
+      userDoc = await findUserProfile(identifier);
+    } catch (error) {
+      console.error("Lookup failed", error);
+      setModeratorStatus("Unable to look up replacement player.", "error");
+      return;
+    }
+    if (!userDoc) {
+      setModeratorStatus("Replacement player not found.", "error");
+      return;
+    }
+  } else {
+    userDoc = replacementCandidateDocs.get(selected) || null;
+    if (!userDoc) {
+      setModeratorStatus("Unable to load replacement player.", "error");
+      return;
+    }
+  }
+  await executeModeratorReplacement(pendingReplacementPlayerId, userDoc);
+}
+
 els.moderatorRows?.addEventListener("click", (event) => {
   const button = event.target.closest("button[data-action]");
   if (!button) return;
@@ -2332,24 +2592,28 @@ async function handleModeratorReplace(playerId) {
     setModeratorStatus("Only the owner can replace players.", "error");
     return;
   }
-  const identifier = window.prompt(
-    "Enter the username, email, or UID of the replacement player:",
-    ""
-  );
-  if (identifier === null) {
-    return;
-  }
-  const trimmed = identifier.trim();
-  if (!trimmed) {
-    setModeratorStatus("Enter a replacement player identifier.", "error");
-    return;
-  }
-  let userDoc;
   try {
-    userDoc = await findUserProfile(trimmed);
+    await ensureReplacementCandidates();
   } catch (error) {
-    console.error("Lookup failed", error);
-    setModeratorStatus("Unable to look up replacement player.", "error");
+    setModeratorStatus("Unable to load replacement candidates.", "error");
+    return;
+  }
+  pendingReplacementPlayerId = playerId;
+  const player = gamePlayers.find((entry) => entry.id === playerId);
+  if (els.replacePlayerName) {
+    els.replacePlayerName.textContent = player?.name || "(unknown)";
+  }
+  populateReplacementSelect();
+  setDisplay(els.replacePlayerControls, "block");
+  if (els.replacePlayerSelect) {
+    els.replacePlayerSelect.focus();
+  }
+  setModeratorStatus("Choose a replacement player from the list.", "info");
+}
+
+async function executeModeratorReplacement(playerId, userDoc) {
+  if (!isOwnerView || !currentGame) {
+    setModeratorStatus("Only the owner can replace players.", "error");
     return;
   }
   if (!userDoc) {
@@ -2357,12 +2621,16 @@ async function handleModeratorReplace(playerId) {
     return;
   }
   const newUserId = userDoc.id;
+  if (!newUserId) {
+    setModeratorStatus("Replacement player not found.", "error");
+    return;
+  }
   if (gamePlayers.some((player) => player.id === newUserId)) {
     setModeratorStatus("That player is already in the game.", "error");
     return;
   }
-  const userData = userDoc.data() || {};
-  const newName = userData.displayName || userData.username || userData.email || "Player";
+  const userData = userDoc.data ? userDoc.data() || {} : {};
+  const newName = userData.displayName || userData.username || userData.email || userData.name || "Player";
   const gameRef = doc(db, "games", gameId);
   const oldRef = doc(gameRef, "players", playerId);
   const newRef = doc(gameRef, "players", newUserId);
@@ -2405,6 +2673,7 @@ async function handleModeratorReplace(playerId) {
         })
       )
     );
+    hideReplacementControls();
     setModeratorStatus("Player replaced.", "success");
     await loadGame();
   } catch (error) {
