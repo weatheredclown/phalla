@@ -19,6 +19,69 @@
     <main>
       <section class="panel">
         <div class="panel-header">
+          <h2>Game management</h2>
+          <div class="panel-actions">
+            <button id="rewindDayButton" class="secondary" type="button">Previous day</button>
+            <button id="advanceDayButton" class="secondary" type="button">Next day</button>
+            <button id="toggleActiveButton" class="secondary" type="button">Toggle active</button>
+            <button id="toggleOpenButton" class="secondary" type="button">Toggle open</button>
+          </div>
+        </div>
+        <form class="form" id="gameSelectionForm">
+          <label for="gameSelect">Moderated game</label>
+          <select id="gameSelect"></select>
+        </form>
+        <div class="game-details" aria-live="polite">
+          <div>
+            <span class="label">Owner</span>
+            <span id="gameOwnerDisplay">—</span>
+          </div>
+          <div>
+            <span class="label">State</span>
+            <span id="gameStateDisplay">Select a game</span>
+          </div>
+          <div>
+            <span class="label">Day</span>
+            <span id="gameDayDisplay">—</span>
+          </div>
+          <div>
+            <span class="label">Updated</span>
+            <span id="gameUpdatedDisplay">—</span>
+          </div>
+        </div>
+        <form id="setDayForm" class="inline-form">
+          <label for="setDayInput">Set day</label>
+          <input id="setDayInput" type="number" min="0" step="1" />
+          <button class="primary" type="submit">Update day</button>
+        </form>
+        <p id="gameStatusMessage" class="metadata" role="status"></p>
+      </section>
+
+      <section class="panel">
+        <div class="panel-header">
+          <h2>Roster</h2>
+        </div>
+        <p id="rosterHelp" class="metadata"></p>
+        <div class="table-wrapper">
+          <table id="rosterTable" class="roster-table">
+            <thead>
+              <tr>
+                <th scope="col">Player</th>
+                <th scope="col">Status</th>
+                <th scope="col">Role</th>
+                <th scope="col">Alignment</th>
+                <th scope="col">Posts left</th>
+                <th scope="col">Notes</th>
+                <th scope="col" class="actions-column">Actions</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </section>
+
+      <section class="panel">
+        <div class="panel-header">
           <h2>Threads</h2>
           <div class="panel-actions">
             <button id="newThreadButton" class="primary" type="button">New thread</button>
@@ -70,6 +133,33 @@
         </div>
       </section>
     </main>
+
+    <dialog id="playerDialog">
+      <form id="playerForm" class="dialog-form">
+        <h2>Edit player</h2>
+        <p id="playerDialogName" class="metadata"></p>
+        <label for="playerRoleInput">Role</label>
+        <input id="playerRoleInput" type="text" list="roleSuggestions" />
+        <label for="playerAlignmentInput">Alignment</label>
+        <input id="playerAlignmentInput" type="text" />
+        <label for="playerStatusSelect">Status</label>
+        <select id="playerStatusSelect">
+          <option value="alive">Alive</option>
+          <option value="eliminated">Eliminated</option>
+        </select>
+        <label for="playerPostsInput">Posts left</label>
+        <input id="playerPostsInput" type="number" min="-1" step="1" />
+        <label for="playerNotesInput">Moderator notes</label>
+        <textarea id="playerNotesInput" rows="4" placeholder="Track hidden info, death flavor, or replacements"></textarea>
+        <p id="playerDialogError" class="form-error" hidden></p>
+        <menu class="dialog-actions">
+          <button type="button" class="secondary" data-action="cancel">Cancel</button>
+          <button type="submit" class="primary" data-action="save">Save changes</button>
+        </menu>
+      </form>
+    </dialog>
+
+    <datalist id="roleSuggestions"></datalist>
 
     <dialog id="threadDialog">
       <form method="dialog" id="threadForm" class="dialog-form">

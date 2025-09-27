@@ -21,6 +21,8 @@ import {
   increment,
   getDocs,
   setDoc,
+  where,
+  deleteField,
 } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
 // Your web app's Firebase configuration
@@ -81,7 +83,62 @@ const els = {
   votePlayerInput: document.getElementById("votePlayerInput"),
   voteCountInput: document.getElementById("voteCountInput"),
   voteNotesInput: document.getElementById("voteNotesInput"),
+  gameSelect: document.getElementById("gameSelect"),
+  gameStatusMessage: document.getElementById("gameStatusMessage"),
+  gameOwnerDisplay: document.getElementById("gameOwnerDisplay"),
+  gameStateDisplay: document.getElementById("gameStateDisplay"),
+  gameDayDisplay: document.getElementById("gameDayDisplay"),
+  gameUpdatedDisplay: document.getElementById("gameUpdatedDisplay"),
+  advanceDayButton: document.getElementById("advanceDayButton"),
+  rewindDayButton: document.getElementById("rewindDayButton"),
+  toggleActiveButton: document.getElementById("toggleActiveButton"),
+  toggleOpenButton: document.getElementById("toggleOpenButton"),
+  setDayForm: document.getElementById("setDayForm"),
+  setDayInput: document.getElementById("setDayInput"),
+  rosterTableBody: document.querySelector("#rosterTable tbody"),
+  rosterHelp: document.getElementById("rosterHelp"),
+  playerDialog: document.getElementById("playerDialog"),
+  playerDialogName: document.getElementById("playerDialogName"),
+  playerForm: document.getElementById("playerForm"),
+  playerRoleInput: document.getElementById("playerRoleInput"),
+  playerAlignmentInput: document.getElementById("playerAlignmentInput"),
+  playerStatusSelect: document.getElementById("playerStatusSelect"),
+  playerPostsInput: document.getElementById("playerPostsInput"),
+  playerNotesInput: document.getElementById("playerNotesInput"),
+  playerDialogError: document.getElementById("playerDialogError"),
+  roleSuggestions: document.getElementById("roleSuggestions"),
 };
+
+const ROLE_SUGGESTIONS = [
+  "Villager",
+  "Vanillager",
+  "Seer",
+  "Investigator",
+  "Bodyguard",
+  "Doctor",
+  "Healer",
+  "Watcher",
+  "Tracker",
+  "Roleblocker",
+  "Bus Driver",
+  "Jailer",
+  "Vigilante",
+  "Mafia Goon",
+  "Mafia Boss",
+  "Cultist",
+  "Serial Killer",
+  "Neutral",
+  "Neutral Support",
+  "Spy",
+];
+
+if (els.roleSuggestions) {
+  ROLE_SUGGESTIONS.forEach((name) => {
+    const option = document.createElement("option");
+    option.value = name;
+    els.roleSuggestions.appendChild(option);
+  });
+}
 
 if (missingConfig) {
   els.authStatus.textContent = "Firebase project not configured";
@@ -102,6 +159,13 @@ let unsubscribePosts = null;
 let unsubscribeThreads = null;
 let unsubscribeVotes = null;
 let unsubscribeProfile = null;
+let unsubscribeGames = null;
+let unsubscribeGameDoc = null;
+let unsubscribePlayers = null;
+let selectedGameId = null;
+let currentGame = null;
+let rosterById = new Map();
+let editingPlayerId = null;
 
 async function ensurePlayerRecord(user) {
   if (!user) return null;
@@ -287,6 +351,7 @@ function stopRealtimeSubscriptions({ showSignedOutState = false } = {}) {
     unsubscribePosts();
     unsubscribePosts = null;
   }
+  stopGameSubscriptions({ showSignedOutState });
   if (showSignedOutState) {
     showThreadsMessage("Sign in to view threads.");
     showVotesMessage("Sign in to see recorded votes.");
@@ -299,6 +364,7 @@ function startRealtimeSubscriptions() {
   stopRealtimeSubscriptions();
   unsubscribeThreads = watchThreads();
   unsubscribeVotes = watchVotes();
+  unsubscribeGames = watchOwnedGames();
 }
 
 function requireAuth(action) {
@@ -528,10 +594,688 @@ function watchVotes() {
   );
 }
 
+function stopGameSubscriptions({ showSignedOutState = false } = {}) {
+  if (unsubscribeGames) {
+    unsubscribeGames();
+    unsubscribeGames = null;
+  }
+  if (unsubscribeGameDoc) {
+    unsubscribeGameDoc();
+    unsubscribeGameDoc = null;
+  }
+  if (unsubscribePlayers) {
+    unsubscribePlayers();
+    unsubscribePlayers = null;
+  }
+  currentGame = null;
+  rosterById = new Map();
+  if (showSignedOutState) {
+    selectedGameId = null;
+    renderGameOptions([]);
+    updateGameDetails(null);
+    showRosterMessage("Sign in to view player rosters.");
+    showGameStatusMessage("Sign in to manage your games.");
+  }
+  updateRosterHelp();
+}
+
+function showGameStatusMessage(message) {
+  if (!els.gameStatusMessage) return;
+  els.gameStatusMessage.textContent = message || "";
+}
+
+function renderGameOptions(entries) {
+  if (!els.gameSelect) return;
+  const select = els.gameSelect;
+  const previousSelection = selectedGameId;
+  select.innerHTML = "";
+
+  const placeholder = document.createElement("option");
+  placeholder.value = "";
+  placeholder.textContent = entries.length
+    ? "Select a game"
+    : "No moderated games yet";
+  placeholder.disabled = entries.length > 0;
+  select.appendChild(placeholder);
+
+  const sorted = [...entries].sort((a, b) => {
+    const aName = (a.data.gamename || a.id || "").toString();
+    const bName = (b.data.gamename || b.id || "").toString();
+    return aName.localeCompare(bName, undefined, { sensitivity: "base" });
+  });
+
+  sorted.forEach((entry) => {
+    const option = document.createElement("option");
+    option.value = entry.id;
+    option.textContent = entry.data.gamename || entry.id;
+    select.appendChild(option);
+  });
+
+  if (previousSelection && sorted.some((entry) => entry.id === previousSelection)) {
+    select.value = previousSelection;
+  } else if (sorted.length) {
+    select.value = sorted[0].id;
+    selectedGameId = select.value;
+  } else {
+    select.value = "";
+    selectedGameId = null;
+  }
+}
+
+function watchOwnedGames() {
+  if (!currentUser || !els.gameSelect) return null;
+  showGameStatusMessage("Loading moderated games…");
+  renderGameOptions([]);
+  updateGameDetails(null);
+  showRosterMessage("Select a game to view the roster.");
+  const gamesRef = collection(db, "games");
+  const gamesQuery = query(
+    gamesRef,
+    where("ownerUserId", "==", currentUser.uid),
+    orderBy("gamename")
+  );
+  return onSnapshot(
+    gamesQuery,
+    (snapshot) => {
+      const entries = snapshot.docs.map((docSnapshot) => ({
+        id: docSnapshot.id,
+        data: docSnapshot.data() || {},
+      }));
+      renderGameOptions(entries);
+      if (els.gameSelect.value) {
+        selectGame(els.gameSelect.value, { fromSnapshot: true });
+      } else {
+        selectedGameId = null;
+        if (unsubscribeGameDoc) {
+          unsubscribeGameDoc();
+          unsubscribeGameDoc = null;
+        }
+        if (unsubscribePlayers) {
+          unsubscribePlayers();
+          unsubscribePlayers = null;
+        }
+        currentGame = null;
+        rosterById = new Map();
+        updateGameDetails(null);
+        showRosterMessage(entries.length ? "Select a game to view the roster." : "No moderated games yet.");
+        showGameStatusMessage(entries.length ? "Choose a game to begin." : "Create a game from the legacy UI to manage it here.");
+      }
+    },
+    (error) => {
+      console.error("Failed to watch moderated games", error);
+      showGameStatusMessage(
+        error.code === "permission-denied"
+          ? "You do not have permission to manage these games."
+          : "Unable to load moderated games."
+      );
+      renderGameOptions([]);
+    }
+  );
+}
+
+function selectGame(gameId, { fromSnapshot = false } = {}) {
+  if (!els.gameSelect) return;
+  const normalizedId = (gameId || "").trim();
+  if (!normalizedId) {
+    selectedGameId = null;
+    if (!fromSnapshot) {
+      els.gameSelect.value = "";
+    }
+    if (unsubscribeGameDoc) {
+      unsubscribeGameDoc();
+      unsubscribeGameDoc = null;
+    }
+    if (unsubscribePlayers) {
+      unsubscribePlayers();
+      unsubscribePlayers = null;
+    }
+    currentGame = null;
+    updateGameDetails(null);
+    showRosterMessage("Select a game to view the roster.");
+    updateRosterHelp();
+    return;
+  }
+  if (!fromSnapshot) {
+    els.gameSelect.value = normalizedId;
+  }
+  const shouldReattach = selectedGameId !== normalizedId || !unsubscribeGameDoc;
+  selectedGameId = normalizedId;
+  if (shouldReattach) {
+    attachGameWatchers(normalizedId);
+  }
+}
+
+function attachGameWatchers(gameId) {
+  if (!gameId) return;
+  if (unsubscribeGameDoc) {
+    unsubscribeGameDoc();
+    unsubscribeGameDoc = null;
+  }
+  if (unsubscribePlayers) {
+    unsubscribePlayers();
+    unsubscribePlayers = null;
+  }
+  const gameRef = doc(db, "games", gameId);
+  showGameStatusMessage("Loading game details…");
+  updateGameDetails(null);
+  showRosterMessage("Loading roster…");
+  unsubscribeGameDoc = onSnapshot(
+    gameRef,
+    (snapshot) => {
+      if (!snapshot.exists()) {
+        showGameStatusMessage("Game not found.");
+        currentGame = null;
+        updateGameDetails(null);
+        updateRosterHelp();
+        return;
+      }
+      currentGame = { id: snapshot.id, ...(snapshot.data() || {}) };
+      updateGameDetails(currentGame);
+      updateRosterHelp();
+      const currentStatus = els.gameStatusMessage?.textContent || "";
+      if (!currentStatus || currentStatus.startsWith("Loading")) {
+        showGameStatusMessage("");
+      }
+    },
+    (error) => {
+      console.error("Failed to load game metadata", error);
+      showGameStatusMessage(
+        error.code === "permission-denied"
+          ? "You do not have permission to view this game."
+          : "Unable to load game details."
+      );
+      currentGame = null;
+      updateGameDetails(null);
+      updateRosterHelp();
+    }
+  );
+  unsubscribePlayers = onSnapshot(
+    collection(gameRef, "players"),
+    (snapshot) => {
+      const players = snapshot.docs.map((docSnapshot) => {
+        const data = docSnapshot.data() || {};
+        const displayName =
+          (data.name || data.username || data.displayName || docSnapshot.id || "").toString();
+        const notes = data.moderatorNotes || data.notes || "";
+        const role = data.role || data.rolename || "";
+        const alignment = data.alignment || data.allegiance || "";
+        const postsLeft =
+          typeof data.postsLeft === "number" && Number.isFinite(data.postsLeft)
+            ? data.postsLeft
+            : "";
+        return {
+          id: docSnapshot.id,
+          data,
+          displayName,
+          role,
+          alignment,
+          notes,
+          postsLeft,
+          alive: derivePlayerAlive(data),
+        };
+      });
+      players.sort((a, b) => {
+        const aOrderRaw = Number(a.data.order);
+        const bOrderRaw = Number(b.data.order);
+        const aOrder = Number.isFinite(aOrderRaw) ? aOrderRaw : Number.POSITIVE_INFINITY;
+        const bOrder = Number.isFinite(bOrderRaw) ? bOrderRaw : Number.POSITIVE_INFINITY;
+        if (aOrder !== bOrder) {
+          return aOrder - bOrder;
+        }
+        return a.displayName.localeCompare(b.displayName, undefined, { sensitivity: "base" });
+      });
+      renderRoster(players);
+    },
+    (error) => {
+      console.error("Failed to load roster", error);
+      renderRoster([]);
+      showRosterMessage(
+        error.code === "permission-denied"
+          ? "You do not have permission to view this roster."
+          : "Unable to load roster."
+      );
+    }
+  );
+}
+
+function updateGameDetails(game) {
+  if (els.gameOwnerDisplay) {
+    els.gameOwnerDisplay.textContent = game?.ownerName || "—";
+  }
+  if (els.gameStateDisplay) {
+    if (!game) {
+      els.gameStateDisplay.textContent = "No game selected";
+    } else {
+      const state = [];
+      state.push(game.open ? "Open" : "Closed");
+      state.push(game.active ? "Active" : "Paused");
+      els.gameStateDisplay.textContent = state.join(" · ");
+    }
+  }
+  if (els.gameDayDisplay) {
+    els.gameDayDisplay.textContent = game ? String(game.day ?? 0) : "—";
+  }
+  if (els.gameUpdatedDisplay) {
+    els.gameUpdatedDisplay.textContent = game?.updatedAt
+      ? formatTimestamp(game.updatedAt)
+      : "—";
+  }
+  if (els.setDayInput) {
+    els.setDayInput.value = game && Number.isFinite(game.day) ? game.day : "";
+  }
+  updateRosterHelp();
+  updatePhaseControls();
+}
+
+function updateRosterHelp() {
+  if (!els.rosterHelp) return;
+  if (!selectedGameId) {
+    els.rosterHelp.textContent = "Select a game to load its roster.";
+    return;
+  }
+  if (!currentGame) {
+    els.rosterHelp.textContent = "Loading roster…";
+    return;
+  }
+  els.rosterHelp.textContent = isCurrentUserGameOwner()
+    ? "Choose a player to edit their role, status, or moderator notes."
+    : "You can view this roster, but only the game owner can make changes.";
+}
+
+function updatePhaseControls() {
+  const canEdit = isCurrentUserGameOwner() && !!currentGame;
+  if (els.advanceDayButton) {
+    els.advanceDayButton.disabled = !canEdit;
+  }
+  if (els.rewindDayButton) {
+    els.rewindDayButton.disabled = !canEdit;
+  }
+  if (els.toggleActiveButton) {
+    els.toggleActiveButton.disabled = !canEdit;
+  }
+  if (els.toggleOpenButton) {
+    els.toggleOpenButton.disabled = !canEdit;
+  }
+  if (els.setDayInput) {
+    els.setDayInput.disabled = !canEdit;
+  }
+  if (els.setDayForm) {
+    const submitButton = els.setDayForm.querySelector("button[type='submit']");
+    if (submitButton) {
+      submitButton.disabled = !canEdit;
+    }
+  }
+}
+
+function isCurrentUserGameOwner() {
+  if (!currentUser || !currentGame) return false;
+  return currentGame.ownerUserId === currentUser.uid;
+}
+
+function showRosterMessage(message) {
+  if (!els.rosterTableBody) return;
+  els.rosterTableBody.innerHTML = "";
+  const row = document.createElement("tr");
+  const cell = document.createElement("td");
+  cell.colSpan = 7;
+  cell.className = "metadata";
+  cell.textContent = message;
+  cell.style.textAlign = "center";
+  cell.style.padding = "1rem";
+  cell.style.color = "var(--muted)";
+  row.appendChild(cell);
+  els.rosterTableBody.appendChild(row);
+}
+
+function renderRoster(players) {
+  rosterById = new Map(players.map((player) => [player.id, player]));
+  if (!els.rosterTableBody) return;
+  els.rosterTableBody.innerHTML = "";
+  if (!players.length) {
+    showRosterMessage("No players joined yet.");
+    return;
+  }
+  const canEdit = isCurrentUserGameOwner();
+  players.forEach((player) => {
+    const row = document.createElement("tr");
+    row.dataset.playerId = player.id;
+
+    const nameCell = document.createElement("td");
+    const nameStrong = document.createElement("strong");
+    nameStrong.textContent = player.displayName || "Unknown";
+    nameCell.appendChild(nameStrong);
+    if (player.id && player.id !== player.displayName) {
+      const meta = document.createElement("div");
+      meta.className = "metadata";
+      meta.textContent = player.id;
+      nameCell.appendChild(meta);
+    }
+
+    const statusCell = document.createElement("td");
+    statusCell.textContent = player.alive ? "Alive" : "Eliminated";
+
+    const roleCell = document.createElement("td");
+    roleCell.textContent = player.role || "—";
+
+    const alignmentCell = document.createElement("td");
+    alignmentCell.textContent = player.alignment || "—";
+
+    const postsCell = document.createElement("td");
+    postsCell.textContent = player.postsLeft === "" ? "—" : String(player.postsLeft);
+
+    const notesCell = document.createElement("td");
+    notesCell.textContent = player.notes || "—";
+
+    const actionsCell = document.createElement("td");
+    actionsCell.className = "actions-column";
+    if (canEdit) {
+      const editButton = document.createElement("button");
+      editButton.type = "button";
+      editButton.className = "secondary";
+      editButton.dataset.playerAction = "edit";
+      editButton.textContent = "Edit";
+      actionsCell.appendChild(editButton);
+    } else {
+      actionsCell.textContent = "—";
+    }
+
+    row.append(nameCell, statusCell, roleCell, alignmentCell, postsCell, notesCell, actionsCell);
+    els.rosterTableBody.appendChild(row);
+  });
+}
+
+function derivePlayerAlive(data = {}) {
+  if (Object.prototype.hasOwnProperty.call(data, "active")) {
+    const value = data.active;
+    if (typeof value === "string") {
+      const normalized = value.trim().toLowerCase();
+      if (["no", "dead", "false", "0"].includes(normalized)) {
+        return false;
+      }
+      if (["yes", "alive", "true", "1"].includes(normalized)) {
+        return true;
+      }
+    }
+    if (typeof value === "number") {
+      return value !== 0;
+    }
+    if (typeof value === "boolean") {
+      return value;
+    }
+  }
+  if (Object.prototype.hasOwnProperty.call(data, "alive")) {
+    const value = data.alive;
+    if (typeof value === "string") {
+      const normalized = value.trim().toLowerCase();
+      if (["no", "dead", "false", "0"].includes(normalized)) {
+        return false;
+      }
+      if (["yes", "alive", "true", "1"].includes(normalized)) {
+        return true;
+      }
+    }
+    if (typeof value === "number") {
+      return value !== 0;
+    }
+    if (typeof value === "boolean") {
+      return value;
+    }
+  }
+  return true;
+}
+
+function openPlayerDialog(playerId) {
+  if (!els.playerDialog) return;
+  const player = rosterById.get(playerId);
+  if (!player) return;
+  editingPlayerId = playerId;
+  if (els.playerDialogName) {
+    els.playerDialogName.textContent = `${player.displayName} (${player.id})`;
+  }
+  if (els.playerRoleInput) {
+    els.playerRoleInput.value = player.role || "";
+  }
+  if (els.playerAlignmentInput) {
+    els.playerAlignmentInput.value = player.alignment || "";
+  }
+  if (els.playerStatusSelect) {
+    els.playerStatusSelect.value = player.alive ? "alive" : "eliminated";
+  }
+  if (els.playerPostsInput) {
+    els.playerPostsInput.value = player.postsLeft === "" ? "" : String(player.postsLeft);
+  }
+  if (els.playerNotesInput) {
+    els.playerNotesInput.value = player.notes || "";
+  }
+  if (els.playerDialogError) {
+    els.playerDialogError.textContent = "";
+    els.playerDialogError.hidden = true;
+  }
+  try {
+    els.playerDialog.showModal();
+  } catch (error) {
+    console.error("Unable to open player dialog", error);
+  }
+}
+
+async function savePlayerChanges() {
+  if (!editingPlayerId || !currentGame) {
+    return;
+  }
+  if (!isCurrentUserGameOwner()) {
+    if (els.playerDialogError) {
+      els.playerDialogError.textContent = "Only the game owner can update players.";
+      els.playerDialogError.hidden = false;
+    }
+    return;
+  }
+  const role = (els.playerRoleInput?.value || "").trim();
+  const alignment = (els.playerAlignmentInput?.value || "").trim();
+  const status = els.playerStatusSelect?.value === "alive";
+  const postsRaw = els.playerPostsInput?.value || "";
+  const parsedPosts = parseInt(postsRaw, 10);
+  const notes = (els.playerNotesInput?.value || "").trim();
+
+  const updates = {
+    active: status,
+    alive: status,
+    updatedAt: serverTimestamp(),
+  };
+
+  if (Number.isFinite(parsedPosts)) {
+    updates.postsLeft = parsedPosts;
+  } else {
+    updates.postsLeft = deleteField();
+  }
+
+  if (role) {
+    updates.role = role;
+    updates.rolename = role;
+  } else {
+    updates.role = deleteField();
+    updates.rolename = deleteField();
+  }
+
+  if (alignment) {
+    updates.alignment = alignment;
+  } else {
+    updates.alignment = deleteField();
+  }
+
+  if (notes) {
+    updates.moderatorNotes = notes;
+  } else {
+    updates.moderatorNotes = deleteField();
+  }
+
+  try {
+    await updateDoc(doc(db, "games", currentGame.id, "players", editingPlayerId), updates);
+    editingPlayerId = null;
+    if (els.playerDialogError) {
+      els.playerDialogError.hidden = true;
+    }
+    els.playerDialog?.close();
+  } catch (error) {
+    console.error("Failed to update player", error);
+    if (els.playerDialogError) {
+      els.playerDialogError.textContent = "Unable to save player changes.";
+      els.playerDialogError.hidden = false;
+    }
+    throw error;
+  }
+}
+
+function requireGameOwnership(action) {
+  return () => {
+    if (!currentUser) {
+      alert("Sign in to manage games.");
+      return;
+    }
+    if (!currentGame || !isCurrentUserGameOwner()) {
+      alert("Only the game owner can perform this action.");
+      return;
+    }
+    action();
+  };
+}
+
+async function applyGameUpdates(updates, { successMessage, errorMessage } = {}) {
+  if (!currentGame) return;
+  try {
+    await updateDoc(doc(db, "games", currentGame.id), {
+      ...updates,
+      updatedAt: serverTimestamp(),
+    });
+    if (successMessage) {
+      showGameStatusMessage(successMessage);
+    }
+  } catch (error) {
+    console.error("Failed to update game", error);
+    showGameStatusMessage(errorMessage || "Unable to update game metadata.");
+  }
+}
+
 if (!missingConfig) {
   showThreadsMessage("Sign in to load threads.");
   showVotesMessage("Sign in to load votes.");
   resetThreadSelection("Sign in to view a thread", "Sign in to view posts.");
+
+  if (els.gameSelect) {
+    els.gameSelect.addEventListener("change", (event) => {
+      selectGame(event.target.value);
+    });
+  }
+
+  if (els.advanceDayButton) {
+    els.advanceDayButton.addEventListener(
+      "click",
+      requireGameOwnership(() => {
+        const currentDay = Number.isFinite(currentGame?.day) ? currentGame.day : 0;
+        const nextDay = currentDay + 1;
+        applyGameUpdates({ day: nextDay }, {
+          successMessage: `Advanced to day ${nextDay}.`,
+        });
+      })
+    );
+  }
+
+  if (els.rewindDayButton) {
+    els.rewindDayButton.addEventListener(
+      "click",
+      requireGameOwnership(() => {
+        const currentDay = Number.isFinite(currentGame?.day) ? currentGame.day : 0;
+        const nextDay = Math.max(currentDay - 1, 0);
+        applyGameUpdates({ day: nextDay }, {
+          successMessage: `Rewound to day ${nextDay}.`,
+        });
+      })
+    );
+  }
+
+  if (els.toggleActiveButton) {
+    els.toggleActiveButton.addEventListener(
+      "click",
+      requireGameOwnership(() => {
+        const nextState = !currentGame?.active;
+        applyGameUpdates(
+          { active: nextState },
+          { successMessage: nextState ? "Game marked active." : "Game paused." }
+        );
+      })
+    );
+  }
+
+  if (els.toggleOpenButton) {
+    els.toggleOpenButton.addEventListener(
+      "click",
+      requireGameOwnership(() => {
+        const nextState = !currentGame?.open;
+        applyGameUpdates(
+          { open: nextState },
+          { successMessage: nextState ? "Signups opened." : "Signups closed." }
+        );
+      })
+    );
+  }
+
+  if (els.setDayForm) {
+    els.setDayForm.addEventListener("submit", (event) => {
+      event.preventDefault();
+      if (!currentGame) {
+        showGameStatusMessage("Select a game before updating the day.");
+        return;
+      }
+      if (!isCurrentUserGameOwner()) {
+        alert("Only the game owner can update the day.");
+        return;
+      }
+      const value = Number(els.setDayInput?.value || "");
+      if (!Number.isFinite(value) || value < 0) {
+        showGameStatusMessage("Enter a non-negative day number.");
+        return;
+      }
+      applyGameUpdates({ day: value }, { successMessage: `Day set to ${value}.` });
+    });
+  }
+
+  if (els.rosterTableBody) {
+    els.rosterTableBody.addEventListener("click", (event) => {
+      const button = event.target.closest("button[data-player-action='edit']");
+      if (!button) return;
+      if (!isCurrentUserGameOwner()) {
+        alert("Only the game owner can edit players.");
+        return;
+      }
+      const row = button.closest("tr[data-player-id]");
+      const playerId = row?.dataset.playerId;
+      if (playerId) {
+        openPlayerDialog(playerId);
+      }
+    });
+  }
+
+  if (els.playerForm) {
+    const cancelButton = els.playerForm.querySelector("[data-action='cancel']");
+    if (cancelButton) {
+      cancelButton.addEventListener("click", () => {
+        editingPlayerId = null;
+        els.playerDialog?.close();
+      });
+    }
+    els.playerForm.addEventListener("submit", (event) => {
+      event.preventDefault();
+      savePlayerChanges().catch(() => {});
+    });
+  }
+
+  if (els.playerDialog) {
+    els.playerDialog.addEventListener("close", () => {
+      editingPlayerId = null;
+    });
+    els.playerDialog.addEventListener("cancel", () => {
+      editingPlayerId = null;
+    });
+  }
 
   els.signInButton.addEventListener("click", () => {
     signInWithPopup(auth, provider).catch((error) => {
