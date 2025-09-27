@@ -1783,7 +1783,15 @@ els.joinButton?.addEventListener("click", async () => {
     header?.openAuthPanel("login");
     return;
   }
-  await setDoc(doc(db, "games", gameId, "players", user.uid), { uid: user.uid, name: user.displayName || "" });
+  await setDoc(
+    doc(db, "games", gameId, "players", user.uid),
+    {
+      uid: user.uid,
+      name: user.displayName || "",
+      joinedAt: serverTimestamp(),
+    },
+    { merge: true }
+  );
   await refreshMembershipAndControls();
   await loadGame();
 });
@@ -4041,12 +4049,15 @@ async function executeModeratorReplacement(playerId, userDoc) {
       delete baseData.userId;
       delete baseData.username;
       delete baseData.id;
+      delete baseData.joinedAt;
+      delete baseData.createdAt;
       transaction.set(newRef, {
         ...baseData,
         uid: newUserId,
         name: newName,
         username: newName,
         replacedFrom: playerId,
+        joinedAt: serverTimestamp(),
         updatedAt: serverTimestamp(),
       });
       transaction.delete(oldRef);

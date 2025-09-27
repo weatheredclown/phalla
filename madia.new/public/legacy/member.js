@@ -588,7 +588,15 @@ els.createBtn.addEventListener("click", async () => {
     createdAt: serverTimestamp(),
   });
   // Auto-join owner
-  await setDoc(doc(db, "games", newDoc.id, "players", currentUser.uid), { uid: currentUser.uid, name: currentUser.displayName || "" });
+  await setDoc(
+    doc(db, "games", newDoc.id, "players", currentUser.uid),
+    {
+      uid: currentUser.uid,
+      name: currentUser.displayName || "",
+      joinedAt: serverTimestamp(),
+    },
+    { merge: true }
+  );
   location.href = `/legacy/game.html?g=${newDoc.id}`;
 });
 
