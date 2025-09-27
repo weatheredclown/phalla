@@ -124,7 +124,13 @@
               <form id="claimRecordForm" class="stacked-form">
                 <label>
                   Claim role
-                  <input id="claimRole" class="bginput" />
+                  <select id="claimRoleSelect" class="bginput"></select>
+                  <input
+                    id="claimRoleCustom"
+                    class="bginput"
+                    style="display:none; margin-top:6px;"
+                    placeholder="Enter role name"
+                  />
                 </label>
                 <label>
                   Day
@@ -159,6 +165,28 @@
             <div id="moderatorPanel" class="smallfont" style="display:none; margin-bottom:12px;">
               <div><strong>Moderator Player Management</strong></div>
               <div id="moderatorStatus" style="display:none; margin:6px 0; color:#F9A906;"></div>
+              <div
+                id="replacePlayerControls"
+                style="display:none; margin:6px 0; padding:6px; background-color:#0f172a; border:1px solid #27364f;"
+              >
+                <div style="margin-bottom:6px;">
+                  Replacing <span id="replacePlayerName" style="font-weight:bold;">(unknown)</span>
+                </div>
+                <label>
+                  Replacement player
+                  <select id="replacePlayerSelect" class="bginput"></select>
+                  <input
+                    id="replacePlayerCustom"
+                    class="bginput"
+                    style="display:none; margin-top:6px;"
+                    placeholder="Enter username, email, or UID"
+                  />
+                </label>
+                <div style="margin-top:6px;">
+                  <button class="button" id="confirmReplaceButton" type="button">Confirm replace</button>
+                  <button class="button" id="cancelReplaceButton" type="button" style="margin-left:4px;">Cancel</button>
+                </div>
+              </div>
               <table class="tborder" cellpadding="4" cellspacing="1" border="0" width="100%" style="margin-top:6px;">
                 <thead>
                   <tr align="center">
