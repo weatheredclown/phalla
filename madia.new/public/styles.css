@@ -327,3 +327,146 @@ button:disabled {
     grid-template-columns: 1fr;
   }
 }
+
+.game-metadata {
+  display: grid;
+  gap: 1rem;
+}
+
+.game-metadata.disabled {
+  opacity: 0.6;
+  pointer-events: none;
+}
+
+.form-grid {
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+}
+
+.form-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  font-size: 0.95rem;
+}
+
+.form-field input,
+.form-field select {
+  background: rgba(15, 23, 42, 0.85);
+  border: 1px solid rgba(148, 163, 184, 0.25);
+}
+
+.toggle-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.toggle {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-weight: 600;
+}
+
+.toggle input {
+  width: auto;
+  accent-color: #38bdf8;
+}
+
+.phase-shortcuts {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+  font-size: 0.9rem;
+  color: var(--muted);
+}
+
+.chip {
+  border: 1px solid rgba(148, 163, 184, 0.25);
+  padding: 0.35rem 0.75rem;
+  border-radius: 999px;
+  background: rgba(15, 23, 42, 0.7);
+}
+
+.roster-header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.roster-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.95rem;
+}
+
+.roster-table th,
+.roster-table td {
+  padding: 0.75rem;
+  border-bottom: 1px solid rgba(148, 163, 184, 0.18);
+  text-align: left;
+  vertical-align: top;
+}
+
+.roster-table input,
+.roster-table textarea,
+.roster-table select {
+  width: 100%;
+  background: rgba(15, 23, 42, 0.8);
+  border: 1px solid rgba(148, 163, 184, 0.25);
+}
+
+.roster-table textarea {
+  resize: vertical;
+  min-height: 3rem;
+}
+
+.roster-table th.actions {
+  text-align: right;
+}
+
+.roster-table tbody tr:hover {
+  background: rgba(56, 189, 248, 0.08);
+}
+
+.roster-name {
+  font-weight: 600;
+}
+
+.roster-meta {
+  color: var(--muted);
+  font-size: 0.8rem;
+}
+
+.roster-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5rem;
+}
+
+.roster-actions button {
+  padding-inline: 0.75rem;
+}
+
+.status-message {
+  margin: 0.25rem 0 0;
+  font-size: 0.85rem;
+  color: var(--muted);
+}
+
+.status-message.success {
+  color: #22c55e;
+}
+
+.status-message.error {
+  color: #ef4444;
+}
+
+.status-message.info {
+  color: #38bdf8;
+}

@@ -69,6 +69,88 @@
           </table>
         </div>
       </section>
+
+      <section class="panel">
+        <div class="panel-header">
+          <div>
+            <h2>Game moderation</h2>
+            <p id="gameStatus" class="metadata status-message" role="status"></p>
+          </div>
+          <div class="panel-actions">
+            <button id="phaseToggleOpenButton" class="secondary" type="button">Toggle open</button>
+            <button id="phaseToggleActiveButton" class="secondary" type="button">Toggle active</button>
+            <button id="phaseNextDayButton" class="secondary" type="button">Advance day</button>
+          </div>
+        </div>
+
+        <form id="gameMetadataForm" class="game-metadata" autocomplete="off">
+          <label class="form-field">
+            Managed game
+            <select id="gameSelect" required>
+              <option value="">Select a game…</option>
+            </select>
+          </label>
+
+          <div class="form-grid">
+            <label class="form-field">
+              Title
+              <input id="gameNameInput" type="text" placeholder="Game title" />
+            </label>
+            <label class="form-field">
+              Day
+              <input id="gameDayInput" type="number" min="0" value="0" />
+            </label>
+            <label class="form-field">
+              Phase label
+              <input id="gamePhaseInput" type="text" placeholder="e.g. Day, Night" />
+            </label>
+          </div>
+
+          <div class="toggle-row">
+            <label class="toggle">
+              <input id="gameOpenInput" type="checkbox" />
+              <span>Open to new players</span>
+            </label>
+            <label class="toggle">
+              <input id="gameActiveInput" type="checkbox" />
+              <span>Game is active</span>
+            </label>
+            <div class="phase-shortcuts">
+              <span>Quick set:</span>
+              <button id="phaseSetDayButton" class="chip" type="button">Day</button>
+              <button id="phaseSetNightButton" class="chip" type="button">Night</button>
+            </div>
+          </div>
+
+          <div class="panel-actions">
+            <button class="primary" type="submit">Save metadata</button>
+            <button id="refreshGameButton" class="secondary" type="button">Refresh</button>
+          </div>
+        </form>
+
+        <div class="roster" aria-live="polite">
+          <div class="roster-header">
+            <h3>Roster</h3>
+            <p id="rosterStatus" class="metadata status-message" role="status"></p>
+          </div>
+          <div class="table-wrapper">
+            <table class="roster-table">
+              <thead>
+                <tr>
+                  <th scope="col">Player</th>
+                  <th scope="col">Role</th>
+                  <th scope="col">Alignment</th>
+                  <th scope="col">Status</th>
+                  <th scope="col">Posts left</th>
+                  <th scope="col">Moderator notes</th>
+                  <th scope="col" class="actions">Actions</th>
+                </tr>
+              </thead>
+              <tbody id="rosterTableBody"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
     </main>
 
     <dialog id="threadDialog">

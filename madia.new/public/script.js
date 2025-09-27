@@ -21,6 +21,8 @@ import {
   increment,
   getDocs,
   setDoc,
+  where,
+  deleteField,
 } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
 // Your web app's Firebase configuration
@@ -81,6 +83,22 @@ const els = {
   votePlayerInput: document.getElementById("votePlayerInput"),
   voteCountInput: document.getElementById("voteCountInput"),
   voteNotesInput: document.getElementById("voteNotesInput"),
+  gameStatus: document.getElementById("gameStatus"),
+  gameMetadataForm: document.getElementById("gameMetadataForm"),
+  gameSelect: document.getElementById("gameSelect"),
+  gameNameInput: document.getElementById("gameNameInput"),
+  gameDayInput: document.getElementById("gameDayInput"),
+  gamePhaseInput: document.getElementById("gamePhaseInput"),
+  gameOpenInput: document.getElementById("gameOpenInput"),
+  gameActiveInput: document.getElementById("gameActiveInput"),
+  phaseToggleOpenButton: document.getElementById("phaseToggleOpenButton"),
+  phaseToggleActiveButton: document.getElementById("phaseToggleActiveButton"),
+  phaseNextDayButton: document.getElementById("phaseNextDayButton"),
+  phaseSetDayButton: document.getElementById("phaseSetDayButton"),
+  phaseSetNightButton: document.getElementById("phaseSetNightButton"),
+  refreshGameButton: document.getElementById("refreshGameButton"),
+  rosterStatus: document.getElementById("rosterStatus"),
+  rosterTableBody: document.getElementById("rosterTableBody"),
 };
 
 if (missingConfig) {
@@ -89,6 +107,33 @@ if (missingConfig) {
   els.signOutButton.disabled = true;
   els.newThreadButton.disabled = true;
   els.recordVoteButton.disabled = true;
+  if (els.gameMetadataForm) {
+    els.gameMetadataForm.classList.add("disabled");
+  }
+  if (els.gameSelect) {
+    els.gameSelect.disabled = true;
+  }
+  [
+    els.phaseToggleOpenButton,
+    els.phaseToggleActiveButton,
+    els.phaseNextDayButton,
+    els.phaseSetDayButton,
+    els.phaseSetNightButton,
+    els.refreshGameButton,
+  ].forEach((button) => {
+    if (button) {
+      button.disabled = true;
+    }
+  });
+  if (els.rosterTableBody) {
+    els.rosterTableBody.innerHTML = "";
+  }
+  if (els.gameStatus) {
+    setStatusMessage(els.gameStatus, "Configure Firebase to manage games.", "error");
+  }
+  if (els.rosterStatus) {
+    setStatusMessage(els.rosterStatus, "", "info");
+  }
   const main = document.querySelector("main");
   if (main) {
     main.innerHTML = `<p class="empty-state">Configure Firebase to load threads and game data.</p>`;
@@ -102,6 +147,11 @@ let unsubscribePosts = null;
 let unsubscribeThreads = null;
 let unsubscribeVotes = null;
 let unsubscribeProfile = null;
+let unsubscribeGameDoc = null;
+let unsubscribeRoster = null;
+let activeGameId = null;
+let currentGameData = null;
+let ownedGames = [];
 
 async function ensurePlayerRecord(user) {
   if (!user) return null;
@@ -217,6 +267,66 @@ function watchUserProfile(user) {
   );
 }
 
+function setStatusMessage(element, message, type = "info") {
+  if (!element) {
+    return;
+  }
+  element.textContent = message || "";
+  element.classList.remove("success", "error", "info");
+  if (message) {
+    element.classList.add(type);
+  }
+}
+
+function escapeHtml(value) {
+  return String(value || "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
+function playerIsAlive(data = {}) {
+  if (Object.prototype.hasOwnProperty.call(data, "active")) {
+    const value = data.active;
+    if (typeof value === "string") {
+      const normalized = value.trim().toLowerCase();
+      if (["no", "dead", "false", "0"].includes(normalized)) {
+        return false;
+      }
+      if (["yes", "alive", "true", "1"].includes(normalized)) {
+        return true;
+      }
+    }
+    if (typeof value === "number") {
+      return value !== 0;
+    }
+    if (typeof value === "boolean") {
+      return value;
+    }
+  }
+  if (Object.prototype.hasOwnProperty.call(data, "alive")) {
+    const value = data.alive;
+    if (typeof value === "string") {
+      const normalized = value.trim().toLowerCase();
+      if (["no", "dead", "false", "0"].includes(normalized)) {
+        return false;
+      }
+      if (["yes", "alive", "true", "1"].includes(normalized)) {
+        return true;
+      }
+    }
+    if (typeof value === "number") {
+      return value !== 0;
+    }
+    if (typeof value === "boolean") {
+      return value;
+    }
+  }
+  return true;
+}
+
 function showThreadsMessage(message) {
   if (!els.threadsList) return;
   els.threadsList.innerHTML = "";
@@ -292,6 +402,601 @@ function stopRealtimeSubscriptions({ showSignedOutState = false } = {}) {
     showVotesMessage("Sign in to see recorded votes.");
     resetThreadSelection("Sign in to view a thread", "Sign in to view posts.");
   }
+}
+
+function stopGameSubscriptions() {
+  if (unsubscribeGameDoc) {
+    unsubscribeGameDoc();
+    unsubscribeGameDoc = null;
+  }
+  if (unsubscribeRoster) {
+    unsubscribeRoster();
+    unsubscribeRoster = null;
+  }
+}
+
+function enableGameControls() {
+  const disabled =
+    missingConfig ||
+    !currentUser ||
+    !activeGameId ||
+    !currentGameData;
+  const inputs = [
+    els.gameNameInput,
+    els.gameDayInput,
+    els.gamePhaseInput,
+    els.gameOpenInput,
+    els.gameActiveInput,
+  ];
+  inputs.forEach((input) => {
+    if (input) {
+      input.disabled = disabled;
+    }
+  });
+  const buttons = [
+    els.phaseToggleOpenButton,
+    els.phaseToggleActiveButton,
+    els.phaseNextDayButton,
+    els.phaseSetDayButton,
+    els.phaseSetNightButton,
+    els.refreshGameButton,
+  ];
+  buttons.forEach((button) => {
+    if (button) {
+      button.disabled = disabled;
+    }
+  });
+  if (els.gameMetadataForm) {
+    if (disabled) {
+      els.gameMetadataForm.classList.add("disabled");
+    } else {
+      els.gameMetadataForm.classList.remove("disabled");
+    }
+  }
+  if (els.rosterTableBody) {
+    Array.from(els.rosterTableBody.querySelectorAll("input, textarea, select, button")).forEach(
+      (element) => {
+        element.disabled = disabled;
+      }
+    );
+  }
+  if (els.gameSelect) {
+    els.gameSelect.disabled = missingConfig || !currentUser;
+  }
+}
+
+function resetGameManagementUI({ signedOut = false } = {}) {
+  stopGameSubscriptions();
+  activeGameId = null;
+  currentGameData = null;
+  if (els.gameSelect) {
+    els.gameSelect.value = "";
+    els.gameSelect.disabled = missingConfig || !currentUser;
+  }
+  if (els.gameNameInput) {
+    els.gameNameInput.value = "";
+  }
+  if (els.gameDayInput) {
+    els.gameDayInput.value = "0";
+  }
+  if (els.gamePhaseInput) {
+    els.gamePhaseInput.value = "";
+  }
+  if (els.gameOpenInput) {
+    els.gameOpenInput.checked = false;
+  }
+  if (els.gameActiveInput) {
+    els.gameActiveInput.checked = false;
+  }
+  if (els.rosterTableBody) {
+    els.rosterTableBody.innerHTML = "";
+  }
+  if (els.rosterStatus) {
+    setStatusMessage(
+      els.rosterStatus,
+      signedOut ? "Sign in to view the roster." : "Select a game to view the roster.",
+      "info"
+    );
+  }
+  if (els.gameStatus) {
+    setStatusMessage(
+      els.gameStatus,
+      signedOut ? "Sign in to manage games." : "Select a game to edit metadata.",
+      "info"
+    );
+  }
+  enableGameControls();
+}
+
+function getPlayerDisplayName(data = {}) {
+  return (
+    data.displayName ||
+    data.name ||
+    data.username ||
+    data.playerName ||
+    data.email ||
+    data.id ||
+    "Unknown"
+  );
+}
+
+function sortRosterPlayers(players = []) {
+  return players
+    .slice()
+    .sort((a, b) => {
+      const orderA =
+        typeof a.order === "number"
+          ? a.order
+          : typeof a.joinOrder === "number"
+          ? a.joinOrder
+          : Number.POSITIVE_INFINITY;
+      const orderB =
+        typeof b.order === "number"
+          ? b.order
+          : typeof b.joinOrder === "number"
+          ? b.joinOrder
+          : Number.POSITIVE_INFINITY;
+      if (orderA !== orderB) {
+        return orderA - orderB;
+      }
+      const nameA = getPlayerDisplayName(a).toLowerCase();
+      const nameB = getPlayerDisplayName(b).toLowerCase();
+      return nameA.localeCompare(nameB, undefined, { sensitivity: "base" });
+    });
+}
+
+async function loadOwnedGames() {
+  if (missingConfig || !els.gameSelect || !currentUser) {
+    return;
+  }
+  setStatusMessage(els.gameStatus, "Loading owned games…", "info");
+  els.gameSelect.disabled = true;
+  try {
+    const gamesRef = collection(db, "games");
+    let snapshot;
+    try {
+      snapshot = await getDocs(query(gamesRef, where("ownerUserId", "==", currentUser.uid)));
+    } catch (error) {
+      console.warn("Owner query failed, falling back to client filter", error);
+      snapshot = await getDocs(gamesRef);
+    }
+    ownedGames = snapshot.docs
+      .map((docSnap) => ({ id: docSnap.id, ...(docSnap.data() || {}) }))
+      .filter((game) => game.ownerUserId === currentUser.uid);
+    ownedGames.sort((a, b) =>
+      (a.gamename || "").localeCompare(b.gamename || "", undefined, { sensitivity: "base" })
+    );
+    populateGameSelect();
+    if (!ownedGames.length) {
+      setStatusMessage(
+        els.gameStatus,
+        "No owned games found. Create a game in the legacy UI to begin.",
+        "info"
+      );
+    } else {
+      setStatusMessage(els.gameStatus, "Select a game to manage its roster.", "info");
+    }
+  } catch (error) {
+    console.error("Failed to load games", error);
+    setStatusMessage(els.gameStatus, "Unable to load owned games.", "error");
+  } finally {
+    els.gameSelect.disabled = false;
+  }
+}
+
+function populateGameSelect() {
+  if (!els.gameSelect) {
+    return;
+  }
+  const previous = activeGameId;
+  els.gameSelect.innerHTML = "";
+  const placeholder = document.createElement("option");
+  placeholder.value = "";
+  placeholder.textContent = ownedGames.length ? "Select a game…" : "No games found";
+  els.gameSelect.appendChild(placeholder);
+  ownedGames.forEach((game) => {
+    const option = document.createElement("option");
+    option.value = game.id;
+    option.textContent = game.gamename || game.id;
+    if (game.id === previous) {
+      option.selected = true;
+    }
+    els.gameSelect.appendChild(option);
+  });
+  if (previous && !ownedGames.some((game) => game.id === previous)) {
+    resetGameManagementUI();
+  }
+}
+
+function handleGameSelection(event) {
+  const value = event?.target?.value || "";
+  if (!value) {
+    resetGameManagementUI();
+    return;
+  }
+  subscribeToGame(value);
+}
+
+function applyGameDataToForm(data = {}) {
+  if (els.gameNameInput) {
+    els.gameNameInput.value = data.gamename || "";
+  }
+  if (els.gameDayInput) {
+    const dayValue = Number.isFinite(data.day) ? data.day : 0;
+    els.gameDayInput.value = String(dayValue);
+  }
+  if (els.gamePhaseInput) {
+    els.gamePhaseInput.value = data.phase || data.phaseLabel || "";
+  }
+  if (els.gameOpenInput) {
+    els.gameOpenInput.checked = !!data.open;
+  }
+  if (els.gameActiveInput) {
+    els.gameActiveInput.checked = !!data.active;
+  }
+  enableGameControls();
+}
+
+function subscribeToGame(gameId) {
+  if (!gameId) {
+    resetGameManagementUI();
+    return;
+  }
+  stopGameSubscriptions();
+  activeGameId = gameId;
+  currentGameData = null;
+  setStatusMessage(els.gameStatus, "Loading game…", "info");
+  const gameRef = doc(db, "games", gameId);
+  unsubscribeGameDoc = onSnapshot(
+    gameRef,
+    (snapshot) => {
+      if (!snapshot.exists()) {
+        setStatusMessage(els.gameStatus, "Game not found.", "error");
+        resetGameManagementUI();
+        return;
+      }
+      currentGameData = { id: snapshot.id, ...(snapshot.data() || {}) };
+      applyGameDataToForm(currentGameData);
+      setStatusMessage(
+        els.gameStatus,
+        `Managing ${currentGameData.gamename || currentGameData.id}.`,
+        "success"
+      );
+    },
+    (error) => {
+      console.error("Failed to watch game metadata", error);
+      setStatusMessage(els.gameStatus, "Unable to load game metadata.", "error");
+    }
+  );
+  startRosterSubscription(gameId);
+}
+
+function startRosterSubscription(gameId) {
+  if (!els.rosterTableBody) {
+    return;
+  }
+  if (!gameId) {
+    resetGameManagementUI();
+    return;
+  }
+  if (unsubscribeRoster) {
+    unsubscribeRoster();
+    unsubscribeRoster = null;
+  }
+  setStatusMessage(els.rosterStatus, "Loading roster…", "info");
+  const playersRef = collection(db, "games", gameId, "players");
+  unsubscribeRoster = onSnapshot(
+    playersRef,
+    (snapshot) => {
+      const players = [];
+      snapshot.forEach((docSnap) => {
+        players.push({ id: docSnap.id, ...(docSnap.data() || {}) });
+      });
+      renderRoster(players);
+    },
+    (error) => {
+      console.error("Failed to watch roster", error);
+      setStatusMessage(els.rosterStatus, "Unable to load roster.", "error");
+      if (els.rosterTableBody) {
+        els.rosterTableBody.innerHTML = "";
+      }
+    }
+  );
+}
+
+function renderRoster(players = []) {
+  if (!els.rosterTableBody) {
+    return;
+  }
+  const sorted = sortRosterPlayers(players);
+  els.rosterTableBody.innerHTML = "";
+  if (!sorted.length) {
+    const emptyRow = document.createElement("tr");
+    const emptyCell = document.createElement("td");
+    emptyCell.colSpan = 7;
+    emptyCell.textContent = "No players joined yet.";
+    emptyCell.style.textAlign = "center";
+    emptyRow.appendChild(emptyCell);
+    els.rosterTableBody.appendChild(emptyRow);
+    setStatusMessage(els.rosterStatus, "No players joined yet.", "info");
+    enableGameControls();
+    return;
+  }
+  sorted.forEach((player) => {
+    const row = document.createElement("tr");
+    row.dataset.playerId = player.id;
+
+    const nameCell = document.createElement("td");
+    nameCell.innerHTML = `
+      <div class="roster-name">${escapeHtml(getPlayerDisplayName(player))}</div>
+      <div class="roster-meta">${escapeHtml(player.id)}</div>
+    `;
+    row.appendChild(nameCell);
+
+    const roleCell = document.createElement("td");
+    const roleInput = document.createElement("input");
+    roleInput.type = "text";
+    roleInput.className = "roster-role";
+    roleInput.placeholder = "Unassigned";
+    roleInput.value = (player.role || player.rolename || "").trim();
+    roleCell.appendChild(roleInput);
+    row.appendChild(roleCell);
+
+    const alignmentCell = document.createElement("td");
+    const alignmentInput = document.createElement("input");
+    alignmentInput.type = "text";
+    alignmentInput.className = "roster-alignment";
+    alignmentInput.placeholder = "Alignment";
+    alignmentInput.value =
+      player.alignment || player.roleAlignment || player.roleDefinition?.alignment || "";
+    alignmentCell.appendChild(alignmentInput);
+    row.appendChild(alignmentCell);
+
+    const statusCell = document.createElement("td");
+    const statusSelect = document.createElement("select");
+    statusSelect.className = "roster-status";
+    [
+      { value: "alive", label: "Alive" },
+      { value: "eliminated", label: "Eliminated" },
+    ].forEach((optionDef) => {
+      const option = document.createElement("option");
+      option.value = optionDef.value;
+      option.textContent = optionDef.label;
+      statusSelect.appendChild(option);
+    });
+    statusSelect.value = playerIsAlive(player) ? "alive" : "eliminated";
+    statusCell.appendChild(statusSelect);
+    row.appendChild(statusCell);
+
+    const postsCell = document.createElement("td");
+    const postsInput = document.createElement("input");
+    postsInput.type = "number";
+    postsInput.className = "roster-posts";
+    postsInput.min = "-1";
+    postsInput.placeholder = "∞";
+    if (typeof player.postsLeft === "number" && Number.isFinite(player.postsLeft)) {
+      postsInput.value = String(player.postsLeft);
+    }
+    postsCell.appendChild(postsInput);
+    row.appendChild(postsCell);
+
+    const notesCell = document.createElement("td");
+    const notesInput = document.createElement("textarea");
+    notesInput.className = "roster-notes";
+    notesInput.rows = 2;
+    notesInput.placeholder = "Moderator notes";
+    notesInput.value = player.modNotes || player.notes || "";
+    notesCell.appendChild(notesInput);
+    row.appendChild(notesCell);
+
+    const actionsCell = document.createElement("td");
+    actionsCell.className = "actions";
+    const actionWrapper = document.createElement("div");
+    actionWrapper.className = "roster-actions";
+    const resetButton = document.createElement("button");
+    resetButton.type = "button";
+    resetButton.className = "secondary";
+    resetButton.dataset.action = "reset";
+    resetButton.textContent = "Reset";
+    const saveButton = document.createElement("button");
+    saveButton.type = "button";
+    saveButton.className = "primary";
+    saveButton.dataset.action = "save";
+    saveButton.textContent = "Save";
+    actionWrapper.appendChild(resetButton);
+    actionWrapper.appendChild(saveButton);
+    actionsCell.appendChild(actionWrapper);
+    row.appendChild(actionsCell);
+
+    row.dataset.originalRole = roleInput.value;
+    row.dataset.originalAlignment = alignmentInput.value;
+    row.dataset.originalStatus = statusSelect.value;
+    row.dataset.originalPosts = postsInput.value || "";
+    row.dataset.originalNotes = notesInput.value;
+
+    els.rosterTableBody.appendChild(row);
+  });
+  setStatusMessage(
+    els.rosterStatus,
+    `${sorted.length} player${sorted.length === 1 ? "" : "s"} loaded.`,
+    "info"
+  );
+  enableGameControls();
+}
+
+async function manualRefreshGame() {
+  if (!currentUser) {
+    setStatusMessage(els.gameStatus, "Sign in to manage games.", "error");
+    return;
+  }
+  if (!activeGameId) {
+    setStatusMessage(els.gameStatus, "Select a game to refresh.", "info");
+    return;
+  }
+  try {
+    const gameRef = doc(db, "games", activeGameId);
+    const snapshot = await getDoc(gameRef);
+    if (snapshot.exists()) {
+      currentGameData = { id: snapshot.id, ...(snapshot.data() || {}) };
+      applyGameDataToForm(currentGameData);
+      setStatusMessage(els.gameStatus, "Game metadata refreshed.", "success");
+    } else {
+      setStatusMessage(els.gameStatus, "Game no longer exists.", "error");
+    }
+    const playersSnapshot = await getDocs(collection(gameRef, "players"));
+    const players = playersSnapshot.docs.map((docSnap) => ({
+      id: docSnap.id,
+      ...(docSnap.data() || {}),
+    }));
+    renderRoster(players);
+    setStatusMessage(els.rosterStatus, "Roster refreshed.", "success");
+  } catch (error) {
+    console.error("Failed to refresh game", error);
+    setStatusMessage(els.gameStatus, "Unable to refresh game data.", "error");
+  }
+}
+
+async function updateGameMetadata(event) {
+  event.preventDefault();
+  if (!currentUser) {
+    alert("Sign in to manage games.");
+    return;
+  }
+  if (!activeGameId) {
+    setStatusMessage(els.gameStatus, "Select a game first.", "error");
+    return;
+  }
+  const updates = { updatedAt: serverTimestamp() };
+  const nameValue = (els.gameNameInput?.value || "").trim();
+  updates.gamename = nameValue;
+  const dayValue = parseInt(els.gameDayInput?.value || "0", 10);
+  updates.day = Number.isFinite(dayValue) && dayValue >= 0 ? dayValue : 0;
+  const phaseValue = (els.gamePhaseInput?.value || "").trim();
+  updates.phase = phaseValue ? phaseValue : deleteField();
+  if (els.gameOpenInput) {
+    updates.open = !!els.gameOpenInput.checked;
+  }
+  if (els.gameActiveInput) {
+    updates.active = !!els.gameActiveInput.checked;
+  }
+  try {
+    await updateDoc(doc(db, "games", activeGameId), updates);
+    setStatusMessage(els.gameStatus, "Metadata updated.", "success");
+  } catch (error) {
+    console.error("Failed to update metadata", error);
+    setStatusMessage(els.gameStatus, "Unable to update metadata.", "error");
+  }
+}
+
+async function triggerPhaseAction(action, value = "") {
+  if (!currentUser) {
+    alert("Sign in to manage games.");
+    return;
+  }
+  if (!activeGameId || !currentGameData) {
+    setStatusMessage(els.gameStatus, "Select a game first.", "error");
+    return;
+  }
+  const patch = { updatedAt: serverTimestamp() };
+  let message = "";
+  if (action === "toggleOpen") {
+    const next = !currentGameData.open;
+    patch.open = next;
+    message = next ? "Game opened to new players." : "Game closed to new players.";
+  } else if (action === "toggleActive") {
+    const next = !currentGameData.active;
+    patch.active = next;
+    message = next ? "Game marked active." : "Game marked inactive.";
+  } else if (action === "nextDay") {
+    const nextDay = (currentGameData.day ?? 0) + 1;
+    patch.day = nextDay;
+    message = `Advanced to day ${nextDay}.`;
+  } else if (action === "setPhase") {
+    const trimmed = (value || "").trim();
+    if (trimmed) {
+      patch.phase = trimmed;
+      message = `Phase set to ${trimmed}.`;
+    } else {
+      patch.phase = deleteField();
+      message = "Phase cleared.";
+    }
+  }
+  try {
+    await updateDoc(doc(db, "games", activeGameId), patch);
+    setStatusMessage(els.gameStatus, message, "success");
+  } catch (error) {
+    console.error("Failed to apply phase action", error);
+    setStatusMessage(els.gameStatus, "Unable to update phase controls.", "error");
+  }
+}
+
+async function handleRosterSave(row, playerId) {
+  if (!currentUser) {
+    alert("Sign in to manage games.");
+    return;
+  }
+  if (!activeGameId) {
+    setStatusMessage(els.rosterStatus, "Select a game first.", "error");
+    return;
+  }
+  const roleValue = (row.querySelector(".roster-role")?.value || "").trim();
+  const alignmentValue = (row.querySelector(".roster-alignment")?.value || "").trim();
+  const statusValue = row.querySelector(".roster-status")?.value || "alive";
+  const postsValueRaw = row.querySelector(".roster-posts")?.value || "";
+  const notesValue = (row.querySelector(".roster-notes")?.value || "").trim();
+  const postsValue = parseInt(postsValueRaw, 10);
+  const updates = { updatedAt: serverTimestamp() };
+  updates.active = statusValue === "alive";
+  updates.alive = statusValue === "alive";
+  updates.postsLeft = Number.isFinite(postsValue) ? postsValue : -1;
+  if (roleValue) {
+    updates.role = roleValue;
+    updates.rolename = roleValue;
+  } else {
+    updates.role = deleteField();
+    updates.rolename = deleteField();
+  }
+  if (alignmentValue) {
+    updates.alignment = alignmentValue;
+  } else {
+    updates.alignment = deleteField();
+  }
+  if (notesValue) {
+    updates.modNotes = notesValue;
+  } else {
+    updates.modNotes = deleteField();
+  }
+  try {
+    await updateDoc(doc(db, "games", activeGameId, "players", playerId), updates);
+    setStatusMessage(els.rosterStatus, "Player updated.", "success");
+  } catch (error) {
+    console.error("Failed to update player", error);
+    setStatusMessage(els.rosterStatus, "Unable to update player.", "error");
+  }
+}
+
+function handleRosterReset(row) {
+  const roleInput = row.querySelector(".roster-role");
+  const alignmentInput = row.querySelector(".roster-alignment");
+  const statusSelect = row.querySelector(".roster-status");
+  const postsInput = row.querySelector(".roster-posts");
+  const notesInput = row.querySelector(".roster-notes");
+  if (roleInput) {
+    roleInput.value = row.dataset.originalRole || "";
+  }
+  if (alignmentInput) {
+    alignmentInput.value = row.dataset.originalAlignment || "";
+  }
+  if (statusSelect) {
+    statusSelect.value = row.dataset.originalStatus || "alive";
+  }
+  if (postsInput) {
+    postsInput.value = row.dataset.originalPosts || "";
+  }
+  if (notesInput) {
+    notesInput.value = row.dataset.originalNotes || "";
+  }
+  setStatusMessage(els.rosterStatus, "Row reset.", "info");
 }
 
 function startRealtimeSubscriptions() {
@@ -532,6 +1237,7 @@ if (!missingConfig) {
   showThreadsMessage("Sign in to load threads.");
   showVotesMessage("Sign in to load votes.");
   resetThreadSelection("Sign in to view a thread", "Sign in to view posts.");
+  resetGameManagementUI({ signedOut: true });
 
   els.signInButton.addEventListener("click", () => {
     signInWithPopup(auth, provider).catch((error) => {
@@ -613,6 +1319,53 @@ if (!missingConfig) {
     });
   }
 
+  if (els.gameSelect) {
+    els.gameSelect.addEventListener("change", handleGameSelection);
+  }
+  if (els.gameMetadataForm) {
+    els.gameMetadataForm.addEventListener("submit", updateGameMetadata);
+  }
+  if (els.refreshGameButton) {
+    els.refreshGameButton.addEventListener("click", manualRefreshGame);
+  }
+  if (els.phaseToggleOpenButton) {
+    els.phaseToggleOpenButton.addEventListener("click", () => triggerPhaseAction("toggleOpen"));
+  }
+  if (els.phaseToggleActiveButton) {
+    els.phaseToggleActiveButton.addEventListener("click", () =>
+      triggerPhaseAction("toggleActive")
+    );
+  }
+  if (els.phaseNextDayButton) {
+    els.phaseNextDayButton.addEventListener("click", () => triggerPhaseAction("nextDay"));
+  }
+  if (els.phaseSetDayButton) {
+    els.phaseSetDayButton.addEventListener("click", () => triggerPhaseAction("setPhase", "Day"));
+  }
+  if (els.phaseSetNightButton) {
+    els.phaseSetNightButton.addEventListener("click", () =>
+      triggerPhaseAction("setPhase", "Night")
+    );
+  }
+  if (els.rosterTableBody) {
+    els.rosterTableBody.addEventListener("click", (event) => {
+      const button = event.target.closest("button[data-action]");
+      if (!button) {
+        return;
+      }
+      const row = button.closest("tr[data-player-id]");
+      const playerId = row?.dataset.playerId;
+      if (!row || !playerId) {
+        return;
+      }
+      if (button.dataset.action === "save") {
+        handleRosterSave(row, playerId);
+      } else if (button.dataset.action === "reset") {
+        handleRosterReset(row);
+      }
+    });
+  }
+
   onAuthStateChanged(auth, async (user) => {
     currentUser = user;
     if (user) {
@@ -631,6 +1384,8 @@ if (!missingConfig) {
       if (!selectedThreadId) {
         resetThreadSelection("Select a thread");
       }
+      enableGameControls();
+      await loadOwnedGames();
     } else {
       stopProfileSubscription();
       currentUserProfile = null;
@@ -640,11 +1395,13 @@ if (!missingConfig) {
       els.replyForm.hidden = true;
       els.deleteThread.hidden = true;
       stopRealtimeSubscriptions({ showSignedOutState: true });
+      resetGameManagementUI({ signedOut: true });
     }
   });
 
   window.addEventListener("beforeunload", () => {
     stopRealtimeSubscriptions();
     stopProfileSubscription();
+    stopGameSubscriptions();
   });
 }
