@@ -55,9 +55,15 @@
                   <input id="privateActionName" class="bginput" />
                 </label>
                 <label>
-                  Target name
-                  <input id="privateActionTarget" class="bginput" />
+                  Target
+                  <select id="privateActionTarget" class="bginput"></select>
                 </label>
+                <div id="privateActionCustomTargetRow" style="display:none;">
+                  <label>
+                    Custom target name
+                    <input id="privateActionCustomTarget" class="bginput" />
+                  </label>
+                </div>
                 <label>
                   Day
                   <input id="privateActionDay" type="number" class="bginput" min="0" />
@@ -105,6 +111,7 @@
                 </label>
                 <div><button class="button" type="submit">Save notebook entry</button></div>
               </form>
+              <div id="playerTargetNotice" class="smallfont" style="display:none; margin-top:6px; color:#F9A906;"></div>
               <div id="playerToolsStatus" style="display:none; margin-top:6px; color:#F9A906;"></div>
             </div>
             <div id="moderatorPanel" class="smallfont" style="display:none; margin-bottom:12px;">

@@ -28,6 +28,7 @@ const header = initLegacyHeader();
 
 
 const CUSTOM_ROLE_OPTION_VALUE = "__custom-role__";
+const CUSTOM_PRIVATE_TARGET_VALUE = "__custom-target__";
 
 const ACTION_LIMIT_ERROR_CODE = "action-limit-exceeded";
 const ACTION_RULE_KEYS = [
@@ -66,6 +67,8 @@ const els = {
   privateActionForm: document.getElementById("privateActionForm"),
   privateActionName: document.getElementById("privateActionName"),
   privateActionTarget: document.getElementById("privateActionTarget"),
+  privateActionCustomTargetRow: document.getElementById("privateActionCustomTargetRow"),
+  privateActionCustomTarget: document.getElementById("privateActionCustomTarget"),
   privateActionDay: document.getElementById("privateActionDay"),
   voteRecordForm: document.getElementById("voteRecordForm"),
   voteTarget: document.getElementById("voteTarget"),
@@ -78,6 +81,7 @@ const els = {
   notebookTarget: document.getElementById("notebookTarget"),
   notebookDay: document.getElementById("notebookDay"),
   notebookNotes: document.getElementById("notebookNotes"),
+  playerTargetNotice: document.getElementById("playerTargetNotice"),
   moderatorPanel: document.getElementById("moderatorPanel"),
   moderatorStatus: document.getElementById("moderatorStatus"),
   moderatorRows: document.getElementById("moderatorRows"),
@@ -120,6 +124,11 @@ if (els.ubbButtons?.length) {
   els.ubbButtons.forEach((button) => {
     button.addEventListener("click", () => applyUbbTag(button.dataset.ubbTag));
   });
+}
+
+if (els.privateActionTarget) {
+  els.privateActionTarget.addEventListener("change", handlePrivateActionTargetChange);
+  handlePrivateActionTargetChange();
 }
 
 function createMetaRow(html) {
@@ -486,15 +495,32 @@ els.privateActionForm?.addEventListener("submit", async (event) => {
     return;
   }
   const actionName = (els.privateActionName?.value || "").trim();
-  const targetNameInput = (els.privateActionTarget?.value || "").trim();
+  const targetSelection = (els.privateActionTarget?.value || "").trim();
+  const customTargetInput = (els.privateActionCustomTarget?.value || "").trim();
   const day = parseDayInput(els.privateActionDay);
   if (!actionName) {
     setPlayerToolsStatus("Enter an action name to record.", "error");
     return;
   }
-  const matchedTarget = targetNameInput ? findPlayerByName(targetNameInput) : null;
-  const targetName = matchedTarget?.name || targetNameInput;
-  const targetPlayerId = matchedTarget?.id || "";
+  if (targetSelection === CUSTOM_PRIVATE_TARGET_VALUE && !customTargetInput) {
+    setPlayerToolsStatus("Enter a custom target name first.", "error");
+    return;
+  }
+  let targetPlayerId = "";
+  let targetName = "";
+  if (targetSelection === CUSTOM_PRIVATE_TARGET_VALUE) {
+    const matchedCustom = customTargetInput ? findPlayerByName(customTargetInput) : null;
+    targetName = matchedCustom?.name || customTargetInput;
+    targetPlayerId = matchedCustom?.id || "";
+  } else if (targetSelection) {
+    const matchedTarget = findPlayerById(targetSelection);
+    targetName = matchedTarget?.name || "";
+    targetPlayerId = matchedTarget?.id || targetSelection;
+  } else if (customTargetInput) {
+    const matchedFallback = findPlayerByName(customTargetInput);
+    targetName = matchedFallback?.name || customTargetInput;
+    targetPlayerId = matchedFallback?.id || "";
+  }
   try {
     await recordAction({
       category: "private",
@@ -506,6 +532,10 @@ els.privateActionForm?.addEventListener("submit", async (event) => {
     setPlayerToolsStatus("Private action recorded.", "success");
     if (els.privateActionTarget) {
       els.privateActionTarget.value = "";
+      handlePrivateActionTargetChange();
+    }
+    if (els.privateActionCustomTarget) {
+      els.privateActionCustomTarget.value = "";
     }
   } catch (error) {
     if (error?.code === ACTION_LIMIT_ERROR_CODE) {
@@ -693,6 +723,16 @@ function parseDayInput(input) {
     return value;
   }
   return currentGame?.day ?? 0;
+}
+
+function handlePrivateActionTargetChange() {
+  const needsCustom = els.privateActionTarget?.value === CUSTOM_PRIVATE_TARGET_VALUE;
+  if (els.privateActionCustomTargetRow) {
+    setDisplay(els.privateActionCustomTargetRow, needsCustom ? "block" : "none");
+  }
+  if (!needsCustom && els.privateActionCustomTarget) {
+    els.privateActionCustomTarget.value = "";
+  }
 }
 
 function setPlayerToolsStatus(message, type = "info") {
@@ -1045,29 +1085,106 @@ function findPlayerByName(name) {
   );
 }
 
+function getEligibleTargetPlayers() {
+  const excludeId = currentUser?.uid || "";
+  return gamePlayers.filter((player) => {
+    if (!player) {
+      return false;
+    }
+    if (excludeId && player.id === excludeId) {
+      return false;
+    }
+    return playerIsAlive(player.data);
+  });
+}
+
+function updateTargetDependentVisibility(players) {
+  const hasTargets = players.length > 0;
+  if (els.voteRecordForm) {
+    setDisplay(els.voteRecordForm, hasTargets ? "block" : "none");
+  }
+  if (els.notebookRecordForm) {
+    setDisplay(els.notebookRecordForm, hasTargets ? "block" : "none");
+  }
+  if (els.playerTargetNotice) {
+    if (hasTargets) {
+      els.playerTargetNotice.style.display = "none";
+      els.playerTargetNotice.textContent = "";
+    } else {
+      els.playerTargetNotice.style.display = "block";
+      els.playerTargetNotice.textContent = "No eligible players to target yet.";
+    }
+  }
+}
+
+function populatePrivateActionTarget(players) {
+  const select = els.privateActionTarget;
+  if (!select) {
+    return;
+  }
+  const previous = select.value;
+  const customSelected = previous === CUSTOM_PRIVATE_TARGET_VALUE;
+  select.innerHTML = "";
+  const placeholder = document.createElement("option");
+  placeholder.value = "";
+  placeholder.textContent = players.length
+    ? "-- optional: select player --"
+    : "-- no players available --";
+  select.appendChild(placeholder);
+  players.forEach((player) => {
+    const option = document.createElement("option");
+    option.value = player.id;
+    option.textContent = player.name;
+    select.appendChild(option);
+  });
+  const customOption = document.createElement("option");
+  customOption.value = CUSTOM_PRIVATE_TARGET_VALUE;
+  customOption.textContent = "Custom target…";
+  select.appendChild(customOption);
+  if (customSelected) {
+    select.value = CUSTOM_PRIVATE_TARGET_VALUE;
+  } else if (players.some((player) => player.id === previous)) {
+    select.value = previous;
+  } else {
+    select.value = "";
+  }
+  handlePrivateActionTargetChange();
+}
+
 function populatePlayerSelects() {
+  const eligiblePlayers = getEligibleTargetPlayers();
+  updateTargetDependentVisibility(eligiblePlayers);
   const selects = [
     { element: els.voteTarget, placeholder: "-- select player --" },
     { element: els.notebookTarget, placeholder: "-- select player --" },
   ];
   selects.forEach(({ element, placeholder }) => {
-    if (!element) return;
+    if (!element) {
+      return;
+    }
     const previous = element.value;
     element.innerHTML = "";
     const blank = document.createElement("option");
     blank.value = "";
-    blank.textContent = placeholder;
+    blank.textContent = eligiblePlayers.length ? placeholder : "-- no eligible players --";
     element.appendChild(blank);
-    gamePlayers.forEach((player) => {
+    let hasPrevious = false;
+    eligiblePlayers.forEach((player) => {
       const option = document.createElement("option");
       option.value = player.id;
       option.textContent = player.name;
       if (player.id === previous) {
         option.selected = true;
+        hasPrevious = true;
       }
       element.appendChild(option);
     });
+    if (!hasPrevious) {
+      element.value = "";
+    }
+    element.disabled = !eligiblePlayers.length;
   });
+  populatePrivateActionTarget(eligiblePlayers);
 }
 
 function getKnownRoleNames() {
