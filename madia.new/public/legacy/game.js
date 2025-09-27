@@ -767,6 +767,15 @@ async function loadPrivateChannels() {
   if (els.privateChannelsSection) {
     els.privateChannelsSection.style.display = "block";
   }
+
+  const userId = normalizeIdentifier(user.uid);
+  const ownerId = normalizeIdentifier(currentGame?.ownerUserId);
+  const isOwner = ownerId && userId === ownerId;
+  if (!currentPlayer && !isOwner) {
+    setPrivateChannelsStatus("Join the game to view your role discussions.");
+    return;
+  }
+
   setPrivateChannelsStatus("Loading role discussions…");
 
   const gameRef = doc(db, "games", gameId);
@@ -783,9 +792,6 @@ async function loadPrivateChannels() {
     container.innerHTML = "";
     return;
   }
-
-  const userId = normalizeIdentifier(user.uid);
-  const ownerId = normalizeIdentifier(currentGame?.ownerUserId);
 
   const accessibleChannels = [];
   channelSnapshot.forEach((docSnap) => {
