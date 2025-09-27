@@ -584,3 +584,74 @@ label { cursor: default; }
   flex-direction: column;
   gap: 2px;
 }
+
+.role-guide__summary {
+  margin-bottom: 12px;
+  color: #94a3b8;
+}
+
+.role-card {
+  margin-bottom: 16px;
+}
+
+.role-card__heading {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.role-card__name {
+  font-size: 13px;
+  font-weight: bold;
+}
+
+.role-card__alignment {
+  font-size: 10px;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: #f9a906;
+}
+
+.role-card__tags {
+  margin-top: 4px;
+  color: #94a3b8;
+}
+
+.role-card__label {
+  width: 24%;
+  font-weight: bold;
+  vertical-align: top;
+}
+
+.role-card__list {
+  margin: 0;
+  padding-left: 18px;
+}
+
+.role-card__action {
+  margin-bottom: 6px;
+}
+
+.role-card__action:last-child {
+  margin-bottom: 0;
+}
+
+.role-card__action-name {
+  font-weight: bold;
+}
+
+.role-card__action-meta {
+  margin-top: 2px;
+  color: #94a3b8;
+}
+
+.role-card__empty {
+  color: #94a3b8;
+  font-style: italic;
+}
+
+.role-card__note {
+  font-style: italic;
+  color: #cbd5f5;
+}
