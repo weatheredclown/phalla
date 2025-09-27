@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Phalla Control Center</title>
+    <link rel="stylesheet" href="../styles.css" />
+  </head>
+  <body>
+    <header>
+      <h1>Phalla Control Center</h1>
+      <p id="authStatus" class="subtitle">Checking sign-in status…</p>
+      <div class="auth-controls">
+        <button id="signInButton" class="primary" type="button">Sign in with Google</button>
+        <button id="signOutButton" class="secondary" type="button" hidden>Sign out</button>
+      </div>
+    </header>
+
+    <main>
+      <section class="panel">
+        <div class="panel-header">
+          <h2>Threads</h2>
+          <div class="panel-actions">
+            <button id="newThreadButton" class="primary" type="button">New thread</button>
+          </div>
+        </div>
+        <ul id="threadsList" class="list" aria-live="polite"></ul>
+      </section>
+
+      <section class="panel">
+        <div class="panel-header">
+          <div>
+            <h2 id="threadTitle">Select a thread</h2>
+            <p id="threadMetadata" class="metadata"></p>
+          </div>
+          <div class="panel-actions">
+            <button id="refreshThread" class="secondary" type="button">Refresh</button>
+            <button id="deleteThread" class="secondary" type="button" hidden>Delete</button>
+          </div>
+        </div>
+        <ul id="postsList" class="list posts" aria-live="polite"></ul>
+        <form id="replyForm" class="reply-form" hidden>
+          <label for="replyBody">Post reply</label>
+          <textarea id="replyBody" rows="5" placeholder="Share an update with the village" required></textarea>
+          <div class="panel-actions">
+            <button class="secondary" type="button" id="cancelReplyButton">Cancel</button>
+            <button class="primary" type="submit">Submit reply</button>
+          </div>
+        </form>
+      </section>
+
+      <section class="panel">
+        <div class="panel-header">
+          <h2>Vote tracker</h2>
+          <div class="panel-actions">
+            <button id="recordVoteButton" class="primary" type="button">Record vote</button>
+          </div>
+        </div>
+        <div class="table-wrapper">
+          <table id="voteTable" class="vote-table">
+            <thead>
+              <tr>
+                <th scope="col">Player</th>
+                <th scope="col">Votes</th>
+                <th scope="col">Notes</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </section>
+    </main>
+
+    <dialog id="threadDialog">
+      <form method="dialog" id="threadForm" class="dialog-form">
+        <h2>Create a new thread</h2>
+        <label for="threadTitleInput">Title</label>
+        <input id="threadTitleInput" type="text" name="title" required />
+        <label for="threadBodyInput">Opening post</label>
+        <textarea
+          id="threadBodyInput"
+          name="body"
+          rows="6"
+          placeholder="Welcome players, describe the game, or log the next phase update"
+          required
+        ></textarea>
+        <menu class="dialog-actions">
+          <button value="cancel" type="reset" class="secondary">Cancel</button>
+          <button value="default" class="primary">Create thread</button>
+        </menu>
+      </form>
+    </dialog>
+
+    <dialog id="voteDialog">
+      <form method="dialog" id="voteForm" class="dialog-form">
+        <h2>Record a vote</h2>
+        <label for="votePlayerInput">Player</label>
+        <input id="votePlayerInput" type="text" name="player" required />
+        <label for="voteCountInput">Vote count</label>
+        <input id="voteCountInput" type="number" name="votes" min="0" value="1" required />
+        <label for="voteNotesInput">Notes</label>
+        <textarea
+          id="voteNotesInput"
+          name="notes"
+          rows="4"
+          placeholder="Include context like vote source or tie-breakers"
+        ></textarea>
+        <menu class="dialog-actions">
+          <button value="cancel" type="reset" class="secondary">Cancel</button>
+          <button value="default" class="primary">Save vote</button>
+        </menu>
+      </form>
+    </dialog>
+
+    <script type="module" src="../script.js"></script>
+  </body>
+</html>
