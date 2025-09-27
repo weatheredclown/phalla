@@ -153,6 +153,11 @@ service cloud.firestore {
 }
 ```
 
+The retro moderator interface now ships with a built-in catalog of role
+names, so the `/roles` collection is optional. You can keep the rule in
+place for compatibility, but no seeding or additional permissions are
+required.
+
 ## 3. Configure Firebase Storage rules
 
 Avatar uploads in the retro member profile use Cloud Storage. Until you

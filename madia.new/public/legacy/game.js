@@ -32,6 +32,31 @@ const CUSTOM_ACTION_OPTION_VALUE = "__custom-action__";
 const CUSTOM_TARGET_OPTION_VALUE = "__custom-target__";
 const CUSTOM_REPLACEMENT_OPTION_VALUE = "__custom-replacement__";
 
+const DEFAULT_ROLE_NAMES = [
+  "Baner",
+  "Bodyguard",
+  "Bus Driver",
+  "Cultist",
+  "Doctor",
+  "Guardian Angel",
+  "Inspector",
+  "Mafia",
+  "Mason",
+  "Mayor",
+  "Miller",
+  "Necromancer",
+  "Roleblocker",
+  "Seer",
+  "Serial Killer",
+  "Spy",
+  "Tracker",
+  "Vanillager",
+  "Villager",
+  "Vigilante",
+  "Vote Manipulator",
+  "Watcher",
+];
+
 const ACTION_LIMIT_ERROR_CODE = "action-limit-exceeded";
 const ACTION_RULE_KEYS = [
   "actionRules",
@@ -125,8 +150,7 @@ let currentGame = null;
 let currentPlayer = null;
 let gamePlayers = [];
 let isOwnerView = false;
-let availableRoles = [];
-let rolesLoadPromise = null;
+let availableRoles = [...DEFAULT_ROLE_NAMES];
 let replacementCandidates = [];
 let replacementCandidateDocs = new Map();
 let replacementCandidatesPromise = null;
@@ -2436,39 +2460,8 @@ function getKnownRoleNames() {
 }
 
 async function ensureRolesLoaded() {
-  if (availableRoles.length) {
-    return availableRoles;
-  }
-  if (rolesLoadPromise) {
-    return rolesLoadPromise;
-  }
-  const loadPromise = (async () => {
-    try {
-      const rolesSnap = await getDocs(query(collection(db, "roles"), orderBy("rolename")));
-      const names = [];
-      rolesSnap.forEach((docSnap) => {
-        const data = docSnap.data() || {};
-        const name = String(data.rolename || data.name || docSnap.id || "").trim();
-        if (!name) {
-          return;
-        }
-        if (!names.includes(name)) {
-          names.push(name);
-        }
-      });
-      availableRoles = names;
-    } catch (error) {
-      console.warn("Failed to load available roles", error);
-      availableRoles = [];
-    }
-    return availableRoles;
-  })();
-  rolesLoadPromise = loadPromise;
-  try {
-    return await loadPromise;
-  } finally {
-    rolesLoadPromise = null;
-  }
+  availableRoles = [...DEFAULT_ROLE_NAMES];
+  return availableRoles;
 }
 
 function renderModeratorPanel() {
