@@ -77,7 +77,8 @@ service cloud.firestore {
       match /posts/{postId} {
         allow read: if true;
         allow create: if request.auth != null
-          && exists(/databases/$(database)/documents/games/$(gameId)/players/$(request.auth.uid));
+          && (exists(/databases/$(database)/documents/games/$(gameId)/players/$(request.auth.uid))
+            || isGameOwner(gameId));
         allow update: if request.auth != null && (
           request.auth.uid == resource.data.authorId ||
           get(/databases/$(database)/documents/games/$(gameId)).data.ownerUserId == request.auth.uid
