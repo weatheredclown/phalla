@@ -663,6 +663,23 @@ function clearPrivateChannels() {
   setPrivateChannelsStatus("");
 }
 
+function getAssignedRoleName(player) {
+  if (!player || typeof player !== "object") {
+    return "";
+  }
+  const fields = ["role", "rolename", "roleName"];
+  for (const field of fields) {
+    const raw = player[field];
+    if (typeof raw === "string") {
+      const trimmed = raw.trim();
+      if (trimmed) {
+        return trimmed;
+      }
+    }
+  }
+  return "";
+}
+
 function collectIdSet(source, keys = []) {
   const ids = new Set();
   if (!source || typeof source !== "object") {
@@ -787,19 +804,22 @@ async function loadPrivateChannels() {
   }
 
   const container = els.privateChannelsContainer;
-  container.innerHTML = "";
-  if (els.privateChannelsSection) {
-    els.privateChannelsSection.style.display = "block";
+  if (container) {
+    container.innerHTML = "";
   }
 
   const userId = normalizeIdentifier(user.uid);
   const ownerId = normalizeIdentifier(currentGame?.ownerUserId);
   const isOwner = ownerId && userId === ownerId;
-  if (!currentPlayer && !isOwner) {
-    setPrivateChannelsStatus("Join the game to view your role discussions.");
+  const assignedRole = getAssignedRoleName(currentPlayer);
+  if (!isOwner && !assignedRole) {
+    clearPrivateChannels();
     return;
   }
 
+  if (els.privateChannelsSection) {
+    els.privateChannelsSection.style.display = "block";
+  }
   setPrivateChannelsStatus("Loading role discussions…");
 
   const gameRef = doc(db, "games", gameId);
@@ -886,8 +906,7 @@ async function loadPrivateChannels() {
       return;
     }
 
-    container.innerHTML = "";
-    setPrivateChannelsStatus("Join the game to view your role discussions.");
+    clearPrivateChannels();
     return;
   }
 
