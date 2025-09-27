@@ -57,6 +57,21 @@ const els = {
   replyTitle: document.getElementById("replyTitle"),
   replyBody: document.getElementById("replyBody"),
   postReply: document.getElementById("postReply"),
+  publicActionsBlock: document.getElementById("publicActionsBlock"),
+  publicActionsStatus: document.getElementById("publicActionsStatus"),
+  publicActionVoteRow: document.getElementById("publicActionVoteRow"),
+  publicActionVote: document.getElementById("publicActionVote"),
+  publicActionVoteTarget: document.getElementById("publicActionVoteTarget"),
+  publicActionUnvoteRow: document.getElementById("publicActionUnvoteRow"),
+  publicActionUnvote: document.getElementById("publicActionUnvote"),
+  publicActionClaimRow: document.getElementById("publicActionClaimRow"),
+  publicActionClaim: document.getElementById("publicActionClaim"),
+  publicClaimRoleSelect: document.getElementById("publicClaimRoleSelect"),
+  publicClaimRoleCustom: document.getElementById("publicClaimRoleCustom"),
+  publicActionNotebookRow: document.getElementById("publicActionNotebookRow"),
+  publicActionNotebook: document.getElementById("publicActionNotebook"),
+  publicNotebookTarget: document.getElementById("publicNotebookTarget"),
+  publicNotebookNotes: document.getElementById("publicNotebookNotes"),
   joinButton: document.getElementById("joinButton"),
   leaveButton: document.getElementById("leaveButton"),
   ownerControls: document.getElementById("ownerControls"),
@@ -158,12 +173,19 @@ if (els.claimRoleSelect) {
   els.claimRoleSelect.addEventListener("change", handleClaimRoleSelectChange);
 }
 
+if (els.publicClaimRoleSelect) {
+  els.publicClaimRoleSelect.addEventListener("change", handleClaimRoleSelectChange);
+}
+
 if (els.replacePlayerSelect) {
   els.replacePlayerSelect.addEventListener("change", handleReplaceSelectChange);
 }
 
 els.confirmReplaceButton?.addEventListener("click", confirmReplaceSelection);
 els.cancelReplaceButton?.addEventListener("click", cancelReplaceSelection);
+
+els.publicActionVote?.addEventListener("change", handlePublicVoteToggle);
+els.publicActionUnvote?.addEventListener("change", handlePublicUnvoteToggle);
 
 function createMetaRow(html) {
   const tr = document.createElement("tr");
@@ -457,6 +479,7 @@ async function loadGame() {
   populatePlayerSelects();
   populatePrivateActionOptions();
   populateClaimRoleOptions();
+  updatePublicActionControls();
   updatePlayerToolsFormsVisibility();
   renderModeratorPanel();
   await renderVoteTallies();
@@ -989,11 +1012,14 @@ async function refreshMembershipAndControls() {
     setDisplay(els.joinButton, "inline-block");
     setDisplay(els.leaveButton, "none");
     setDisplay(els.playerTools, "none");
+    setDisplay(els.publicActionsBlock, "none");
     setPlayerToolsStatus("");
+    setPublicActionsStatus("");
     if (els.actionHistorySection) {
       els.actionHistorySection.style.display = "none";
     }
     currentPlayer = null;
+    clearPublicActionSelections();
     clearPrivateChannels();
     populatePrivateActionOptions();
     populateClaimRoleOptions();
@@ -1010,12 +1036,14 @@ async function refreshMembershipAndControls() {
     const ownerView = currentGame && currentGame.ownerUserId === user.uid;
     setDisplay(els.playerTools, joined || ownerView ? "block" : "none");
     updatePlayerToolsFormsVisibility();
+    updatePublicActionControls();
   } catch {}
   await loadPrivateChannels();
   await renderActionHistory();
   populatePrivateActionOptions();
   populateClaimRoleOptions();
   updatePlayerToolsFormsVisibility();
+  updatePublicActionControls();
 }
 
 els.joinButton?.addEventListener("click", async () => {
@@ -1052,19 +1080,132 @@ els.postReply.addEventListener("click", async () => {
       return;
     }
   }
+
   const title = (els.replyTitle.value || "").trim();
   const body = (els.replyBody.value || "").trim();
   if (!body) return;
-  await addDoc(collection(doc(db, "games", gameId), "posts"), {
-    title,
-    body, // store as UBB; render via ubbToHtml
-    authorId: user.uid,
-    authorName: user.displayName || "Unknown",
-    avatar: user.photoURL || "",
-    createdAt: serverTimestamp(),
-  });
+
+  setPublicActionsStatus("");
+
+  const actionsToRecord = [];
+  const currentDay = currentGame?.day ?? 0;
+
+  if (els.publicActionVote?.checked) {
+    const targetId = (els.publicActionVoteTarget?.value || "").trim();
+    if (!targetId) {
+      setPublicActionsStatus("Select a vote target before posting.", "error");
+      return;
+    }
+    const targetPlayer = findPlayerById(targetId);
+    if (!targetPlayer) {
+      setPublicActionsStatus("Select a valid vote target before posting.", "error");
+      return;
+    }
+    actionsToRecord.push({
+      description: "vote",
+      payload: {
+        category: "vote",
+        actionName: "vote",
+        targetPlayerId: targetPlayer.id,
+        targetName: targetPlayer.name || "",
+        notes: "",
+        day: currentDay,
+        extra: {},
+      },
+    });
+  }
+
+  if (els.publicActionUnvote?.checked) {
+    if (els.publicActionVote?.checked) {
+      setPublicActionsStatus("Choose either vote or unvote, not both.", "error");
+      return;
+    }
+    actionsToRecord.push({
+      description: "unvote",
+      payload: {
+        category: "vote",
+        actionName: "unvote",
+        targetPlayerId: "",
+        targetName: "",
+        notes: "",
+        day: currentDay,
+        extra: { valid: false },
+      },
+    });
+  }
+
+  if (els.publicActionClaim?.checked) {
+    const claimValue = (els.publicClaimRoleSelect?.value || "").trim();
+    let claimRole = "";
+    if (claimValue === CUSTOM_ROLE_OPTION_VALUE) {
+      claimRole = (els.publicClaimRoleCustom?.value || "").trim();
+    } else {
+      claimRole = claimValue;
+    }
+    if (!claimRole) {
+      setPublicActionsStatus("Select a role to claim before posting.", "error");
+      return;
+    }
+    const claimTargetId = currentPlayer?.id || user.uid;
+    actionsToRecord.push({
+      description: "claim",
+      payload: {
+        category: "claim",
+        actionName: "claim",
+        targetPlayerId: claimTargetId,
+        targetName: claimRole,
+        notes: claimRole,
+        day: currentDay,
+        extra: {},
+      },
+    });
+  }
+
+  if (els.publicActionNotebook?.checked) {
+    const notebookTargetId = (els.publicNotebookTarget?.value || "").trim();
+    if (!notebookTargetId) {
+      setPublicActionsStatus("Select a notebook target before posting.", "error");
+      return;
+    }
+    const notebookTarget = findPlayerById(notebookTargetId);
+    if (!notebookTarget) {
+      setPublicActionsStatus("Select a valid notebook target before posting.", "error");
+      return;
+    }
+    const notebookNotes = (els.publicNotebookNotes?.value || "").trim();
+    actionsToRecord.push({
+      description: "notebook",
+      payload: {
+        category: "notebook",
+        actionName: "notebook",
+        targetPlayerId: notebookTarget.id,
+        targetName: notebookTarget.name || "",
+        notes: notebookNotes,
+        day: currentDay,
+        extra: {},
+      },
+    });
+  }
+
+  let postRef;
+  try {
+    postRef = await addDoc(collection(doc(db, "games", gameId), "posts"), {
+      title,
+      body, // store as UBB; render via ubbToHtml
+      authorId: user.uid,
+      authorName: user.displayName || "Unknown",
+      avatar: user.photoURL || "",
+      createdAt: serverTimestamp(),
+    });
+  } catch (error) {
+    console.error("Failed to post reply", error);
+    alert("Unable to post reply.");
+    return;
+  }
+
   els.replyTitle.value = "";
   els.replyBody.value = "";
+
   if (!isOwner && currentPlayer && typeof currentPlayer.postsLeft === "number") {
     if (currentPlayer.postsLeft > 0) {
       const remaining = currentPlayer.postsLeft - 1;
@@ -1076,6 +1217,28 @@ els.postReply.addEventListener("click", async () => {
       }
     }
   }
+
+  if (actionsToRecord.length) {
+    let actionError = false;
+    for (const action of actionsToRecord) {
+      try {
+        const extra = { ...(action.payload.extra || {}), postId: postRef.id };
+        if (!extra.postRef) {
+          extra.postRef = postRef;
+        }
+        await recordAction({ ...action.payload, extra });
+      } catch (error) {
+        actionError = true;
+        console.error(`Failed to record ${action.description} action`, error);
+        setPublicActionsStatus(`Unable to record ${action.description} action.`, "error");
+      }
+    }
+    if (!actionError) {
+      setPublicActionsStatus("");
+    }
+  }
+
+  clearPublicActionSelections();
   await loadGame();
 });
 
@@ -1340,6 +1503,21 @@ function parseDayInput(input) {
 function setPlayerToolsStatus(message, type = "info") {
   const el = els.playerToolsStatus;
   if (!el) return;
+  if (!message) {
+    el.style.display = "none";
+    el.textContent = "";
+    return;
+  }
+  el.style.display = "block";
+  el.textContent = message;
+  el.style.color = type === "error" ? "#ff7676" : type === "success" ? "#6ee7b7" : "#F9A906";
+}
+
+function setPublicActionsStatus(message, type = "info") {
+  const el = els.publicActionsStatus;
+  if (!el) {
+    return;
+  }
   if (!message) {
     el.style.display = "none";
     el.textContent = "";
@@ -1724,6 +1902,8 @@ function populatePlayerSelects() {
     { element: els.privateActionTarget, placeholder: "-- choose target --", allowCustom: true },
     { element: els.voteTarget, placeholder: "-- select player --", allowCustom: false },
     { element: els.notebookTarget, placeholder: "-- select player --", allowCustom: false },
+    { element: els.publicActionVoteTarget, placeholder: "-- select player --", allowCustom: false },
+    { element: els.publicNotebookTarget, placeholder: "-- select player --", allowCustom: false },
   ];
   selects.forEach(({ element, placeholder, allowCustom }) => {
     if (!element) return;
@@ -1764,6 +1944,119 @@ function populatePlayerSelects() {
     }
   });
   handlePrivateActionTargetChange();
+  updatePublicActionControls();
+}
+
+function updatePublicActionControls() {
+  const block = els.publicActionsBlock;
+  if (!block) {
+    return;
+  }
+  const canUseActions = !!auth.currentUser && (currentPlayer || isOwnerView);
+  if (!canUseActions) {
+    block.style.display = "none";
+    clearPublicActionSelections();
+    setPublicActionsStatus("");
+    return;
+  }
+
+  const voteRow = els.publicActionVoteRow;
+  const unvoteRow = els.publicActionUnvoteRow;
+  const claimRow = els.publicActionClaimRow;
+  const notebookRow = els.publicActionNotebookRow;
+
+  const hasVoteTargets = gamePlayers.some((player) => player.id !== currentPlayer?.id);
+  setDisplay(voteRow, hasVoteTargets ? "block" : "none");
+  setDisplay(unvoteRow, hasVoteTargets ? "block" : "none");
+  if (!hasVoteTargets) {
+    if (els.publicActionVote) {
+      els.publicActionVote.checked = false;
+    }
+    if (els.publicActionUnvote) {
+      els.publicActionUnvote.checked = false;
+    }
+    if (els.publicActionVoteTarget) {
+      els.publicActionVoteTarget.value = "";
+    }
+  }
+
+  const hasNotebookTargets = gamePlayers.length > 0;
+  setDisplay(notebookRow, hasNotebookTargets ? "block" : "none");
+  if (!hasNotebookTargets) {
+    if (els.publicActionNotebook) {
+      els.publicActionNotebook.checked = false;
+    }
+    if (els.publicNotebookTarget) {
+      els.publicNotebookTarget.value = "";
+    }
+    if (els.publicNotebookNotes) {
+      els.publicNotebookNotes.value = "";
+    }
+  }
+
+  const hasClaimOptions = getKnownRoleNames().length > 0;
+  setDisplay(claimRow, hasClaimOptions ? "block" : "none");
+  if (!hasClaimOptions) {
+    if (els.publicActionClaim) {
+      els.publicActionClaim.checked = false;
+    }
+    if (els.publicClaimRoleSelect) {
+      els.publicClaimRoleSelect.value = "";
+    }
+    if (els.publicClaimRoleCustom) {
+      els.publicClaimRoleCustom.value = "";
+    }
+  }
+
+  const visibleRows = [voteRow, unvoteRow, claimRow, notebookRow];
+  const anyVisible = visibleRows.some((row) => row && row.style.display !== "none");
+  block.style.display = anyVisible ? "block" : "none";
+  if (!anyVisible) {
+    setPublicActionsStatus("");
+  }
+}
+
+function clearPublicActionSelections() {
+  if (els.publicActionVote) {
+    els.publicActionVote.checked = false;
+  }
+  if (els.publicActionVoteTarget) {
+    els.publicActionVoteTarget.value = "";
+  }
+  if (els.publicActionUnvote) {
+    els.publicActionUnvote.checked = false;
+  }
+  if (els.publicActionClaim) {
+    els.publicActionClaim.checked = false;
+  }
+  if (els.publicClaimRoleSelect) {
+    els.publicClaimRoleSelect.value = "";
+  }
+  if (els.publicClaimRoleCustom) {
+    els.publicClaimRoleCustom.value = "";
+  }
+  if (els.publicActionNotebook) {
+    els.publicActionNotebook.checked = false;
+  }
+  if (els.publicNotebookTarget) {
+    els.publicNotebookTarget.value = "";
+  }
+  if (els.publicNotebookNotes) {
+    els.publicNotebookNotes.value = "";
+  }
+  handleClaimRoleSelectChange();
+}
+
+function handlePublicVoteToggle() {
+  if (els.publicActionVote?.checked && els.publicActionUnvote) {
+    els.publicActionUnvote.checked = false;
+  }
+}
+
+function handlePublicUnvoteToggle() {
+  if (els.publicActionUnvote?.checked && els.publicActionVote) {
+    els.publicActionVote.checked = false;
+  }
 }
 
 function handlePrivateActionNameChange() {
@@ -1791,14 +2084,18 @@ function handlePrivateActionTargetChange() {
 }
 
 function handleClaimRoleSelectChange() {
-  const input = els.claimRoleCustom;
-  if (!input) {
+  toggleClaimRoleCustom(els.claimRoleSelect, els.claimRoleCustom);
+  toggleClaimRoleCustom(els.publicClaimRoleSelect, els.publicClaimRoleCustom);
+}
+
+function toggleClaimRoleCustom(selectEl, inputEl) {
+  if (!inputEl) {
     return;
   }
-  const isCustom = (els.claimRoleSelect?.value || "") === CUSTOM_ROLE_OPTION_VALUE;
-  setDisplay(input, isCustom ? "block" : "none");
+  const isCustom = (selectEl?.value || "") === CUSTOM_ROLE_OPTION_VALUE;
+  setDisplay(inputEl, isCustom ? "block" : "none");
   if (!isCustom) {
-    input.value = "";
+    inputEl.value = "";
   }
 }
 
@@ -1907,42 +2204,57 @@ function populatePrivateActionOptions() {
 }
 
 function populateClaimRoleOptions() {
-  const select = els.claimRoleSelect;
-  if (!select) {
-    return;
-  }
-  const previous = select.value;
-  select.innerHTML = "";
-
-  const placeholder = document.createElement("option");
-  placeholder.value = "";
-  placeholder.textContent = "-- choose role --";
-  select.appendChild(placeholder);
-
+  const selects = [
+    { select: els.claimRoleSelect, custom: els.claimRoleCustom },
+    { select: els.publicClaimRoleSelect, custom: els.publicClaimRoleCustom },
+  ];
   const roles = getKnownRoleNames();
-  roles.forEach((role) => {
-    const option = document.createElement("option");
-    option.value = role;
-    option.textContent = role;
-    select.appendChild(option);
-  });
 
-  const customOption = document.createElement("option");
-  customOption.value = CUSTOM_ROLE_OPTION_VALUE;
-  customOption.textContent = "Custom role…";
-  select.appendChild(customOption);
+  selects.forEach(({ select, custom }) => {
+    if (!select) {
+      return;
+    }
+    const previous = select.value;
+    select.innerHTML = "";
 
-  if (previous) {
-    if (previous === CUSTOM_ROLE_OPTION_VALUE) {
-      select.value = CUSTOM_ROLE_OPTION_VALUE;
-    } else {
-      const normalizedPrevious = previous.trim().toLowerCase();
-      const match = roles.find((role) => role.trim().toLowerCase() === normalizedPrevious);
-      if (match) {
-        select.value = match;
+    const placeholder = document.createElement("option");
+    placeholder.value = "";
+    placeholder.textContent = "-- choose role --";
+    select.appendChild(placeholder);
+
+    roles.forEach((role) => {
+      const option = document.createElement("option");
+      option.value = role;
+      option.textContent = role;
+      select.appendChild(option);
+    });
+
+    const customOption = document.createElement("option");
+    customOption.value = CUSTOM_ROLE_OPTION_VALUE;
+    customOption.textContent = "Custom role…";
+    select.appendChild(customOption);
+
+    if (previous) {
+      if (previous === CUSTOM_ROLE_OPTION_VALUE) {
+        select.value = CUSTOM_ROLE_OPTION_VALUE;
+      } else {
+        const normalizedPrevious = previous.trim().toLowerCase();
+        const match = roles.find((role) => role.trim().toLowerCase() === normalizedPrevious);
+        if (match) {
+          select.value = match;
+        }
       }
     }
-  }
+
+    if (select.value === "" && previous && custom && previous !== CUSTOM_ROLE_OPTION_VALUE) {
+      const normalizedPrevious = previous.trim().toLowerCase();
+      const match = roles.find((role) => role.trim().toLowerCase() === normalizedPrevious);
+      if (!match) {
+        select.value = CUSTOM_ROLE_OPTION_VALUE;
+        custom.value = previous;
+      }
+    }
+  });
 
   handleClaimRoleSelectChange();
 }
