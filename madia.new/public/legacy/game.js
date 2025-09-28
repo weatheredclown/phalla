@@ -71,19 +71,7 @@ const els = {
   postReply: document.getElementById("postReply"),
   publicActionsBlock: document.getElementById("publicActionsBlock"),
   publicActionsStatus: document.getElementById("publicActionsStatus"),
-  publicActionVoteRow: document.getElementById("publicActionVoteRow"),
-  publicActionVote: document.getElementById("publicActionVote"),
-  publicActionVoteTarget: document.getElementById("publicActionVoteTarget"),
-  publicActionUnvoteRow: document.getElementById("publicActionUnvoteRow"),
-  publicActionUnvote: document.getElementById("publicActionUnvote"),
-  publicActionClaimRow: document.getElementById("publicActionClaimRow"),
-  publicActionClaim: document.getElementById("publicActionClaim"),
-  publicClaimRoleSelect: document.getElementById("publicClaimRoleSelect"),
-  publicClaimRoleCustom: document.getElementById("publicClaimRoleCustom"),
-  publicActionNotebookRow: document.getElementById("publicActionNotebookRow"),
-  publicActionNotebook: document.getElementById("publicActionNotebook"),
-  publicNotebookTarget: document.getElementById("publicNotebookTarget"),
-  publicNotebookNotes: document.getElementById("publicNotebookNotes"),
+  publicActionsList: document.getElementById("publicActionsList"),
   joinButton: document.getElementById("joinButton"),
   leaveButton: document.getElementById("leaveButton"),
   ownerControls: document.getElementById("ownerControls"),
@@ -142,6 +130,48 @@ let pendingReplacementPlayerId = null;
 let postCache = new Map();
 let pendingQuote = null;
 
+const BASE_PUBLIC_ACTION_DEFINITIONS = [
+  {
+    id: "vote",
+    type: "vote",
+    label: "Vote",
+    normalized: "vote",
+    requiresTarget: true,
+    targetType: "player",
+    excludeCurrentPlayer: true,
+  },
+  {
+    id: "unvote",
+    type: "unvote",
+    label: "Unvote",
+    normalized: "unvote",
+    requiresTarget: false,
+    targetType: null,
+  },
+  {
+    id: "claim",
+    type: "claim",
+    label: "Claim",
+    normalized: "claim",
+    requiresTarget: true,
+    targetType: "role",
+  },
+  {
+    id: "notebook",
+    type: "notebook",
+    label: "Notebook",
+    normalized: "notebook",
+    requiresTarget: true,
+    targetType: "player",
+    allowsNotes: true,
+  },
+];
+
+let publicActionRows = new Map();
+let lastPublicActionsSignature = "";
+const actionsByDayCache = new Map();
+let actionHistoryContext = { actionsByDay: new Map() };
+
 onAuthStateChanged(auth, async (user) => {
   currentUser = user;
   header?.setUser(user);
@@ -188,19 +218,12 @@ if (els.claimRoleSelect) {
   els.claimRoleSelect.addEventListener("change", handleClaimRoleSelectChange);
 }
 
-if (els.publicClaimRoleSelect) {
-  els.publicClaimRoleSelect.addEventListener("change", handleClaimRoleSelectChange);
-}
-
 if (els.replacePlayerSelect) {
   els.replacePlayerSelect.addEventListener("change", handleReplaceSelectChange);
 }
 
 els.confirmReplaceButton?.addEventListener("click", confirmReplaceSelection);
 els.cancelReplaceButton?.addEventListener("click", cancelReplaceSelection);
-
-els.publicActionVote?.addEventListener("change", handlePublicVoteToggle);
-els.publicActionUnvote?.addEventListener("change", handlePublicUnvoteToggle);
 
 function createMetaRow(html) {
   const tr = document.createElement("tr");
@@ -1213,101 +1236,176 @@ els.postReply.addEventListener("click", async () => {
   const actionsToRecord = [];
   const currentDay = currentGame?.day ?? 0;
 
-  if (els.publicActionVote?.checked) {
-    const targetId = (els.publicActionVoteTarget?.value || "").trim();
-    if (!targetId) {
-      setPublicActionsStatus("Select a vote target before posting.", "error");
-      return;
-    }
-    const targetPlayer = findPlayerById(targetId);
-    if (!targetPlayer) {
-      setPublicActionsStatus("Select a valid vote target before posting.", "error");
-      return;
-    }
-    actionsToRecord.push({
-      description: "vote",
-      payload: {
-        category: "vote",
-        actionName: "vote",
-        targetPlayerId: targetPlayer.id,
-        targetName: targetPlayer.name || "",
-        notes: "",
-        day: currentDay,
-        extra: {},
-      },
-    });
-  }
+  let voteSelected = false;
+  let unvoteSelected = false;
+  let actionValidationFailed = false;
 
-  if (els.publicActionUnvote?.checked) {
-    if (els.publicActionVote?.checked) {
-      setPublicActionsStatus("Choose either vote or unvote, not both.", "error");
+  publicActionRows.forEach((row) => {
+    if (actionValidationFailed || !row.checkbox?.checked) {
       return;
     }
-    actionsToRecord.push({
-      description: "unvote",
-      payload: {
-        category: "vote",
-        actionName: "unvote",
-        targetPlayerId: "",
-        targetName: "",
-        notes: "",
-        day: currentDay,
-        extra: { valid: false },
-      },
-    });
-  }
+    switch (row.definition.type) {
+      case "vote": {
+        const opposing = getPublicActionRowById("unvote");
+        if (opposing?.checkbox?.checked) {
+          setPublicActionsStatus("Choose either vote or unvote, not both.", "error");
+          actionValidationFailed = true;
+          return;
+        }
+        const targetId = (row.targetSelect?.value || "").trim();
+        if (!targetId) {
+          setPublicActionsStatus("Select a vote target before posting.", "error");
+          actionValidationFailed = true;
+          return;
+        }
+        const targetPlayer = findPlayerById(targetId);
+        if (!targetPlayer) {
+          setPublicActionsStatus("Select a valid vote target before posting.", "error");
+          actionValidationFailed = true;
+          return;
+        }
+        actionsToRecord.push({
+          description: "vote",
+          payload: {
+            category: "vote",
+            actionName: "vote",
+            targetPlayerId: targetPlayer.id,
+            targetName: targetPlayer.name || "",
+            notes: "",
+            day: currentDay,
+            extra: {},
+          },
+        });
+        voteSelected = true;
+        break;
+      }
+      case "unvote": {
+        const opposing = getPublicActionRowById("vote");
+        if (voteSelected || opposing?.checkbox?.checked) {
+          setPublicActionsStatus("Choose either vote or unvote, not both.", "error");
+          actionValidationFailed = true;
+          return;
+        }
+        actionsToRecord.push({
+          description: "unvote",
+          payload: {
+            category: "vote",
+            actionName: "unvote",
+            targetPlayerId: "",
+            targetName: "",
+            notes: "",
+            day: currentDay,
+            extra: { valid: false },
+          },
+        });
+        unvoteSelected = true;
+        break;
+      }
+      case "claim": {
+        const selectValue = (row.roleSelect?.value || "").trim();
+        let claimRole = "";
+        if (selectValue === CUSTOM_ROLE_OPTION_VALUE) {
+          claimRole = (row.customInput?.value || "").trim();
+        } else {
+          claimRole = selectValue;
+        }
+        if (!claimRole) {
+          setPublicActionsStatus("Select a role to claim before posting.", "error");
+          actionValidationFailed = true;
+          return;
+        }
+        const claimTargetId = currentPlayer?.id || user.uid;
+        actionsToRecord.push({
+          description: "claim",
+          payload: {
+            category: "claim",
+            actionName: "claim",
+            targetPlayerId: claimTargetId,
+            targetName: claimRole,
+            notes: claimRole,
+            day: currentDay,
+            extra: {},
+          },
+        });
+        break;
+      }
+      case "notebook": {
+        const targetId = (row.targetSelect?.value || "").trim();
+        if (!targetId) {
+          setPublicActionsStatus("Select a notebook target before posting.", "error");
+          actionValidationFailed = true;
+          return;
+        }
+        const targetPlayer = findPlayerById(targetId);
+        if (!targetPlayer) {
+          setPublicActionsStatus("Select a valid notebook target before posting.", "error");
+          actionValidationFailed = true;
+          return;
+        }
+        const notebookNotes = (row.notesInput?.value || "").trim();
+        actionsToRecord.push({
+          description: "notebook",
+          payload: {
+            category: "notebook",
+            actionName: "notebook",
+            targetPlayerId: targetPlayer.id,
+            targetName: targetPlayer.name || "",
+            notes: notebookNotes,
+            day: currentDay,
+            extra: {},
+          },
+        });
+        break;
+      }
+      default: {
+        let targetPlayerId = "";
+        let targetName = "";
+        if (row.definition.requiresTarget && row.definition.targetType === "player") {
+          const targetId = (row.targetSelect?.value || "").trim();
+          if (!targetId) {
+            setPublicActionsStatus(
+              `Select a target for ${row.definition.label.toLowerCase()} before posting.`,
+              "error"
+            );
+            actionValidationFailed = true;
+            return;
+          }
+          const targetPlayer = findPlayerById(targetId);
+          if (!targetPlayer) {
+            setPublicActionsStatus("Select a valid action target before posting.", "error");
+            actionValidationFailed = true;
+            return;
+          }
+          targetPlayerId = targetPlayer.id;
+          targetName = targetPlayer.name || "";
+        }
+        const notes = (row.notesInput?.value || "").trim();
+        const extra = {};
+        if (Number.isFinite(row.definition.actionTypeId)) {
+          extra.actionTypeId = row.definition.actionTypeId;
+        }
+        if (row.definition.actionType) {
+          extra.actionType = row.definition.actionType;
+        }
+        actionsToRecord.push({
+          description: row.definition.normalized || row.definition.label || "action",
+          payload: {
+            category: row.definition.normalized || row.definition.type || "public",
+            actionName: row.definition.label,
+            targetPlayerId,
+            targetName,
+            notes,
+            day: currentDay,
+            extra,
+          },
+        });
+        break;
+      }
+    }
+  });
 
-  if (els.publicActionClaim?.checked) {
-    const claimValue = (els.publicClaimRoleSelect?.value || "").trim();
-    let claimRole = "";
-    if (claimValue === CUSTOM_ROLE_OPTION_VALUE) {
-      claimRole = (els.publicClaimRoleCustom?.value || "").trim();
-    } else {
-      claimRole = claimValue;
-    }
-    if (!claimRole) {
-      setPublicActionsStatus("Select a role to claim before posting.", "error");
-      return;
-    }
-    const claimTargetId = currentPlayer?.id || user.uid;
-    actionsToRecord.push({
-      description: "claim",
-      payload: {
-        category: "claim",
-        actionName: "claim",
-        targetPlayerId: claimTargetId,
-        targetName: claimRole,
-        notes: claimRole,
-        day: currentDay,
-        extra: {},
-      },
-    });
-  }
-
-  if (els.publicActionNotebook?.checked) {
-    const notebookTargetId = (els.publicNotebookTarget?.value || "").trim();
-    if (!notebookTargetId) {
-      setPublicActionsStatus("Select a notebook target before posting.", "error");
-      return;
-    }
-    const notebookTarget = findPlayerById(notebookTargetId);
-    if (!notebookTarget) {
-      setPublicActionsStatus("Select a valid notebook target before posting.", "error");
-      return;
-    }
-    const notebookNotes = (els.publicNotebookNotes?.value || "").trim();
-    actionsToRecord.push({
-      description: "notebook",
-      payload: {
-        category: "notebook",
-        actionName: "notebook",
-        targetPlayerId: notebookTarget.id,
-        targetName: notebookTarget.name || "",
-        notes: notebookNotes,
-        day: currentDay,
-        extra: {},
-      },
-    });
+  if (actionValidationFailed) {
+    return;
   }
 
   let postRef;
@@ -2122,8 +2220,6 @@ function populatePlayerSelects() {
     { element: els.privateActionTarget, placeholder: "-- choose target --", allowCustom: true },
     { element: els.voteTarget, placeholder: "-- select player --", allowCustom: false },
     { element: els.notebookTarget, placeholder: "-- select player --", allowCustom: false },
-    { element: els.publicActionVoteTarget, placeholder: "-- select player --", allowCustom: false },
-    { element: els.publicNotebookTarget, placeholder: "-- select player --", allowCustom: false },
   ];
   selects.forEach(({ element, placeholder, allowCustom }) => {
     if (!element) return;
@@ -2164,6 +2260,7 @@ function populatePlayerSelects() {
     }
   });
   handlePrivateActionTargetChange();
+  populatePublicActionTargets();
   updatePublicActionControls();
 }
 
@@ -2189,56 +2286,56 @@ function updatePublicActionControls() {
     return;
   }
 
-  const voteRow = els.publicActionVoteRow;
-  const unvoteRow = els.publicActionUnvoteRow;
-  const claimRow = els.publicActionClaimRow;
-  const notebookRow = els.publicActionNotebookRow;
+  rebuildPublicActionsUI();
+  populatePublicActionTargets();
+  populateClaimRoleOptions();
+  handleClaimRoleSelectChange();
 
   const hasVoteTargets = gamePlayers.some((player) => player.id !== currentPlayer?.id);
-  setDisplay(voteRow, hasVoteTargets ? "block" : "none");
-  setDisplay(unvoteRow, hasVoteTargets ? "block" : "none");
-  if (!hasVoteTargets) {
-    if (els.publicActionVote) {
-      els.publicActionVote.checked = false;
-    }
-    if (els.publicActionUnvote) {
-      els.publicActionUnvote.checked = false;
-    }
-    if (els.publicActionVoteTarget) {
-      els.publicActionVoteTarget.value = "";
-    }
-  }
-
   const hasNotebookTargets = gamePlayers.length > 0;
-  setDisplay(notebookRow, hasNotebookTargets ? "block" : "none");
-  if (!hasNotebookTargets) {
-    if (els.publicActionNotebook) {
-      els.publicActionNotebook.checked = false;
-    }
-    if (els.publicNotebookTarget) {
-      els.publicNotebookTarget.value = "";
-    }
-    if (els.publicNotebookNotes) {
-      els.publicNotebookNotes.value = "";
-    }
-  }
-
   const hasClaimOptions = getKnownRoleNames().length > 0;
-  setDisplay(claimRow, hasClaimOptions ? "block" : "none");
-  if (!hasClaimOptions) {
-    if (els.publicActionClaim) {
-      els.publicActionClaim.checked = false;
-    }
-    if (els.publicClaimRoleSelect) {
-      els.publicClaimRoleSelect.value = "";
-    }
-    if (els.publicClaimRoleCustom) {
-      els.publicClaimRoleCustom.value = "";
-    }
-  }
 
-  const visibleRows = [voteRow, unvoteRow, claimRow, notebookRow];
-  const anyVisible = visibleRows.some((row) => row && row.style.display !== "none");
+  let anyVisible = false;
+  publicActionRows.forEach((row) => {
+    let visible = true;
+    switch (row.definition.type) {
+      case "vote":
+        visible = hasVoteTargets;
+        break;
+      case "unvote":
+        visible = hasVoteTargets;
+        break;
+      case "claim":
+        visible = hasClaimOptions;
+        break;
+      case "notebook":
+        visible = hasNotebookTargets;
+        break;
+      default:
+        if (row.definition.requiresTarget && row.definition.targetType === "player") {
+          visible = gamePlayers.length > 0;
+        }
+        break;
+    }
+    setDisplay(row.root, visible ? "block" : "none");
+    if (!visible) {
+      if (row.checkbox) {
+        row.checkbox.checked = false;
+      }
+      if (row.targetSelect) {
+        row.targetSelect.value = "";
+      }
+      if (row.notesInput) {
+        row.notesInput.value = "";
+      }
+      if (row.customInput) {
+        row.customInput.value = "";
+      }
+    } else {
+      anyVisible = true;
+    }
+  });
+
   block.style.display = anyVisible ? "block" : "none";
   if (!anyVisible) {
     setPublicActionsStatus("");
@@ -2246,46 +2343,22 @@ function updatePublicActionControls() {
 }
 
 function clearPublicActionSelections() {
-  if (els.publicActionVote) {
-    els.publicActionVote.checked = false;
-  }
-  if (els.publicActionVoteTarget) {
-    els.publicActionVoteTarget.value = "";
-  }
-  if (els.publicActionUnvote) {
-    els.publicActionUnvote.checked = false;
-  }
-  if (els.publicActionClaim) {
-    els.publicActionClaim.checked = false;
-  }
-  if (els.publicClaimRoleSelect) {
-    els.publicClaimRoleSelect.value = "";
-  }
-  if (els.publicClaimRoleCustom) {
-    els.publicClaimRoleCustom.value = "";
-  }
-  if (els.publicActionNotebook) {
-    els.publicActionNotebook.checked = false;
-  }
-  if (els.publicNotebookTarget) {
-    els.publicNotebookTarget.value = "";
-  }
-  if (els.publicNotebookNotes) {
-    els.publicNotebookNotes.value = "";
-  }
+  publicActionRows.forEach((row) => {
+    if (row.checkbox) {
+      row.checkbox.checked = false;
+    }
+    if (row.targetSelect) {
+      row.targetSelect.value = "";
+    }
+    if (row.notesInput) {
+      row.notesInput.value = "";
+    }
+    if (row.customInput) {
+      row.customInput.value = "";
+    }
+  });
   handleClaimRoleSelectChange();
-}
-
-function handlePublicVoteToggle() {
-  if (els.publicActionVote?.checked && els.publicActionUnvote) {
-    els.publicActionUnvote.checked = false;
-  }
-}
-
-function handlePublicUnvoteToggle() {
-  if (els.publicActionUnvote?.checked && els.publicActionVote) {
-    els.publicActionVote.checked = false;
-  }
+  setPublicActionsStatus("");
 }
 
 function handlePrivateActionNameChange() {
@@ -2312,9 +2385,299 @@ function handlePrivateActionTargetChange() {
   }
 }
 
+function computePublicActionDefinitions() {
+  const definitions = BASE_PUBLIC_ACTION_DEFINITIONS.map((definition) => ({ ...definition }));
+  const seen = new Set(definitions.map((definition) => definition.normalized));
+  const visited = new WeakSet();
+
+  function collectNotes(value) {
+    const notes = [];
+    if (Array.isArray(value)) {
+      value.forEach((entry) => {
+        if (typeof entry === "string" && entry.trim()) {
+          notes.push(entry.trim());
+        }
+      });
+    } else if (typeof value === "string" && value.trim()) {
+      notes.push(value.trim());
+    }
+    return notes;
+  }
+
+  function inspect(candidate) {
+    if (!candidate) {
+      return;
+    }
+    const typeOfCandidate = typeof candidate;
+    if (typeOfCandidate === "string" || typeOfCandidate === "number" || typeOfCandidate === "boolean") {
+      return;
+    }
+    if (Array.isArray(candidate)) {
+      candidate.forEach(inspect);
+      return;
+    }
+    if (typeOfCandidate !== "object") {
+      return;
+    }
+    if (visited.has(candidate)) {
+      return;
+    }
+    visited.add(candidate);
+
+    const rawName =
+      typeof candidate.actionName === "string"
+        ? candidate.actionName
+        : typeof candidate.name === "string"
+        ? candidate.name
+        : null;
+    const normalized = normalizeActionName(rawName);
+    if (normalized && !seen.has(normalized)) {
+      const description = typeof candidate.description === "string" ? candidate.description : "";
+      const likelyPrivate = description.toLowerCase().includes("moderator tracking");
+      if (!likelyPrivate) {
+        const targeted =
+          candidate.targeted === true || normalizeActionName(candidate.target) === "player";
+        const notes = collectNotes(candidate.notes);
+        const timesPerGame = Number.isFinite(candidate.timesPerGame)
+          ? candidate.timesPerGame
+          : Number.isFinite(candidate.limit)
+          ? candidate.limit
+          : null;
+        if (Number.isFinite(timesPerGame) && timesPerGame >= 0) {
+          notes.push(
+            timesPerGame === 1
+              ? "Limited to 1 use per game."
+              : `Limited to ${timesPerGame} uses per game.`
+          );
+        }
+        const definition = {
+          id: `custom-${normalized}`,
+          type: "custom",
+          label: candidate.name || candidate.actionName || candidate.actionType || rawName || "Action",
+          normalized,
+          requiresTarget: targeted,
+          targetType: targeted ? "player" : null,
+          allowsNotes: false,
+          excludeCurrentPlayer: false,
+        };
+        if (notes.length) {
+          definition.hint = notes.join(" ");
+        }
+        if (Number.isFinite(candidate.actionTypeId)) {
+          definition.actionTypeId = candidate.actionTypeId;
+        }
+        if (typeof candidate.actionType === "string") {
+          definition.actionType = candidate.actionType;
+        }
+        definitions.push(definition);
+        seen.add(normalized);
+      }
+    }
+
+    Object.values(candidate).forEach(inspect);
+  }
+
+  getActionRuleSources().forEach(inspect);
+
+  return definitions;
+}
+
+function rebuildPublicActionsUI() {
+  const container = els.publicActionsList;
+  if (!container) {
+    publicActionRows.clear();
+    lastPublicActionsSignature = "";
+    return;
+  }
+  const definitions = computePublicActionDefinitions();
+  const signature = JSON.stringify(
+    definitions.map((definition) => `${definition.id}:${definition.targetType || "none"}`)
+  );
+  if (signature !== lastPublicActionsSignature) {
+    container.innerHTML = "";
+    publicActionRows = new Map();
+    definitions.forEach((definition) => {
+      const row = createPublicActionRow(definition);
+      if (row) {
+        container.appendChild(row.root);
+        publicActionRows.set(definition.id, row);
+      }
+    });
+    lastPublicActionsSignature = signature;
+  } else {
+    definitions.forEach((definition) => {
+      const row = publicActionRows.get(definition.id);
+      if (!row) {
+        return;
+      }
+      row.definition = definition;
+      if (row.labelSpan) {
+        row.labelSpan.textContent = ` ${definition.label}`;
+      }
+      if (row.hintEl) {
+        if (definition.hint) {
+          row.hintEl.textContent = definition.hint;
+          row.hintEl.style.display = "block";
+        } else {
+          row.hintEl.textContent = "";
+          row.hintEl.style.display = "none";
+        }
+      }
+    });
+  }
+}
+
+function getPublicActionRowById(id) {
+  if (!id) {
+    return null;
+  }
+  return publicActionRows.get(id) || null;
+}
+
+function createPublicActionRow(definition) {
+  const root = document.createElement("div");
+  root.className = "public-action-row";
+
+  const label = document.createElement("label");
+  const checkbox = document.createElement("input");
+  checkbox.type = "checkbox";
+  checkbox.id = `public-action-${definition.id}`;
+  label.appendChild(checkbox);
+  const labelSpan = document.createElement("span");
+  labelSpan.textContent = ` ${definition.label}`;
+  label.appendChild(labelSpan);
+  root.appendChild(label);
+
+  const row = {
+    definition,
+    root,
+    checkbox,
+    labelSpan,
+  };
+
+  if (definition.type === "claim") {
+    const container = document.createElement("div");
+    container.style.marginTop = "4px";
+    const select = document.createElement("select");
+    select.className = "bginput";
+    select.addEventListener("change", handleClaimRoleSelectChange);
+    container.appendChild(select);
+    const customInput = document.createElement("input");
+    customInput.className = "bginput";
+    customInput.style.display = "none";
+    customInput.style.marginTop = "6px";
+    customInput.style.width = "250px";
+    customInput.placeholder = "Enter role name";
+    container.appendChild(customInput);
+    row.roleSelect = select;
+    row.customInput = customInput;
+    root.appendChild(container);
+  } else if (definition.type === "notebook") {
+    const container = document.createElement("div");
+    container.style.marginTop = "4px";
+    const select = document.createElement("select");
+    select.className = "bginput";
+    container.appendChild(select);
+    const notes = document.createElement("input");
+    notes.className = "bginput";
+    notes.style.marginTop = "6px";
+    notes.style.width = "250px";
+    notes.placeholder = "Notes (optional)";
+    container.appendChild(notes);
+    row.targetSelect = select;
+    row.notesInput = notes;
+    root.appendChild(container);
+  } else if (definition.requiresTarget && definition.targetType === "player") {
+    const container = document.createElement("div");
+    container.style.marginTop = "4px";
+    const select = document.createElement("select");
+    select.className = "bginput";
+    container.appendChild(select);
+    row.targetSelect = select;
+    root.appendChild(container);
+  }
+
+  if (definition.hint) {
+    const hint = document.createElement("div");
+    hint.className = "smallfont";
+    hint.style.marginTop = "4px";
+    hint.textContent = definition.hint;
+    root.appendChild(hint);
+    row.hintEl = hint;
+  }
+
+  if (definition.type === "vote") {
+    checkbox.addEventListener("change", () => {
+      if (checkbox.checked) {
+        const unvoteRow = getPublicActionRowById("unvote");
+        if (unvoteRow?.checkbox) {
+          unvoteRow.checkbox.checked = false;
+        }
+      }
+    });
+  } else if (definition.type === "unvote") {
+    checkbox.addEventListener("change", () => {
+      if (checkbox.checked) {
+        const voteRow = getPublicActionRowById("vote");
+        if (voteRow?.checkbox) {
+          voteRow.checkbox.checked = false;
+        }
+      }
+    });
+  }
+
+  return row;
+}
+
+function populatePublicActionTargets() {
+  publicActionRows.forEach((row) => {
+    if (!row.targetSelect || row.definition.targetType !== "player") {
+      return;
+    }
+    const select = row.targetSelect;
+    const previous = select.value;
+    const placeholder =
+      row.definition.type === "vote" || row.definition.type === "notebook"
+        ? "-- select player --"
+        : "-- choose target --";
+    select.innerHTML = "";
+    const blank = document.createElement("option");
+    blank.value = "";
+    blank.textContent = placeholder;
+    select.appendChild(blank);
+    gamePlayers.forEach((player) => {
+      if (row.definition.excludeCurrentPlayer && player.id === currentPlayer?.id) {
+        return;
+      }
+      const option = document.createElement("option");
+      option.value = player.id;
+      option.textContent = player.name;
+      option.dataset.playerName = player.name;
+      select.appendChild(option);
+    });
+    if (previous) {
+      select.value = previous;
+      if (select.value !== previous) {
+        const normalizedPrevious = normalizeIdentifier(previous);
+        const match = gamePlayers.find(
+          (player) => normalizeIdentifier(player.id) === normalizedPrevious
+        );
+        if (match) {
+          select.value = match.id;
+        } else {
+          select.value = "";
+        }
+      }
+    }
+  });
+}
+
 function handleClaimRoleSelectChange() {
   toggleClaimRoleCustom(els.claimRoleSelect, els.claimRoleCustom);
-  toggleClaimRoleCustom(els.publicClaimRoleSelect, els.publicClaimRoleCustom);
+  const claimRow = getPublicActionRowById("claim");
+  if (claimRow) {
+    toggleClaimRoleCustom(claimRow.roleSelect, claimRow.customInput);
+  }
 }
 
 function toggleClaimRoleCustom(selectEl, inputEl) {
@@ -2554,8 +2917,11 @@ function populatePrivateActionOptions() {
 function populateClaimRoleOptions() {
   const selects = [
     { select: els.claimRoleSelect, custom: els.claimRoleCustom },
-    { select: els.publicClaimRoleSelect, custom: els.publicClaimRoleCustom },
   ];
+  const publicClaimRow = getPublicActionRowById("claim");
+  if (publicClaimRow?.roleSelect) {
+    selects.push({ select: publicClaimRow.roleSelect, custom: publicClaimRow.customInput });
+  }
   const roles = getKnownRoleNames();
 
   selects.forEach(({ select, custom }) => {
@@ -2955,6 +3321,178 @@ function extractFirstStringValue(source, keys = []) {
   return "";
 }
 
+async function ensureActionsLoadedForDays(days = []) {
+  if (!Array.isArray(days) || !days.length || missingConfig) {
+    return;
+  }
+  const numericDays = days
+    .map((value) => (Number.isFinite(value) ? value : null))
+    .filter((value) => value !== null);
+  const missing = numericDays.filter((day) => !actionsByDayCache.has(day));
+  if (!missing.length) {
+    return;
+  }
+  await Promise.all(
+    missing.map(async (day) => {
+      try {
+        const snapshot = await getDocs(
+          query(collection(db, "games", gameId, "actions"), where("day", "==", day))
+        );
+        const records = snapshot.docs.map((docSnap) => ({ id: docSnap.id, ...docSnap.data() }));
+        actionsByDayCache.set(day, records);
+      } catch (error) {
+        console.warn(`Failed to load actions for day ${day}`, error);
+        actionsByDayCache.set(day, []);
+      }
+    })
+  );
+}
+
+function getActionsForDay(day) {
+  if (!Number.isFinite(day)) {
+    return [];
+  }
+  return actionHistoryContext.actionsByDay.get(day) || [];
+}
+
+function isPlayerBlockedOnDay(playerId, day) {
+  const normalizedPlayerId = normalizeIdentifier(playerId);
+  if (!normalizedPlayerId) {
+    return false;
+  }
+  return getActionsForDay(day).some((entry) => {
+    if (entry.valid === false) {
+      return false;
+    }
+    const type = normalizeActionName(entry.actionName || entry.category);
+    if (type !== "block") {
+      return false;
+    }
+    return normalizeIdentifier(entry.targetPlayerId) === normalizedPlayerId;
+  });
+}
+
+function getFirstActionForPlayerOnDay(playerId, day, options = {}) {
+  const { excludeTypes = [], excludeActionId = null, includeInvalid = false } = options;
+  const normalizedPlayerId = normalizeIdentifier(playerId);
+  if (!normalizedPlayerId) {
+    return null;
+  }
+  const dayActions = getActionsForDay(day);
+  const candidates = dayActions.filter((entry) => {
+    if (!includeInvalid && entry.valid === false) {
+      return false;
+    }
+    if (excludeActionId && entry.id === excludeActionId) {
+      return false;
+    }
+    if (normalizeIdentifier(entry.playerId) !== normalizedPlayerId) {
+      return false;
+    }
+    const type = normalizeActionName(entry.actionName || entry.category);
+    if (excludeTypes.includes(type)) {
+      return false;
+    }
+    return true;
+  });
+  if (!candidates.length) {
+    return null;
+  }
+  candidates.sort(
+    (a, b) => timestampToMillis(a.createdAt || a.updatedAt) - timestampToMillis(b.createdAt || b.updatedAt)
+  );
+  return candidates[0] || null;
+}
+
+function describeSeerResolution(action = {}) {
+  const day = action.day ?? 0;
+  const currentDay = currentGame?.day ?? 0;
+  if (day === currentDay) {
+    return null;
+  }
+  const actorId = action.playerId || currentUser?.uid || "";
+  if (isPlayerBlockedOnDay(actorId, day)) {
+    return "Blocked";
+  }
+  const targetId = action.targetPlayerId || "";
+  const targetPlayer = findPlayerById(targetId);
+  if (!targetPlayer) {
+    return "Recorded";
+  }
+  const roleName = getAssignedRoleName(targetPlayer.data);
+  const definition = getCanonicalRoleDefinition(roleName);
+  if (definition?.id === "godfather") {
+    return "Innocent";
+  }
+  const alignment = (definition?.alignment || targetPlayer.data?.alignment || "").trim().toLowerCase();
+  if (alignment === "village") {
+    return "Innocent";
+  }
+  if (alignment === "hostile") {
+    return "Guilty";
+  }
+  if (alignment) {
+    return alignment[0].toUpperCase() + alignment.slice(1);
+  }
+  return "Recorded";
+}
+
+function describeTrackerResolution(action = {}) {
+  const day = action.day ?? 0;
+  const currentDay = currentGame?.day ?? 0;
+  if (day === currentDay) {
+    return null;
+  }
+  const actorId = action.playerId || currentUser?.uid || "";
+  if (isPlayerBlockedOnDay(actorId, day)) {
+    return "Blocked";
+  }
+  const targetId = action.targetPlayerId || "";
+  if (!targetId) {
+    return "None";
+  }
+  const targetAction = getFirstActionForPlayerOnDay(targetId, day, {
+    excludeTypes: ["vote", "mafiavote", "claim"],
+    excludeActionId: action.id,
+  });
+  if (!targetAction) {
+    return "None";
+  }
+  const visitedName =
+    targetAction.targetName ||
+    getPlayerDisplayName(targetAction.targetPlayerId) ||
+    (targetAction.actionName ? targetAction.actionName : "");
+  return visitedName ? visitedName : "Recorded";
+}
+
+function describeBlockResolution(action = {}) {
+  const day = action.day ?? 0;
+  const currentDay = currentGame?.day ?? 0;
+  if (day === currentDay) {
+    return null;
+  }
+  const actorId = action.playerId || currentUser?.uid || "";
+  if (isPlayerBlockedOnDay(actorId, day)) {
+    return "You were blocked";
+  }
+  const targetId = action.targetPlayerId || "";
+  if (!targetId) {
+    return "Blocked";
+  }
+  const targetAction = getFirstActionForPlayerOnDay(targetId, day, {
+    excludeTypes: ["vote", "mafiavote", "claim"],
+    excludeActionId: action.id,
+  });
+  if (!targetAction) {
+    return "No action";
+  }
+  return "Blocked them";
+}
+
+function describeTrustResolution(action = {}) {
+  return "Trusted";
+}
+
 function describeActionStatus(action = {}) {
   const explicit = extractFirstStringValue(action, [
     "statusText",
@@ -2977,6 +3515,30 @@ function describeActionStatus(action = {}) {
   if (typeof action.success === "boolean") {
     return action.success ? "Success" : "Failed";
   }
+  const normalizedAction = normalizeActionName(
+    action.actionName || action.actionType || action.category
+  );
+  if (normalizedAction === "trust") {
+    return describeTrustResolution(action);
+  }
+  if (normalizedAction === "seer") {
+    const seerResult = describeSeerResolution(action);
+    if (seerResult) {
+      return seerResult;
+    }
+  }
+  if (normalizedAction === "track") {
+    const trackerResult = describeTrackerResolution(action);
+    if (trackerResult) {
+      return trackerResult;
+    }
+  }
+  if (normalizedAction === "block") {
+    const blockResult = describeBlockResolution(action);
+    if (blockResult) {
+      return blockResult;
+    }
+  }
   const category = normalizeActionName(action.category);
   const day = action.day ?? 0;
   const currentDay = currentGame?.day ?? 0;
@@ -2988,9 +3550,6 @@ function describeActionStatus(action = {}) {
   }
   if (category === "notebook") {
     return "Saved";
-  }
-  if (isTrustAction(action.actionName) && day === currentDay) {
-    return "Trusted";
   }
   if (day === currentDay) {
     return "Pending";
@@ -3074,6 +3633,20 @@ async function renderActionHistory() {
     }
     return timestampToMillis(b.updatedAt || b.createdAt) - timestampToMillis(a.updatedAt || a.createdAt);
   });
+  const uniqueDays = Array.from(
+    new Set(
+      actions
+        .map((action) => (Number.isFinite(action.day) ? action.day : null))
+        .filter((day) => day !== null)
+    )
+  );
+  actionHistoryContext.actionsByDay = new Map();
+  if (uniqueDays.length) {
+    await ensureActionsLoadedForDays(uniqueDays);
+    uniqueDays.forEach((day) => {
+      actionHistoryContext.actionsByDay.set(day, actionsByDayCache.get(day) || []);
+    });
+  }
   const grouped = new Map();
   actions.forEach((action) => {
     const dayValue = action.day ?? 0;
