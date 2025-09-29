@@ -886,12 +886,12 @@ async function loadPrivateChannels() {
     channelSnapshot = await getDocs(collection(gameRef, "channels"));
   } catch (error) {
     console.error("Failed to load private channels", error);
-    const message =
-      error?.code === "permission-denied"
-        ? "You do not have permission to view private discussions."
-        : "Unable to load private discussions.";
-    setPrivateChannelsStatus(message, "error");
-    container.innerHTML = "";
+    if (error?.code === "permission-denied") {
+      clearPrivateChannels();
+    } else {
+      setPrivateChannelsStatus("Unable to load private discussions.", "error");
+      container.innerHTML = "";
+    }
     return;
   }
 
