@@ -60,6 +60,14 @@ const ACTION_RULE_KEYS = [
   "privateActionLimits",
 ];
 
+const PRIVATE_ACTION_RULE_KEYS = [
+  "privateActions",
+  "privateActionRules",
+  "privateActionLimit",
+  "privateActionLimitMap",
+  "privateActionLimits",
+];
+
 
 const els = {
   gameTitle: document.getElementById("gameTitle"),
@@ -116,6 +124,14 @@ const els = {
   actionHistoryContent: document.getElementById("actionHistoryContent"),
 };
 els.ubbButtons = document.querySelectorAll(".ubb-button[data-ubb-tag]");
+
+if (els.privateActionDay) {
+  els.privateActionDay.type = "hidden";
+  const label = els.privateActionDay.closest("label");
+  if (label) {
+    label.style.display = "none";
+  }
+}
 
 let currentUser = null;
 let currentGame = null;
@@ -1998,6 +2014,35 @@ function getActionRuleSources() {
   return sources;
 }
 
+function getPrivateActionRuleSources() {
+  const sources = [];
+  const entities = [];
+  if (currentPlayer) {
+    entities.push(currentPlayer);
+    if (currentPlayer.rules && typeof currentPlayer.rules === "object") {
+      entities.push(currentPlayer.rules);
+    }
+  }
+  if (currentGame) {
+    entities.push(currentGame);
+    if (currentGame.rules && typeof currentGame.rules === "object") {
+      entities.push(currentGame.rules);
+    }
+  }
+  entities.forEach((entity) => {
+    if (!entity) return;
+    PRIVATE_ACTION_RULE_KEYS.forEach((key) => {
+      if (Object.prototype.hasOwnProperty.call(entity, key)) {
+        const value = entity[key];
+        if (value !== undefined && value !== null) {
+          sources.push(value);
+        }
+      }
+    });
+  });
+  return sources;
+}
+
 function resolveActionRuleFromSource(source, normalized, seen = new WeakSet()) {
   if (!source) {
     return null;
@@ -2856,17 +2901,34 @@ function getAvailablePrivateActionNames() {
           value.label ||
           value.title ||
           value.key ||
-          value.id ||
           value.slug
       );
       if (Array.isArray(value.aliases)) {
-        value.aliases.forEach(addName);
+        value.aliases.forEach((alias) => {
+          if (typeof alias === "string") {
+            addName(alias);
+          }
+        });
       }
-      Object.values(value).forEach(inspect);
+      const nestedKeys = [
+        "actions",
+        "privateActions",
+        "options",
+        "variants",
+        "children",
+        "entries",
+        "list",
+        "items",
+      ];
+      nestedKeys.forEach((key) => {
+        if (Object.prototype.hasOwnProperty.call(value, key)) {
+          inspect(value[key]);
+        }
+      });
     }
   }
 
-  getActionRuleSources().forEach(inspect);
+  getPrivateActionRuleSources().forEach(inspect);
 
   const result = Array.from(names.values());
   result.sort((a, b) => a.localeCompare(b, undefined, { sensitivity: "base" }));
