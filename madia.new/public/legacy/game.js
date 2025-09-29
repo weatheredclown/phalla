@@ -1675,14 +1675,40 @@ els.voteRecordForm?.addEventListener("submit", async (event) => {
     return;
   }
   try {
-    await recordAction({
-      category: "vote",
-      actionName: "Vote",
-      targetName,
-      targetPlayerId: targetId,
-      notes,
-      day,
+    const user = auth.currentUser;
+    if (!user) {
+      header?.openAuthPanel("login");
+      return;
+    }
+    const gameRef = doc(db, "games", gameId);
+    const postsRef = collection(gameRef, "posts");
+    const body = targetName ? `vote ${targetName}` : "vote";
+    const postRef = await addDoc(postsRef, {
+      title: "",
+      body,
+      authorId: user.uid,
+      authorName: user.displayName || "Unknown",
+      avatar: user.photoURL || "",
+      createdAt: serverTimestamp(),
     });
+    try {
+      await recordAction({
+        category: "vote",
+        actionName: "Vote",
+        targetName,
+        targetPlayerId: targetId,
+        notes,
+        day,
+        extra: { postId: postRef.id, postRef },
+      });
+    } catch (actionError) {
+      try {
+        await deleteDoc(postRef);
+      } catch (cleanupError) {
+        console.warn("Failed to roll back vote post", cleanupError);
+      }
+      throw actionError;
+    }
     setPlayerToolsStatus("Vote recorded.", "success");
     if (els.voteTarget) {
       els.voteTarget.value = "";
@@ -1690,7 +1716,7 @@ els.voteRecordForm?.addEventListener("submit", async (event) => {
     if (els.voteNotes) {
       els.voteNotes.value = "";
     }
-    await renderVoteTallies();
+    await loadGame();
     await renderActionHistory();
   } catch (error) {
     console.error("Failed to record vote", error);
