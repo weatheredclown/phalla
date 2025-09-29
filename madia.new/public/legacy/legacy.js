@@ -13,6 +13,9 @@ import { auth, db, ensureUserDocument, missingConfig } from "./firebase.js";
 import { initLegacyHeader } from "./header.js";
 
 const header = initLegacyHeader();
+header?.setNavLinks([
+  { label: "List of Games", href: "/legacy/index.html", current: true },
+]);
 const els = {
   gamesBody: document.getElementById("gamesBody"),
 };
