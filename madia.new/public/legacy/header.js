@@ -179,10 +179,13 @@ export function initLegacyHeader({ containerId = "legacyHeader" } = {}) {
       cellspacing="0"
     >
       <tr>
-        <td align="left" valign="top" height="48">
-          <table width="50%" align="left" border="0" cellspacing="0" cellpadding="0">
+        <td align="left" valign="middle" height="48">
+          <table width="100%" align="left" border="0" cellspacing="0" cellpadding="0">
             <tr>
-              <td align="left" valign="top" width="192" height="48">&nbsp;</td>
+              <td align="left" valign="middle" width="192" height="48">&nbsp;</td>
+              <td align="left" valign="middle" class="smallfont" id="legacyHeaderNav" style="padding-left:12px;">
+                &nbsp;
+              </td>
             </tr>
           </table>
         </td>
@@ -217,7 +220,55 @@ export function initLegacyHeader({ containerId = "legacyHeader" } = {}) {
     signupSubmit: container.querySelector("#legacyHeaderSignupSubmit"),
     showLogin: container.querySelector("#legacyHeaderShowLogin"),
     showSignup: container.querySelector("#legacyHeaderShowSignup"),
+    nav: container.querySelector("#legacyHeaderNav"),
   };
+
+  function escapeHtml(value) {
+    if (value === null || value === undefined) {
+      return "";
+    }
+    return String(value)
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;")
+      .replace(/'/g, "&#39;");
+  }
+
+  function setNavLinks(links = []) {
+    if (!els.nav) {
+      return;
+    }
+    if (!Array.isArray(links) || !links.length) {
+      els.nav.innerHTML = "&nbsp;";
+      return;
+    }
+    const parts = [];
+    links.forEach((link, index) => {
+      if (!link || typeof link !== "object") {
+        return;
+      }
+      const separator = index === 0 ? "" : " &raquo; ";
+      const label = escapeHtml(link.label || "");
+      if (link.current) {
+        const italicized = link.italic ? `<i>${label}</i>` : label;
+        parts.push(`${separator}<strong>${italicized}</strong>`);
+        return;
+      }
+      if (link.href) {
+        parts.push(
+          `${separator}<span class="navbar"><a href="${escapeHtml(link.href)}">${label}</a></span>`
+        );
+        return;
+      }
+      parts.push(`${separator}<span class="navbar">${label}</span>`);
+    });
+    if (!parts.length) {
+      els.nav.innerHTML = "&nbsp;";
+      return;
+    }
+    els.nav.innerHTML = parts.join("");
+  }
 
   let currentMode = "login";
   let panelVisible = false;
@@ -405,6 +456,10 @@ export function initLegacyHeader({ containerId = "legacyHeader" } = {}) {
     updateUser(user);
   });
 
+  setNavLinks([
+    { label: "List of Games", href: "/legacy/index.html", current: true },
+  ]);
+
   function disableSection(section) {
     if (!section) return;
     section.style.opacity = "0.5";
@@ -424,6 +479,7 @@ export function initLegacyHeader({ containerId = "legacyHeader" } = {}) {
     closeAuthPanel: closePanel,
     profileLink: els.profileLink,
     setUser: updateUser,
+    setNavLinks,
     destroy,
   };
 }
