@@ -62,6 +62,14 @@ const ACTION_RULE_KEYS = [
   "privateActionLimits",
 ];
 
+const PRIVATE_ACTION_RULE_KEYS = [
+  "privateActions",
+  "privateActionRules",
+  "privateActionLimit",
+  "privateActionLimitMap",
+  "privateActionLimits",
+];
+
 
 const els = {
   gameTitle: document.getElementById("gameTitle"),
@@ -83,6 +91,9 @@ const els = {
   daySummary: document.getElementById("daySummary"),
   playerTools: document.getElementById("playerTools"),
   playerToolsStatus: document.getElementById("playerToolsStatus"),
+  playerRoleSummary: document.getElementById("playerRoleSummary"),
+  playerRoleName: document.getElementById("playerRoleName"),
+  playerRoleDescription: document.getElementById("playerRoleDescription"),
   privateChannelsSection: document.getElementById("privateChannelsSection"),
   privateChannelsContainer: document.getElementById("privateChannelsContainer"),
   privateChannelsStatus: document.getElementById("privateChannelsStatus"),
@@ -118,6 +129,14 @@ const els = {
   actionHistoryContent: document.getElementById("actionHistoryContent"),
 };
 els.ubbButtons = document.querySelectorAll(".ubb-button[data-ubb-tag]");
+
+if (els.privateActionDay) {
+  els.privateActionDay.type = "hidden";
+  const label = els.privateActionDay.closest("label");
+  if (label) {
+    label.style.display = "none";
+  }
+}
 
 let currentUser = null;
 let currentGame = null;
@@ -533,6 +552,7 @@ async function loadGame() {
   }
   const g = gSnap.data();
   currentGame = { id: gameId, ...g };
+  updateHeaderNav({ joined: false });
   isOwnerView = !!(auth.currentUser && g.ownerUserId === auth.currentUser.uid);
   els.gameTitle.textContent = g.gamename || "(no name)";
   els.ownerControls.style.display = isOwnerView ? "block" : "none";
@@ -821,6 +841,28 @@ function getRoleDefinitionByLegacyId(legacyRoleId) {
     return null;
   }
   return ROLE_DEFINITION_BY_LEGACY_ID.get(legacyRoleId) || null;
+}
+function getAssignedRoleDescription(player) {
+  if (!player || typeof player !== "object") {
+    return "";
+  }
+  const fields = [
+    "description",
+    "roleDescription",
+    "roleText",
+    "roleDetails",
+    "roleDescriptionText",
+  ];
+  for (const field of fields) {
+    const raw = player[field];
+    if (typeof raw === "string") {
+      const trimmed = raw.trim();
+      if (trimmed) {
+        return trimmed;
+      }
+    }
+  }
+  return "";
 }
 
 function collectIdSet(source, keys = []) {
@@ -1549,6 +1591,75 @@ function setDisplay(el, value) {
   }
 }
 
+function updatePlayerRoleSummary(player) {
+  const summary = els.playerRoleSummary;
+  const nameEl = els.playerRoleName;
+  const descriptionEl = els.playerRoleDescription;
+  if (!summary || !nameEl || !descriptionEl) {
+    return;
+  }
+
+  if (!player) {
+    summary.style.display = "none";
+    nameEl.textContent = "";
+    descriptionEl.innerHTML = "";
+    return;
+  }
+
+  const roleName = getAssignedRoleName(player);
+  const roleDescription = getAssignedRoleDescription(player);
+  if (!roleName && !roleDescription) {
+    summary.style.display = "none";
+    nameEl.textContent = "";
+    descriptionEl.innerHTML = "";
+    return;
+  }
+
+  summary.style.display = "block";
+  nameEl.innerHTML = roleName ? `<big><big>${escapeHtml(roleName)}</big></big>` : "";
+  if (roleDescription) {
+    const escaped = escapeHtml(roleDescription).replace(/\r?\n/g, "<br />");
+    descriptionEl.innerHTML = escaped;
+  } else {
+    descriptionEl.innerHTML = "";
+  }
+}
+
+function updateHeaderNav({ joined = false } = {}) {
+  if (!header || typeof header.setNavLinks !== "function") {
+    return;
+  }
+
+  const links = [{ label: "List of Games", href: "/legacy/index.html" }];
+  if (currentGame) {
+    const gameLabel = currentGame.gamename || "(no name)";
+    const gameLink = {
+      label: gameLabel,
+      href: `/legacy/game.html?g=${encodeURIComponent(currentGame.id)}`,
+    };
+    if (!joined) {
+      gameLink.current = true;
+    }
+    links.push(gameLink);
+    if (joined) {
+      links.push({
+        label: "my game",
+        href: `/legacy/mygame.html?g=${encodeURIComponent(currentGame.id)}`,
+        current: true,
+        italic: true,
+      });
+    }
+  } else {
+    links[0].current = true;
+  }
+
+  if (!links.some((link) => link && link.current)) {
+    links[links.length - 1].current = true;
+  }
+
+  header.setNavLinks(links);
+}
+
 async function refreshMembershipAndControls() {
   const user = auth.currentUser;
   if (!user) {
@@ -1568,6 +1679,8 @@ async function refreshMembershipAndControls() {
     populatePrivateActionOptions();
     populateClaimRoleOptions();
     updatePlayerToolsFormsVisibility();
+    updatePlayerRoleSummary(null);
+    updateHeaderNav({ joined: false });
     return;
   }
   try {
@@ -1582,7 +1695,14 @@ async function refreshMembershipAndControls() {
     setDisplay(els.playerTools, joined || ownerView ? "block" : "none");
     updatePlayerToolsFormsVisibility();
     updatePublicActionControls();
-  } catch {}
+    updatePlayerRoleSummary(currentPlayer);
+    updateHeaderNav({ joined });
+  } catch (error) {
+    console.warn("Failed to refresh player membership", error);
+    currentPlayer = null;
+    updatePlayerRoleSummary(null);
+    updateHeaderNav({ joined: false });
+  }
   await loadPrivateChannels();
   await renderActionHistory();
   populatePrivateActionOptions();
@@ -2411,6 +2531,35 @@ function getActionRuleSources() {
   entities.forEach((entity) => {
     if (!entity) return;
     ACTION_RULE_KEYS.forEach((key) => {
+      if (Object.prototype.hasOwnProperty.call(entity, key)) {
+        const value = entity[key];
+        if (value !== undefined && value !== null) {
+          sources.push(value);
+        }
+      }
+    });
+  });
+  return sources;
+}
+
+function getPrivateActionRuleSources() {
+  const sources = [];
+  const entities = [];
+  if (currentPlayer) {
+    entities.push(currentPlayer);
+    if (currentPlayer.rules && typeof currentPlayer.rules === "object") {
+      entities.push(currentPlayer.rules);
+    }
+  }
+  if (currentGame) {
+    entities.push(currentGame);
+    if (currentGame.rules && typeof currentGame.rules === "object") {
+      entities.push(currentGame.rules);
+    }
+  }
+  entities.forEach((entity) => {
+    if (!entity) return;
+    PRIVATE_ACTION_RULE_KEYS.forEach((key) => {
       if (Object.prototype.hasOwnProperty.call(entity, key)) {
         const value = entity[key];
         if (value !== undefined && value !== null) {
@@ -3280,17 +3429,34 @@ function getAvailablePrivateActionNames() {
           value.label ||
           value.title ||
           value.key ||
-          value.id ||
           value.slug
       );
       if (Array.isArray(value.aliases)) {
-        value.aliases.forEach(addName);
+        value.aliases.forEach((alias) => {
+          if (typeof alias === "string") {
+            addName(alias);
+          }
+        });
       }
-      Object.values(value).forEach(inspect);
+      const nestedKeys = [
+        "actions",
+        "privateActions",
+        "options",
+        "variants",
+        "children",
+        "entries",
+        "list",
+        "items",
+      ];
+      nestedKeys.forEach((key) => {
+        if (Object.prototype.hasOwnProperty.call(value, key)) {
+          inspect(value[key]);
+        }
+      });
     }
   }
 
-  getActionRuleSources().forEach(inspect);
+  getPrivateActionRuleSources().forEach(inspect);
 
   const result = Array.from(names.values());
   result.sort((a, b) => a.localeCompare(b, undefined, { sensitivity: "base" }));
