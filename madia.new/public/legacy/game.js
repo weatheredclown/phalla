@@ -19,9 +19,11 @@ import { escapeHtml as baseEscapeHtml, ubbToHtml } from "/legacy/ubb.js";
 import { auth, db, ensureUserDocument, missingConfig } from "./firebase.js";
 import { initLegacyHeader } from "./header.js";
 import {
+  ROLE_DEFINITIONS,
   ROLE_NAMES,
   getCanonicalRoleDefinition,
   getActionTypeDefinition,
+  normalizeRoleName as canonicalNormalizeRoleName,
 } from "./roles-data.js";
 
 function getParam(name) {
@@ -129,6 +131,31 @@ let replacementCandidatesPromise = null;
 let pendingReplacementPlayerId = null;
 let postCache = new Map();
 let pendingQuote = null;
+let legacyChannelSyncPromise = null;
+
+const ROLE_DEFINITION_BY_LEGACY_ID = new Map();
+ROLE_DEFINITIONS.forEach((definition) => {
+  if (!definition || typeof definition !== "object") {
+    return;
+  }
+  const legacyRoleIdCandidates = [];
+  if (typeof definition.legacyId === "number") {
+    legacyRoleIdCandidates.push(definition.legacyId);
+  }
+  if (definition.rules && typeof definition.rules === "object") {
+    if (typeof definition.rules.legacyRoleId === "number") {
+      legacyRoleIdCandidates.push(definition.rules.legacyRoleId);
+    }
+  }
+  legacyRoleIdCandidates.forEach((value) => {
+    if (!Number.isFinite(value)) {
+      return;
+    }
+    if (!ROLE_DEFINITION_BY_LEGACY_ID.has(value)) {
+      ROLE_DEFINITION_BY_LEGACY_ID.set(value, definition);
+    }
+  });
+});
 
 const BASE_PUBLIC_ACTION_DEFINITIONS = [
   {
@@ -613,6 +640,7 @@ async function loadGame() {
 
   attemptApplyPendingQuote();
 
+  await ensureLegacyChannelsSynced();
   await refreshMembershipAndControls();
   await loadPrivateChannels();
 }
@@ -738,6 +766,63 @@ function getAssignedRoleName(player) {
   return "";
 }
 
+function getAssignedLegacyRoleId(player) {
+  if (!player || typeof player !== "object") {
+    return null;
+  }
+  const directFields = [
+    "legacyRoleId",
+    "legacyroleid",
+    "roleId",
+    "roleid",
+    "role_id",
+    "legacyRole",
+  ];
+  for (const field of directFields) {
+    const value = player[field];
+    const parsed = normalizeLegacyRoleId(value);
+    if (parsed !== null) {
+      return parsed;
+    }
+  }
+  const definition = player.roleDefinition;
+  if (definition && typeof definition === "object") {
+    const nestedCandidates = [definition.legacyRoleId, definition.legacyId, definition.id];
+    for (const candidate of nestedCandidates) {
+      const parsed = normalizeLegacyRoleId(candidate);
+      if (parsed !== null) {
+        return parsed;
+      }
+    }
+  }
+  return null;
+}
+
+function normalizeLegacyRoleId(value) {
+  if (value === null || value === undefined) {
+    return null;
+  }
+  if (typeof value === "number") {
+    return Number.isFinite(value) ? value : null;
+  }
+  if (typeof value === "string") {
+    const trimmed = value.trim();
+    if (!trimmed) {
+      return null;
+    }
+    const parsed = Number.parseInt(trimmed, 10);
+    return Number.isFinite(parsed) ? parsed : null;
+  }
+  return null;
+}
+
+function getRoleDefinitionByLegacyId(legacyRoleId) {
+  if (!Number.isFinite(legacyRoleId)) {
+    return null;
+  }
+  return ROLE_DEFINITION_BY_LEGACY_ID.get(legacyRoleId) || null;
+}
+
 function collectIdSet(source, keys = []) {
   const ids = new Set();
   if (!source || typeof source !== "object") {
@@ -756,6 +841,345 @@ function collectIdSet(source, keys = []) {
     });
   });
   return ids;
+}
+
+function normalizeRoleLabel(value) {
+  if (value === null || value === undefined) {
+    return "";
+  }
+  if (typeof value === "string") {
+    return value.trim();
+  }
+  return String(value).trim();
+}
+
+function roleDefinitionCreatesPrivateChannel(definition) {
+  if (!definition || typeof definition !== "object") {
+    return false;
+  }
+  const rules = definition.rules;
+  if (!rules || typeof rules !== "object") {
+    return false;
+  }
+  const actions = Array.isArray(rules.privateActions) ? rules.privateActions : [];
+  return actions.some((action) => action && action.createsPrivateChannel === true);
+}
+
+function mapLegacyRoleIdToChannel(legacyRoleId) {
+  if (!Number.isFinite(legacyRoleId)) {
+    return null;
+  }
+  if (legacyRoleId === 17) {
+    return 2;
+  }
+  return legacyRoleId;
+}
+
+function createChannelInfo(channelId, baseDefinition = null) {
+  const baseName = normalizeRoleLabel(baseDefinition?.name || "Private Discussion");
+  const sortOrder = Number.isFinite(baseDefinition?.rules?.legacyRoleId)
+    ? baseDefinition.rules.legacyRoleId
+    : Number.MAX_SAFE_INTEGER;
+  const info = {
+    id: channelId,
+    baseRoleName: baseName,
+    title: `${baseName} Discussion`,
+    memberIds: new Set(),
+    roleNames: new Set(),
+    legacyRoleIds: new Set(),
+    extraMemberIds: new Set(),
+    extraViewerIds: new Set(),
+    allowOwner: true,
+    allowOwnerPost: true,
+    sortOrder,
+    existingData: null,
+  };
+  if (baseName) {
+    info.roleNames.add(baseName);
+  }
+  if (Number.isFinite(baseDefinition?.rules?.legacyRoleId)) {
+    info.legacyRoleIds.add(baseDefinition.rules.legacyRoleId);
+  }
+  if (Number.isFinite(baseDefinition?.legacyId)) {
+    info.legacyRoleIds.add(baseDefinition.legacyId);
+  }
+  return info;
+}
+
+function buildChannelDescription(roleNames = []) {
+  if (!Array.isArray(roleNames) || !roleNames.length) {
+    return "Private discussion space generated from legacy role rules.";
+  }
+  const unique = Array.from(
+    new Set(
+      roleNames
+        .map((name) => normalizeRoleLabel(name))
+        .filter((name) => name)
+    )
+  ).sort((a, b) => a.localeCompare(b, undefined, { sensitivity: "base" }));
+  if (!unique.length) {
+    return "Private discussion space generated from legacy role rules.";
+  }
+  if (unique.length === 1) {
+    return `Private discussion for ${unique[0]} players.`;
+  }
+  const last = unique[unique.length - 1];
+  const start = unique.slice(0, unique.length - 1);
+  return `Private discussion shared by ${start.join(", ")} and ${last} roles.`;
+}
+
+function sortStringArray(values = []) {
+  return Array.from(
+    new Set(
+      values
+        .map((value) => (typeof value === "string" ? value.trim() : ""))
+        .filter((value) => value)
+    )
+  ).sort((a, b) => a.localeCompare(b, undefined, { sensitivity: "base" }));
+}
+
+function sortNumberArray(values = []) {
+  return Array.from(
+    new Set(
+      values
+        .map((value) => {
+          const parsed = normalizeLegacyRoleId(value);
+          return parsed === null ? null : parsed;
+        })
+        .filter((value) => value !== null)
+    )
+  ).sort((a, b) => a - b);
+}
+
+function arraysEqual(a = [], b = []) {
+  if (!Array.isArray(a) || !Array.isArray(b)) {
+    return false;
+  }
+  if (a.length !== b.length) {
+    return false;
+  }
+  for (let i = 0; i < a.length; i += 1) {
+    if (a[i] !== b[i]) {
+      return false;
+    }
+  }
+  return true;
+}
+
+async function ensureLegacyChannelsSynced() {
+  if (!isOwnerView || !currentGame || missingConfig) {
+    return;
+  }
+  if (legacyChannelSyncPromise) {
+    await legacyChannelSyncPromise;
+    return;
+  }
+  legacyChannelSyncPromise = resyncManagedPrivateChannels()
+    .catch((error) => {
+      console.warn("Failed to sync legacy role discussions", error);
+    })
+    .finally(() => {
+      legacyChannelSyncPromise = null;
+    });
+  await legacyChannelSyncPromise;
+}
+
+async function resyncManagedPrivateChannels() {
+  if (!isOwnerView || !currentGame || missingConfig) {
+    return;
+  }
+  const players = Array.isArray(gamePlayers) ? gamePlayers : [];
+  const channelMap = new Map();
+
+  players.forEach((player) => {
+    if (!player || typeof player !== "object") {
+      return;
+    }
+    const playerId = normalizeIdentifier(player.id);
+    if (!playerId) {
+      return;
+    }
+    const playerData = player.data || {};
+    const assignedRoleName = getAssignedRoleName(playerData);
+    let definition = assignedRoleName ? getCanonicalRoleDefinition(assignedRoleName) : null;
+    const legacyRoleIdFromPlayer = getAssignedLegacyRoleId(playerData);
+    if (!definition && legacyRoleIdFromPlayer !== null) {
+      definition = getRoleDefinitionByLegacyId(legacyRoleIdFromPlayer);
+    }
+    if (!definition && assignedRoleName) {
+      const normalizedName = canonicalNormalizeRoleName(assignedRoleName);
+      if (normalizedName) {
+        definition = ROLE_DEFINITIONS.find((role) => canonicalNormalizeRoleName(role.name) === normalizedName) || null;
+      }
+    }
+    if (!definition) {
+      return;
+    }
+    if (!roleDefinitionCreatesPrivateChannel(definition)) {
+      return;
+    }
+    const legacyCandidates = [];
+    if (Number.isFinite(definition.rules?.legacyRoleId)) {
+      legacyCandidates.push(definition.rules.legacyRoleId);
+    }
+    if (Number.isFinite(definition.legacyId)) {
+      legacyCandidates.push(definition.legacyId);
+    }
+    if (legacyRoleIdFromPlayer !== null) {
+      legacyCandidates.push(legacyRoleIdFromPlayer);
+    }
+    const resolvedLegacy = legacyCandidates.find((value) => Number.isFinite(value));
+    const mappedLegacy = mapLegacyRoleIdToChannel(resolvedLegacy ?? null);
+    if (!Number.isFinite(mappedLegacy)) {
+      return;
+    }
+    const channelId = `legacy-role-${mappedLegacy}`;
+    const baseDefinition = getRoleDefinitionByLegacyId(mappedLegacy) || definition;
+    const info = channelMap.get(channelId) || createChannelInfo(channelId, baseDefinition);
+    channelMap.set(channelId, info);
+    info.memberIds.add(playerId);
+    const readableName = normalizeRoleLabel(definition.name || assignedRoleName);
+    if (readableName) {
+      info.roleNames.add(readableName);
+    }
+    if (Number.isFinite(definition.rules?.legacyRoleId)) {
+      info.legacyRoleIds.add(definition.rules.legacyRoleId);
+    }
+    if (Number.isFinite(definition.legacyId)) {
+      info.legacyRoleIds.add(definition.legacyId);
+    }
+    if (legacyRoleIdFromPlayer !== null) {
+      info.legacyRoleIds.add(legacyRoleIdFromPlayer);
+    }
+    if (Number.isFinite(mappedLegacy)) {
+      info.legacyRoleIds.add(mappedLegacy);
+    }
+  });
+
+  const gameRef = doc(db, "games", gameId);
+  let channelSnapshot;
+  try {
+    channelSnapshot = await getDocs(collection(gameRef, "channels"));
+  } catch (error) {
+    console.warn("Failed to load channels for legacy sync", error);
+    return;
+  }
+
+  channelSnapshot.forEach((docSnap) => {
+    const channelId = docSnap.id;
+    const data = docSnap.data() || {};
+    if (data.managedByLegacyRole === true) {
+      let info = channelMap.get(channelId);
+      if (!info) {
+        const primaryLegacyId = mapLegacyRoleIdToChannel(normalizeLegacyRoleId(data.sortOrder));
+        const baseDefinition = getRoleDefinitionByLegacyId(primaryLegacyId) || null;
+        info = createChannelInfo(channelId, baseDefinition);
+        if (typeof data.title === "string" && data.title.trim()) {
+          info.title = data.title.trim();
+        }
+        channelMap.set(channelId, info);
+      }
+      info.existingData = data;
+      if (Array.isArray(data.roleNames)) {
+        data.roleNames.forEach((name) => {
+          const normalized = normalizeRoleLabel(name);
+          if (normalized) {
+            info.roleNames.add(normalized);
+          }
+        });
+      }
+      if (Array.isArray(data.legacyRoleIds)) {
+        data.legacyRoleIds.forEach((value) => {
+          const parsed = normalizeLegacyRoleId(value);
+          if (parsed !== null) {
+            info.legacyRoleIds.add(parsed);
+          }
+        });
+      }
+      const manualMembers = collectIdSet(data, ["extraMemberIds", "additionalMemberIds", "manualMemberIds"]);
+      manualMembers.forEach((id) => info.extraMemberIds.add(id));
+      const manualViewers = collectIdSet(data, ["extraViewerIds", "additionalViewers", "additionalReaderIds", "observerIds"]);
+      manualViewers.forEach((id) => info.extraViewerIds.add(id));
+      const storedViewers = collectIdSet(data, ["viewerIds"]);
+      storedViewers.forEach((id) => info.extraViewerIds.add(id));
+      if (typeof data.allowOwner === "boolean") {
+        info.allowOwner = data.allowOwner;
+      }
+      if (typeof data.allowOwnerPost === "boolean") {
+        info.allowOwnerPost = data.allowOwnerPost;
+      }
+      if (typeof data.sortOrder === "number" && Number.isFinite(data.sortOrder)) {
+        info.sortOrder = data.sortOrder;
+      }
+      if (typeof data.baseRoleName === "string" && data.baseRoleName.trim()) {
+        info.baseRoleName = data.baseRoleName.trim();
+      }
+    }
+  });
+
+  for (const [channelId, info] of channelMap.entries()) {
+    const existingData = info.existingData || {};
+    const managedMembers = sortStringArray(Array.from(info.memberIds));
+    const extraMembers = sortStringArray(Array.from(info.extraMemberIds));
+    const combinedMembers = sortStringArray([...managedMembers, ...extraMembers]);
+    const extraViewerIds = sortStringArray(Array.from(info.extraViewerIds));
+    const viewerIds = sortStringArray([...combinedMembers, ...extraViewerIds]);
+    const roleNames = sortStringArray(Array.from(info.roleNames));
+    const legacyRoleIds = sortNumberArray(Array.from(info.legacyRoleIds));
+    const desiredTitle = info.title || `${info.baseRoleName || "Private Discussion"} Discussion`;
+    const description = buildChannelDescription(roleNames);
+    const payload = {
+      title: desiredTitle,
+      description,
+      allowOwner: info.allowOwner !== false,
+      allowOwnerPost: info.allowOwnerPost !== false,
+      memberIds: combinedMembers,
+      writerIds: combinedMembers,
+      viewerIds,
+      managedMemberIds: managedMembers,
+      roleNames,
+      baseRoleName: info.baseRoleName || (roleNames[0] || "Private Discussion"),
+      legacyRoleIds,
+      managedByLegacyRole: true,
+      sortOrder: Number.isFinite(info.sortOrder) ? info.sortOrder : Number.MAX_SAFE_INTEGER,
+      updatedAt: serverTimestamp(),
+    };
+
+    const existingMembers = sortStringArray(Array.from(collectIdSet(existingData, ["memberIds"])));
+    const existingManaged = sortStringArray(Array.from(collectIdSet(existingData, ["managedMemberIds"])));
+    const existingWriters = sortStringArray(Array.from(collectIdSet(existingData, ["writerIds"])));
+    const existingViewers = sortStringArray(Array.from(collectIdSet(existingData, ["viewerIds"])));
+    const existingRoleNames = sortStringArray(Array.isArray(existingData.roleNames) ? existingData.roleNames : []);
+    const existingLegacyIds = sortNumberArray(Array.isArray(existingData.legacyRoleIds) ? existingData.legacyRoleIds : []);
+    const existingTitle = typeof existingData.title === "string" ? existingData.title : "";
+    const existingDescription = typeof existingData.description === "string" ? existingData.description : "";
+    const existingAllowOwner = existingData.allowOwner !== undefined ? existingData.allowOwner : true;
+    const existingAllowOwnerPost = existingData.allowOwnerPost !== undefined ? existingData.allowOwnerPost : existingAllowOwner;
+    const existingSortOrder = Number.isFinite(existingData.sortOrder) ? existingData.sortOrder : Number.MAX_SAFE_INTEGER;
+
+    const alreadyMatches = existingData.managedByLegacyRole === true &&
+      arraysEqual(existingMembers, combinedMembers) &&
+      arraysEqual(existingManaged, managedMembers) &&
+      arraysEqual(existingWriters, combinedMembers) &&
+      arraysEqual(existingViewers, viewerIds) &&
+      arraysEqual(existingRoleNames, roleNames) &&
+      arraysEqual(existingLegacyIds, legacyRoleIds) &&
+      existingTitle === desiredTitle &&
+      existingDescription === description &&
+      existingAllowOwner === payload.allowOwner &&
+      existingAllowOwnerPost === payload.allowOwnerPost &&
+      existingSortOrder === payload.sortOrder;
+
+    if (alreadyMatches) {
+      continue;
+    }
+
+    try {
+      await setDoc(doc(gameRef, "channels", channelId), payload, { merge: true });
+    } catch (error) {
+      console.warn(`Failed to update channel ${channelId}`, error);
+    }
+  }
 }
 
 function getChannelTitle(channel = {}) {
