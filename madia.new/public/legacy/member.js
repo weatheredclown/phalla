@@ -484,6 +484,12 @@ function handleListError(error) {
 }
 
 async function loadLists() {
+  if (!viewedUid) {
+    renderListMessage(els.gamesYouPlay, "Missing member id.", "error");
+    renderListMessage(els.gamesYouOwn, "Missing member id.", "error");
+    return;
+  }
+
   if (missingConfig) {
     renderListMessage(
       els.gamesYouPlay,
@@ -497,8 +503,9 @@ async function loadLists() {
     );
     return;
   }
-  els.gamesYouPlay.innerHTML = groupSectionSkeleton();
-  els.gamesYouOwn.innerHTML = groupSectionSkeleton();
+
+  setLoadingState(els.gamesYouPlay);
+  setLoadingState(els.gamesYouOwn);
 
   try {
     const ownedQ = query(
@@ -507,7 +514,7 @@ async function loadLists() {
     );
     const ownedSnap = await getDocs(ownedQ);
     const owned = ownedSnap.docs.map((d) => ({ id: d.id, ...d.data() }));
-    renderGrouped(els.gamesYouOwn, owned);
+    renderGrouped(els.gamesYouOwn, owned, { listType: "owned" });
   } catch (error) {
     handleListError(error);
     return;
@@ -526,16 +533,24 @@ async function loadLists() {
     return;
   }
 
-  const gameIds = new Set();
+  const playerEntries = new Map();
   playersSnap.forEach((p) => {
-    const gameRef = p.ref.parent.parent; // games/{id}
-    if (gameRef) gameIds.add(gameRef.id);
+    const gameRef = p.ref.parent?.parent;
+    if (!gameRef) {
+      return;
+    }
+    if (!playerEntries.has(gameRef.id)) {
+      playerEntries.set(gameRef.id, { id: p.id, ...p.data() });
+    }
   });
+
   const plays = [];
-  for (const gid of gameIds) {
+  for (const [gid, player] of playerEntries.entries()) {
     try {
       const d = await getDoc(doc(db, "games", gid));
-      if (d.exists()) plays.push({ id: gid, ...d.data() });
+      if (d.exists()) {
+        plays.push({ id: gid, ...d.data(), player });
+      }
     } catch (error) {
       if (isPermissionDenied(error)) {
         handleListError(error);
@@ -544,33 +559,157 @@ async function loadLists() {
       console.warn("Failed to load game", gid, error);
     }
   }
-  renderGrouped(els.gamesYouPlay, plays);
+  renderGrouped(els.gamesYouPlay, plays, { listType: "played" });
 }
 
 function groupSectionSkeleton() {
   return `
-    <fieldset class="fieldset"><legend>Open</legend><div class="smallfont" data-group="open"></div></fieldset>
-    <fieldset class="fieldset"><legend>Running</legend><div class="smallfont" data-group="running"></div></fieldset>
-    <fieldset class="fieldset"><legend>Game Over</legend><div class="smallfont" data-group="over"></div></fieldset>
+    <fieldset class="fieldset">
+      <legend>Open</legend>
+      <table cellpadding="0" cellspacing="3" border="0" data-group="open"></table>
+    </fieldset>
+    <fieldset class="fieldset">
+      <legend>Running</legend>
+      <table cellpadding="0" cellspacing="3" border="0" data-group="running"></table>
+    </fieldset>
+    <fieldset class="fieldset">
+      <legend>Game Over</legend>
+      <table cellpadding="0" cellspacing="3" border="0" data-group="over"></table>
+    </fieldset>
   `;
 }
 
-function renderGrouped(container, games) {
-  const open = container.querySelector('[data-group="open"]');
-  const running = container.querySelector('[data-group="running"]');
-  const over = container.querySelector('[data-group="over"]');
-  open.innerHTML = running.innerHTML = over.innerHTML = "";
-  if (!games.length) {
-    container.querySelectorAll('[data-group]').forEach((el) => (el.innerHTML = "<i>None</i>"));
+function renderGrouped(container, games, { listType } = {}) {
+  if (!container) {
     return;
   }
-  for (const g of games.sort((a,b)=> (b.active - a.active) || ((b.open|0)-(a.open|0)) || String(a.gamename||"").localeCompare(String(b.gamename||"")))) {
-    const a = document.createElement("div");
-    a.innerHTML = `<a href="/legacy/game.html?g=${g.id}">${g.gamename || "(no name)"}</a>`;
-    const bucket = g.active ? ((g.day||0)===0 ? open : running) : over;
-    bucket.appendChild(a);
+
+  if (!games.length) {
+    container.innerHTML = "<i>None</i>";
+    return;
+  }
+
+  container.innerHTML = groupSectionSkeleton();
+  const openTable = container.querySelector('[data-group="open"]');
+  const runningTable = container.querySelector('[data-group="running"]');
+  const overTable = container.querySelector('[data-group="over"]');
+
+  const buckets = {
+    open: [],
+    running: [],
+    over: [],
+  };
+
+  games.forEach((game) => {
+    const bucket = classifyGameBucket(game);
+    buckets[bucket].push(game);
+  });
+
+  Object.values(buckets).forEach((bucketGames) => {
+    bucketGames.sort((a, b) => {
+      const nameA = (a.gamename || "").toLowerCase();
+      const nameB = (b.gamename || "").toLowerCase();
+      return nameA.localeCompare(nameB);
+    });
+  });
+
+  fillBucket(openTable, buckets.open, listType);
+  fillBucket(runningTable, buckets.running, listType);
+  fillBucket(overTable, buckets.over, listType);
+}
+
+function fillBucket(table, games, listType) {
+  if (!table) {
+    return;
+  }
+  table.innerHTML = "";
+  if (!games.length) {
+    const row = document.createElement("tr");
+    const cell = document.createElement("td");
+    cell.innerHTML = "<i>None</i>";
+    row.appendChild(cell);
+    table.appendChild(row);
+    return;
+  }
+
+  games.forEach((game) => {
+    const row = document.createElement("tr");
+    const cell = document.createElement("td");
+    const link = document.createElement("a");
+    link.href = `/legacy/game.html?g=${game.id}`;
+    link.textContent = game.gamename || "(no name)";
+
+    if (listType === "played") {
+      decoratePlayedLink(link, game.player);
+    }
+
+    cell.appendChild(link);
+    if (listType === "played" && isPlayerEliminated(game.player)) {
+      const deadNote = document.createElement("span");
+      deadNote.innerHTML = " <i>(dead!)</i>";
+      cell.appendChild(deadNote);
+    }
+
+    row.appendChild(cell);
+    table.appendChild(row);
+  });
+}
+
+function decoratePlayedLink(link, playerData) {
+  if (!link || !playerData) {
+    return;
+  }
+  if (isPlayerEliminated(playerData)) {
+    link.style.color = "gray";
   }
 }
+
+function classifyGameBucket(game) {
+  if (game?.active) {
+    return (game?.day || 0) === 0 ? "open" : "running";
+  }
+  return "over";
+}
+
+function isPlayerEliminated(playerData = {}) {
+  const active = coerceBoolean(playerData.active);
+  const alive = coerceBoolean(playerData.alive);
+  if (active === false || alive === false) {
+    return true;
+  }
+  if (active === true || alive === true) {
+    return false;
+  }
+  return false;
+}
+
+function coerceBoolean(value) {
+  if (typeof value === "boolean") {
+    return value;
+  }
+  if (typeof value === "number") {
+    return value !== 0;
+  }
+  if (typeof value === "string") {
+    const normalized = value.trim().toLowerCase();
+    if (["yes", "true", "1", "alive", "active"].includes(normalized)) {
+      return true;
+    }
+    if (["no", "false", "0", "dead", "inactive"].includes(normalized)) {
+      return false;
+    }
+  }
+  return null;
+}
+
+function setLoadingState(container) {
+  if (!container) {
+    return;
+  }
+  container.innerHTML =
+    '<div class="smallfont" style="color:#F9A906;">Loading games…</div>';
+}
+
 
 els.createBtn.addEventListener("click", async () => {
   if (!currentUser || currentUser.uid !== viewedUid) return;
