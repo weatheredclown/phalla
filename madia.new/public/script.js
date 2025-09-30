@@ -167,6 +167,13 @@ let currentGame = null;
 let rosterById = new Map();
 let editingPlayerId = null;
 
+function stopSubscription(subscription) {
+  if (typeof subscription === "function") {
+    subscription();
+  }
+  return null;
+}
+
 async function ensurePlayerRecord(user) {
   if (!user) return null;
   const userRef = doc(db, "users", user.uid);
@@ -241,10 +248,7 @@ async function ensurePlayerRecord(user) {
 }
 
 function stopProfileSubscription() {
-  if (unsubscribeProfile) {
-    unsubscribeProfile();
-    unsubscribeProfile = null;
-  }
+  unsubscribeProfile = stopSubscription(unsubscribeProfile);
 }
 
 function getCurrentDisplayName() {
@@ -290,9 +294,9 @@ function watchUserProfile(user) {
   );
 }
 
-function showThreadsMessage(message) {
-  if (!els.threadsList) return;
-  els.threadsList.innerHTML = "";
+function renderEmptyListMessage(listElement, message) {
+  if (!listElement) return;
+  listElement.innerHTML = "";
   const li = document.createElement("li");
   li.className = "empty-message";
   li.textContent = message;
@@ -300,42 +304,57 @@ function showThreadsMessage(message) {
   li.setAttribute("role", "status");
   li.style.listStyle = "none";
   li.style.cursor = "default";
-  els.threadsList.appendChild(li);
+  listElement.appendChild(li);
+}
+
+function renderEmptyTableMessage(
+  tableBody,
+  message,
+  {
+    colSpan = 1,
+    rowClassName = "",
+    cellClassName = "",
+    role = "status",
+    cellStyles = {},
+  } = {}
+) {
+  if (!tableBody) return;
+  tableBody.innerHTML = "";
+  const tr = document.createElement("tr");
+  if (rowClassName) {
+    tr.className = rowClassName;
+  }
+  const td = document.createElement("td");
+  td.colSpan = colSpan;
+  if (cellClassName) {
+    td.className = cellClassName;
+  }
+  td.textContent = message;
+  td.setAttribute("role", role);
+  Object.assign(td.style, cellStyles);
+  tr.appendChild(td);
+  tableBody.appendChild(tr);
+}
+
+function showThreadsMessage(message) {
+  renderEmptyListMessage(els.threadsList, message);
 }
 
 function showPostsMessage(message) {
-  if (!els.postsList) return;
-  els.postsList.innerHTML = "";
-  const li = document.createElement("li");
-  li.className = "empty-message";
-  li.textContent = message;
-  li.tabIndex = -1;
-  li.setAttribute("role", "status");
-  li.style.listStyle = "none";
-  li.style.cursor = "default";
-  els.postsList.appendChild(li);
+  renderEmptyListMessage(els.postsList, message);
 }
 
 function showVotesMessage(message) {
-  if (!els.voteTableBody) return;
-  els.voteTableBody.innerHTML = "";
-  const tr = document.createElement("tr");
-  tr.className = "table-empty";
-  const td = document.createElement("td");
-  td.colSpan = 3;
-  td.textContent = message;
-  td.setAttribute("role", "status");
-  td.style.padding = "1rem";
-  tr.appendChild(td);
-  els.voteTableBody.appendChild(tr);
+  renderEmptyTableMessage(els.voteTableBody, message, {
+    colSpan: 3,
+    rowClassName: "table-empty",
+    cellStyles: { padding: "1rem" },
+  });
 }
 
 function resetThreadSelection(message, postsMessage = "Select a thread to view posts.") {
   selectedThreadId = null;
-  if (unsubscribePosts) {
-    unsubscribePosts();
-    unsubscribePosts = null;
-  }
+  unsubscribePosts = stopSubscription(unsubscribePosts);
   els.threadTitle.textContent = message;
   els.threadMetadata.textContent = "";
   showPostsMessage(postsMessage);
@@ -348,18 +367,9 @@ function resetThreadSelection(message, postsMessage = "Select a thread to view p
 }
 
 function stopRealtimeSubscriptions({ showSignedOutState = false } = {}) {
-  if (unsubscribeThreads) {
-    unsubscribeThreads();
-    unsubscribeThreads = null;
-  }
-  if (unsubscribeVotes) {
-    unsubscribeVotes();
-    unsubscribeVotes = null;
-  }
-  if (unsubscribePosts) {
-    unsubscribePosts();
-    unsubscribePosts = null;
-  }
+  unsubscribeThreads = stopSubscription(unsubscribeThreads);
+  unsubscribeVotes = stopSubscription(unsubscribeVotes);
+  unsubscribePosts = stopSubscription(unsubscribePosts);
   stopGameSubscriptions({ showSignedOutState });
   if (showSignedOutState) {
     showThreadsMessage("Sign in to view threads.");
@@ -416,10 +426,7 @@ async function selectThread(threadId) {
     alert("Sign in to view threads.");
     return;
   }
-  if (unsubscribePosts) {
-    unsubscribePosts();
-    unsubscribePosts = null;
-  }
+  unsubscribePosts = stopSubscription(unsubscribePosts);
   selectedThreadId = threadId;
   els.postsList.innerHTML = "";
   els.threadTitle.textContent = "Loading thread...";
@@ -604,18 +611,9 @@ function watchVotes() {
 }
 
 function stopGameSubscriptions({ showSignedOutState = false } = {}) {
-  if (unsubscribeGames) {
-    unsubscribeGames();
-    unsubscribeGames = null;
-  }
-  if (unsubscribeGameDoc) {
-    unsubscribeGameDoc();
-    unsubscribeGameDoc = null;
-  }
-  if (unsubscribePlayers) {
-    unsubscribePlayers();
-    unsubscribePlayers = null;
-  }
+  unsubscribeGames = stopSubscription(unsubscribeGames);
+  unsubscribeGameDoc = stopSubscription(unsubscribeGameDoc);
+  unsubscribePlayers = stopSubscription(unsubscribePlayers);
   currentGame = null;
   rosterById = new Map();
   if (showSignedOutState) {
@@ -695,14 +693,8 @@ function watchOwnedGames() {
         selectGame(els.gameSelect.value, { fromSnapshot: true });
       } else {
         selectedGameId = null;
-        if (unsubscribeGameDoc) {
-          unsubscribeGameDoc();
-          unsubscribeGameDoc = null;
-        }
-        if (unsubscribePlayers) {
-          unsubscribePlayers();
-          unsubscribePlayers = null;
-        }
+        unsubscribeGameDoc = stopSubscription(unsubscribeGameDoc);
+        unsubscribePlayers = stopSubscription(unsubscribePlayers);
         currentGame = null;
         rosterById = new Map();
         updateGameDetails(null);
@@ -730,14 +722,8 @@ function selectGame(gameId, { fromSnapshot = false } = {}) {
     if (!fromSnapshot) {
       els.gameSelect.value = "";
     }
-    if (unsubscribeGameDoc) {
-      unsubscribeGameDoc();
-      unsubscribeGameDoc = null;
-    }
-    if (unsubscribePlayers) {
-      unsubscribePlayers();
-      unsubscribePlayers = null;
-    }
+    unsubscribeGameDoc = stopSubscription(unsubscribeGameDoc);
+    unsubscribePlayers = stopSubscription(unsubscribePlayers);
     currentGame = null;
     updateGameDetails(null);
     showRosterMessage("Select a game to view the roster.");
@@ -756,14 +742,8 @@ function selectGame(gameId, { fromSnapshot = false } = {}) {
 
 function attachGameWatchers(gameId) {
   if (!gameId) return;
-  if (unsubscribeGameDoc) {
-    unsubscribeGameDoc();
-    unsubscribeGameDoc = null;
-  }
-  if (unsubscribePlayers) {
-    unsubscribePlayers();
-    unsubscribePlayers = null;
-  }
+  unsubscribeGameDoc = stopSubscription(unsubscribeGameDoc);
+  unsubscribePlayers = stopSubscription(unsubscribePlayers);
   const gameRef = doc(db, "games", gameId);
   showGameStatusMessage("Loading game details…");
   updateGameDetails(null);
@@ -922,18 +902,15 @@ function isCurrentUserGameOwner() {
 }
 
 function showRosterMessage(message) {
-  if (!els.rosterTableBody) return;
-  els.rosterTableBody.innerHTML = "";
-  const row = document.createElement("tr");
-  const cell = document.createElement("td");
-  cell.colSpan = 7;
-  cell.className = "metadata";
-  cell.textContent = message;
-  cell.style.textAlign = "center";
-  cell.style.padding = "1rem";
-  cell.style.color = "var(--muted)";
-  row.appendChild(cell);
-  els.rosterTableBody.appendChild(row);
+  renderEmptyTableMessage(els.rosterTableBody, message, {
+    colSpan: 7,
+    cellClassName: "metadata",
+    cellStyles: {
+      textAlign: "center",
+      padding: "1rem",
+      color: "var(--muted)",
+    },
+  });
 }
 
 function renderRoster(players) {
