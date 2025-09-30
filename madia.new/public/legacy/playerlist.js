@@ -47,6 +47,14 @@ async function loadPlayers() {
   if (gameSnap.exists()) {
     const gameName = gameSnap.data().gamename || "(no name)";
     gameBreadcrumb.innerHTML = `&gt; <a href="/legacy/game.html?g=${encodeURIComponent(gameId)}">${escapeHtml(gameName)}</a>`;
+    header?.setNavLinks([
+      { label: "List of Games", href: "/legacy/index.html" },
+      {
+        label: gameName,
+        href: `/legacy/game.html?g=${encodeURIComponent(gameId)}`,
+      },
+      { label: "Player List", current: true },
+    ]);
   }
 
   const playersSnap = await getDocs(collection(gameRef, "players"));
