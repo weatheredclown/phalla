@@ -1764,10 +1764,17 @@ els.postReply.addEventListener("click", async () => {
     return;
   }
   const isOwner = currentGame?.ownerUserId === user.uid;
-  if (!isOwner && currentPlayer && typeof currentPlayer.postsLeft === "number") {
-    if (currentPlayer.postsLeft <= 0) {
-      alert("You have no posts remaining for today.");
-      return;
+  const playerAlive = currentPlayer ? playerIsAlive(currentPlayer) : false;
+  const numericPostsLeft =
+    typeof currentPlayer?.postsLeft === "number" && Number.isFinite(currentPlayer.postsLeft)
+      ? currentPlayer.postsLeft
+      : null;
+  if (!isOwner && currentPlayer) {
+    if (!playerAlive) {
+      if (numericPostsLeft !== null && numericPostsLeft <= 0) {
+        alert("You have already used your final words.");
+        return;
+      }
     }
   }
 
@@ -1971,14 +1978,23 @@ els.postReply.addEventListener("click", async () => {
   els.replyTitle.value = "";
   els.replyBody.value = "";
 
-  if (!isOwner && currentPlayer && typeof currentPlayer.postsLeft === "number") {
-    if (currentPlayer.postsLeft > 0) {
-      const remaining = currentPlayer.postsLeft - 1;
+  if (!isOwner && currentPlayer && !playerAlive) {
+    const startingPostsLeft =
+      numericPostsLeft !== null ? numericPostsLeft : 1;
+    if (startingPostsLeft > 0) {
+      const remaining = Math.max(startingPostsLeft - 1, 0);
       try {
         await updateDoc(doc(db, "games", gameId, "players", user.uid), { postsLeft: remaining });
         currentPlayer.postsLeft = remaining;
       } catch (error) {
         console.warn("Failed to update postsLeft", error);
+      }
+    } else if (numericPostsLeft === null) {
+      try {
+        await updateDoc(doc(db, "games", gameId, "players", user.uid), { postsLeft: 0 });
+        currentPlayer.postsLeft = 0;
+      } catch (error) {
+        console.warn("Failed to set postsLeft after final words", error);
       }
     }
   }
@@ -4605,12 +4621,15 @@ async function handleModeratorSave(row, playerId) {
   }
   const roleValue = roleValueRaw.trim();
   const alive = statusSelect?.value === "alive";
-  const postsRaw = postsInput?.value || "";
-  const parsedPosts = parseInt(postsRaw, 10);
+  const postsRaw = postsInput?.value ?? "";
+  const normalizedPostsRaw = postsRaw.trim();
+  const parsedPosts = parseInt(normalizedPostsRaw, 10);
+  const hasCustomPostsLeft = normalizedPostsRaw.length > 0 && Number.isFinite(parsedPosts);
+  const defaultPostsLeft = alive ? -1 : 1;
   const updates = {
     active: alive,
     alive,
-    postsLeft: Number.isFinite(parsedPosts) ? parsedPosts : -1,
+    postsLeft: hasCustomPostsLeft ? parsedPosts : defaultPostsLeft,
     updatedAt: serverTimestamp(),
   };
   applyCanonicalRoleDefinition(updates, roleValue);

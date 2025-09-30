@@ -13,7 +13,7 @@ This document summarizes the custom server-side logic implemented in each `mafia
 | `default.asp` | Redirects visitors to the games list. | ✅ | Meta refresh redirect in `public/index.html`. |
 | `daysummary.asp` | GM-only day summary, renaming, reset/close/delete controls. | ✅ | `legacy/daysummary.html` + `daysummary.js` owner tools and action log. |
 | `editpost.asp` | Loads a post for editing when a user is signed in. | ✅ | Inline edit buttons in `legacy/game.js`. |
-| `gamedisplay.asp` | Core thread view: posting, role/admin controls, vote + action handling. | ✅ | `legacy/game.html` + `game.js` cover posting, moderation, actions, and render the inline day vote tally table. |
+| `gamedisplay.asp` | Core thread view: posting, role/admin controls, vote + action handling. | ⚠️ | `legacy/game.html` + `game.js` cover posting, moderation, actions, and render the inline day vote tally table, but the modern app still needs the automated vote visualization from the legacy page. |
 | `games.asp` | Lists games grouped by status with last-post metadata. | ✅ | `legacy/index.html` + `legacy.js` live game list. |
 | `helloworld.asp` | Test page opening a DB connection and printing "hello world". | ❌ | No equivalent debug page in `madia.new`. |
 | `login.asp` | Handles username/password sign-in, cookie persistence, and registration. | ✅ | Firebase auth flows in `legacy/login.html` + `login.js` and the shared header. |
@@ -55,8 +55,8 @@ This document summarizes the custom server-side logic implemented in each `mafia
 - **Port notes:** In `legacy/game.js`, owners and authors see "Edit Post" buttons that prompt for new title/body and persist updates back to the Firestore post document.
 
 ### `gamedisplay.asp`
-- **Legacy behavior:** Central hub combining public thread reading/posting, player roster with live vote tallies, GM tools (lock game, advance day, assign roles, kick/replace players), and quick forms to record votes, claims, trusts, and notebook notes.
-- **Port notes:** `legacy/game.html` and `game.js` reimplement joining/leaving, posting with UBB helpers, moderator role/lock/day controls, replace/kick, and player private action forms. The modern page links to a separate roster view but does not yet surface the old inline vote tally table, so automated vote visualization is still outstanding.
+- **Legacy behavior:** Central hub combining public thread reading/posting, player roster with live vote tallies, GM tools (lock game, advance day, assign roles, kick/replace players), and quick forms to record votes, claims, trusts, and notebook notes. Players had unlimited posting while alive (`postsleft = -1`) and, once marked dead, were given a single farewell post (`postsleft = 1`) that flipped to `0` after use. 【F:mafia.old/gamedisplay.asp†L32-L33】【F:mafia.old/gamedisplay.asp†L146-L161】
+- **Port notes:** `legacy/game.html` and `game.js` reimplement joining/leaving, posting with UBB helpers, moderator role/lock/day controls, replace/kick, and player private action forms. The modern page links to a separate roster view but does not yet surface the old inline vote tally table, so automated vote visualization is still outstanding. Posting limits now mirror the legacy rules by allowing unlimited alive posts and a single "last words" message when eliminated. 【F:madia.new/public/legacy/game.js†L1730-L1999】
 
 ### `games.asp`
 - **Legacy behavior:** Groups games into Open/Running/Game Over buckets, shows last post metadata, and indicates whether the viewer has joined.
