@@ -783,6 +783,13 @@ function getAssignedRoleName(player) {
       }
     }
   }
+  const roleDefinitionName = player.roleDefinition?.name;
+  if (typeof roleDefinitionName === "string") {
+    const trimmed = roleDefinitionName.trim();
+    if (trimmed) {
+      return trimmed;
+    }
+  }
   return "";
 }
 
@@ -1336,7 +1343,8 @@ async function loadPrivateChannels() {
   const ownerId = normalizeIdentifier(currentGame?.ownerUserId);
   const isOwner = ownerId && userId === ownerId;
   const assignedRole = getAssignedRoleName(currentPlayer);
-  if (!isOwner && !assignedRole) {
+  const assignedLegacyRoleId = getAssignedLegacyRoleId(currentPlayer);
+  if (!isOwner && !assignedRole && assignedLegacyRoleId === null) {
     clearPrivateChannels();
     return;
   }
