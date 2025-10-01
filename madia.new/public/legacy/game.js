@@ -1637,15 +1637,12 @@ function updateHeaderNav({ joined = false } = {}) {
       label: gameLabel,
       href: `/legacy/game.html?g=${encodeURIComponent(currentGame.id)}`,
     };
-    if (!joined) {
-      gameLink.current = true;
-    }
+    gameLink.current = true;
     links.push(gameLink);
     if (joined) {
       links.push({
         label: "my game",
         href: `/legacy/mygame.html?g=${encodeURIComponent(currentGame.id)}`,
-        current: true,
         italic: true,
       });
     }
