@@ -250,18 +250,18 @@ export function initLegacyHeader({ containerId = "legacyHeader" } = {}) {
       }
       const separator = index === 0 ? "" : " &raquo; ";
       const label = escapeHtml(link.label || "");
+      const formattedLabel = link.italic ? `<i>${label}</i>` : label;
       if (link.current) {
-        const italicized = link.italic ? `<i>${label}</i>` : label;
-        parts.push(`${separator}<strong>${italicized}</strong>`);
+        parts.push(`${separator}<strong>${formattedLabel}</strong>`);
         return;
       }
       if (link.href) {
         parts.push(
-          `${separator}<span class="navbar"><a href="${escapeHtml(link.href)}">${label}</a></span>`
+          `${separator}<span class="navbar"><a href="${escapeHtml(link.href)}">${formattedLabel}</a></span>`
         );
         return;
       }
-      parts.push(`${separator}<span class="navbar">${label}</span>`);
+      parts.push(`${separator}<span class="navbar">${formattedLabel}</span>`);
     });
     if (!parts.length) {
       els.nav.innerHTML = "&nbsp;";
