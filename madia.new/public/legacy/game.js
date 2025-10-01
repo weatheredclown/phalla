@@ -2884,13 +2884,15 @@ function updatePublicActionControls() {
   if (!block) {
     return;
   }
-  const playerActive = currentPlayer ? playerIsAlive(currentPlayer) : false;
+  const isPlayer = !!currentPlayer;
+  const playerActive = isPlayer && playerIsAlive(currentPlayer);
   const gameActive = isGameCurrentlyActive();
   const dayStarted = hasGameDayStarted();
   const lockedForPlayer = isGameLockedForPlayers() && !isOwnerView;
   const canUseActions =
     !!auth.currentUser &&
-    (playerActive || isOwnerView) &&
+    isPlayer &&
+    playerActive &&
     gameActive &&
     dayStarted &&
     !lockedForPlayer;
