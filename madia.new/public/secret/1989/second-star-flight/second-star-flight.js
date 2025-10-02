@@ -1,3 +1,7 @@
+import { mountParticleField } from "../particles.js";
+
+mountParticleField();
+
 const GRID_SIZE = 6;
 const SHADOW_COUNT = 7;
 const LIGHT_DURATION_MS = 8000;

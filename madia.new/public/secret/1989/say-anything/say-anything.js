@@ -1,3 +1,7 @@
+import { mountParticleField } from "../particles.js";
+
+mountParticleField();
+
 const STARTING_FLOW = 72;
 const MAX_FLOW = 100;
 const SYNC_WINDOW_MS = 520;

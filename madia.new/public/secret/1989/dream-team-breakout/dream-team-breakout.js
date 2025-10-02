@@ -1,3 +1,7 @@
+import { mountParticleField } from "../particles.js";
+
+mountParticleField();
+
 const TURN_COUNT = 6;
 const SANITY_MAX = 3;
 const wildcardDeck = ["S", "E", "S", "E", "S", "E"];

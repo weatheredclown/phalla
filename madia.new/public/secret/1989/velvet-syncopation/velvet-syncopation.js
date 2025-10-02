@@ -1,3 +1,7 @@
+import { mountParticleField } from "../particles.js";
+
+mountParticleField();
+
 const chart = [
   { left: "KeyA", right: "KeyL" },
   { left: "KeyS", right: "KeyK" },
