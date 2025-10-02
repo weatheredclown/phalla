@@ -390,6 +390,58 @@ const games = [
     `,
   },
   {
+    id: "vendetta-convoy",
+    name: "Vendetta Convoy",
+    description: "Chain sabotage charges to shepherd the rogue tanker convoy past concealed explosives.",
+    url: "./vendetta-convoy/index.html",
+    thumbnail: `
+      <svg viewBox="0 0 160 120" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Vendetta Convoy preview">
+        <defs>
+          <linearGradient id="convoySky" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="rgba(56,189,248,0.35)" />
+            <stop offset="100%" stop-color="rgba(15,23,42,0.9)" />
+          </linearGradient>
+          <linearGradient id="convoyLane" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0%" stop-color="#38bdf8" />
+            <stop offset="100%" stop-color="#a855f7" />
+          </linearGradient>
+        </defs>
+        <rect x="6" y="8" width="148" height="104" rx="18" fill="rgba(7,11,24,0.92)" stroke="rgba(148,163,184,0.35)" />
+        <rect x="16" y="18" width="128" height="84" rx="16" fill="url(#convoySky)" stroke="rgba(148,163,184,0.28)" />
+        <g transform="translate(30 28)">
+          <rect x="0" y="0" width="100" height="56" rx="12" fill="rgba(10,16,32,0.88)" stroke="rgba(56,189,248,0.35)" />
+          <rect x="8" y="6" width="84" height="44" rx="10" fill="rgba(15,23,42,0.85)" stroke="rgba(168,85,247,0.45)" />
+          <g stroke="rgba(56,189,248,0.25)" stroke-width="1.2">
+            ${Array.from({ length: 3 }, (_, i) => `<line x1="${18 + i * 24}" y1="6" x2="${18 + i * 24}" y2="50" />`).join("")}
+          </g>
+          <g>
+            ${[0, 1, 2, 3].map((i) => `<rect x="${6 + i * 20}" y="12" width="16" height="16" rx="4" fill="rgba(148,163,184,0.35)" stroke="rgba(148,163,184,0.4)" />`).join("")}
+            ${[0, 1, 2].map((i) => `<rect x="${12 + i * 24}" y="30" width="12" height="12" rx="3" fill="rgba(249,115,22,0.6)" stroke="rgba(249,115,22,0.65)" />`).join("")}
+          </g>
+          <g transform="translate(24 14)">
+            <rect x="0" y="16" width="36" height="20" rx="6" fill="rgba(56,189,248,0.72)" stroke="rgba(56,189,248,0.8)" />
+            <rect x="36" y="8" width="16" height="28" rx="6" fill="rgba(168,85,247,0.65)" stroke="rgba(168,85,247,0.75)" />
+            <rect x="52" y="16" width="20" height="20" rx="6" fill="rgba(34,197,94,0.55)" stroke="rgba(34,197,94,0.7)" />
+          </g>
+          <path d="M12 44 Q32 60 52 44 T92 44" fill="none" stroke="url(#convoyLane)" stroke-width="4" stroke-linecap="round" />
+          <g>
+            <circle cx="18" cy="44" r="6" fill="#38bdf8" stroke="rgba(255,255,255,0.4)" />
+            <circle cx="52" cy="44" r="6" fill="#a855f7" stroke="rgba(255,255,255,0.4)" />
+            <circle cx="86" cy="44" r="6" fill="#f97316" stroke="rgba(255,255,255,0.4)" />
+          </g>
+        </g>
+        <g transform="translate(22 20)" stroke="rgba(239,68,68,0.6)" stroke-width="2" stroke-dasharray="4 6">
+          <rect x="0" y="0" width="28" height="20" rx="6" fill="rgba(239,68,68,0.15)" />
+          <rect x="108" y="12" width="28" height="20" rx="6" fill="rgba(239,68,68,0.15)" />
+        </g>
+        <g transform="translate(30 84)">
+          <rect x="0" y="0" width="100" height="18" rx="8" fill="rgba(10,16,32,0.88)" stroke="rgba(56,189,248,0.35)" />
+          <rect x="6" y="4" width="88" height="10" rx="5" fill="rgba(56,189,248,0.35)" stroke="rgba(168,85,247,0.45)" />
+        </g>
+          </svg>
+    `,
+  },
+  {
     id: "kodiak-covenant",
     name: "Kodiak Covenant",
     description: "Coordinate guardian and cub trails while shielding them from the roaming hunter.",
