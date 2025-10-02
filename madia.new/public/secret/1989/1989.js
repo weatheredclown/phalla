@@ -126,6 +126,54 @@ const games = [
     `,
   },
   {
+    id: "culdesac-curiosity",
+    name: "Cul-de-sac Curiosity",
+    description: "Swap gossip to earn dig tokens while paranoia creeps toward a suburban outburst.",
+    url: "./culdesac-curiosity/index.html",
+    thumbnail: `
+      <svg viewBox="0 0 160 120" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Cul-de-sac Curiosity preview">
+        <defs>
+          <linearGradient id="curiositySky" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="rgba(56,189,248,0.85)" />
+            <stop offset="100%" stop-color="rgba(15,23,42,0.9)" />
+          </linearGradient>
+          <linearGradient id="basementGlow" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0%" stop-color="rgba(192,132,252,0.65)" />
+            <stop offset="100%" stop-color="rgba(56,189,248,0.4)" />
+          </linearGradient>
+          <linearGradient id="paranoiaMeter" x1="0" y1="0" x2="1" y2="0">
+            <stop offset="0%" stop-color="rgba(248,113,113,0.9)" />
+            <stop offset="100%" stop-color="rgba(251,191,36,0.9)" />
+          </linearGradient>
+        </defs>
+        <rect x="8" y="8" width="144" height="104" rx="18" fill="rgba(6,10,22,0.92)" stroke="rgba(148,163,184,0.35)" />
+        <rect x="20" y="20" width="120" height="48" rx="14" fill="url(#curiositySky)" stroke="rgba(148,163,184,0.28)" />
+        <g transform="translate(38 28)">
+          <polygon points="24,0 48,18 0,18" fill="rgba(226,232,240,0.85)" stroke="rgba(148,163,184,0.35)" />
+          <rect x="6" y="18" width="36" height="20" rx="6" fill="rgba(15,23,42,0.85)" stroke="rgba(148,163,184,0.35)" />
+          <rect x="14" y="24" width="8" height="10" fill="rgba(56,189,248,0.75)" />
+          <rect x="28" y="24" width="8" height="10" fill="rgba(249,115,22,0.75)" />
+        </g>
+        <g transform="translate(20 70)">
+          <rect x="0" y="0" width="120" height="34" rx="10" fill="rgba(9,13,28,0.9)" stroke="rgba(148,163,184,0.28)" />
+          <rect x="10" y="8" width="32" height="18" rx="6" fill="rgba(226,232,240,0.1)" stroke="rgba(148,163,184,0.25)" />
+          <rect x="50" y="8" width="32" height="18" rx="6" fill="rgba(226,232,240,0.1)" stroke="rgba(148,163,184,0.25)" />
+          <rect x="90" y="8" width="20" height="18" rx="6" fill="rgba(226,232,240,0.1)" stroke="rgba(148,163,184,0.25)" />
+          <rect x="12" y="10" width="12" height="14" rx="4" fill="rgba(248,250,252,0.85)" />
+          <rect x="54" y="10" width="12" height="14" rx="4" fill="rgba(251,191,36,0.75)" />
+          <rect x="94" y="10" width="12" height="14" rx="4" fill="rgba(192,132,252,0.75)" />
+        </g>
+        <rect x="28" y="92" width="104" height="10" rx="5" fill="rgba(15,23,42,0.8)" stroke="rgba(148,163,184,0.25)" />
+        <rect x="30" y="94" width="70" height="6" rx="3" fill="url(#paranoiaMeter)" />
+        <g transform="translate(110 28)">
+          <rect x="0" y="0" width="22" height="40" rx="8" fill="rgba(15,23,42,0.85)" stroke="rgba(148,163,184,0.28)" />
+          <rect x="4" y="26" width="14" height="10" rx="4" fill="url(#basementGlow)" />
+          <circle cx="11" cy="12" r="6" fill="rgba(192,132,252,0.8)" stroke="rgba(248,250,252,0.6)" stroke-width="1.5" />
+        </g>
+      </svg>
+    `,
+  },
+  {
     id: "argumentum",
     name: "Argumentum",
 
