@@ -42,3 +42,11 @@
 - **Routing challenge:** Players must lock in a safe path before the dice settle on a high-risk face, threading alternate highways, detours, and rest stops to avoid hazard nodes while still clearing every checkpoint in sequence.
 - **Escalating threats:** Rival crews leak false traffic reports, shifting hazard tiles mid-turn, and patrol markers sweep ahead of the player whenever consecutive high-risk icons appear.
 - **Actuation twist:** Earning a rare ``Bypass`` actuation cancels one checkpoint requirement, but forces an immediate reroute that consumes the current movement roll and shifts the risk icons for the next throw.
+
+## Level 44: Say Anything...
+- **Inspirational roots:** Channels the heartfelt late-night driveway scene where a trench-coated romantic hoists a boombox skyward to keep the conversation alive.
+- **Anchor pieces:** Dual emotional frequency tracks for Lloyd and Diane, a central Communication Flow meter, and a rechargeable Boombox Charge that bridges threatening silences.
+- **Core mechanic:** Harmonic Frequency Matching—pairs of thought blocks slide down each lane and must be answered in near-unison to sustain the shared dialogue.
+- **Dynamic blockers:** "Miscommunication" clouds spawn whenever Static, Guarded, or Doubtful blocks appear; missed sync windows or uncharged silences grow the cloud stack and drain the meter.
+- **Actuation twist:** Spending a Boombox Charge during scripted silence gaps keeps the flow alive, while lining up a positive combo (Love, Trust, Reassure) wipes all active miscommunication clouds in a "Commitment" burst.
+- **Difficulty curve:** Early beats introduce single positive pairings, then weave in offset responses, longer silence gaps, and alternating negative intrusions that demand rapid Boombox timing before a three-beat finale of perfect positives triggers a sweeping payoff.
