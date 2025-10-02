@@ -278,6 +278,56 @@ const games = [
     `,
   },
   {
+    id: "gates-of-eastside",
+    name: "Gates of Eastside",
+    description: "Expel the hall blockers and channel MBST charge before chaos rings the alarm.",
+    url: "./gates-of-eastside/index.html",
+    thumbnail: `
+      <svg viewBox="0 0 160 120" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Gates of Eastside preview">
+        <defs>
+          <linearGradient id="leanGlow" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0%" stop-color="#38bdf8" />
+            <stop offset="100%" stop-color="#facc15" />
+          </linearGradient>
+          <linearGradient id="leanFloor" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="rgba(56,189,248,0.25)" />
+            <stop offset="100%" stop-color="rgba(15,23,42,0.85)" />
+          </linearGradient>
+        </defs>
+        <rect x="8" y="10" width="144" height="100" rx="18" fill="rgba(6,10,24,0.92)" stroke="rgba(148,163,184,0.35)" />
+        <rect x="18" y="22" width="124" height="76" rx="16" fill="url(#leanFloor)" stroke="rgba(148,163,184,0.35)" />
+        <g transform="translate(28 32)">
+          <rect x="0" y="0" width="28" height="56" rx="10" fill="rgba(15,23,42,0.85)" stroke="rgba(56,189,248,0.45)" />
+          <rect x="0" y="18" width="28" height="20" rx="8" fill="rgba(248,113,113,0.45)" />
+          <rect x="46" y="0" width="28" height="56" rx="10" fill="rgba(15,23,42,0.85)" stroke="rgba(250,204,21,0.45)" />
+          <rect x="46" y="18" width="28" height="20" rx="8" fill="rgba(250,204,21,0.45)" />
+          <rect x="92" y="0" width="28" height="56" rx="10" fill="rgba(15,23,42,0.85)" stroke="rgba(45,212,191,0.45)" />
+          <rect x="92" y="18" width="28" height="20" rx="8" fill="rgba(45,212,191,0.4)" />
+        </g>
+        <g transform="translate(34 28)" stroke="rgba(148,163,184,0.4)" stroke-width="1.2">
+          ${Array.from({ length: 3 }, (_, i) => `<line x1="0" y1="${12 + i * 16}" x2="112" y2="${12 + i * 16}" />`).join("")}
+        </g>
+        <g transform="translate(32 24)">
+          <rect x="16" y="64" width="84" height="12" rx="6" fill="rgba(15,23,42,0.9)" stroke="rgba(148,163,184,0.4)" />
+          <rect x="20" y="66" width="46" height="8" rx="4" fill="rgba(56,189,248,0.5)" />
+          <rect x="70" y="66" width="26" height="8" rx="4" fill="rgba(34,197,94,0.55)" />
+        </g>
+        <g transform="translate(42 18)">
+          <rect x="0" y="0" width="76" height="20" rx="8" fill="rgba(15,23,42,0.85)" stroke="url(#leanGlow)" />
+          <rect x="6" y="6" width="24" height="8" rx="3" fill="rgba(56,189,248,0.6)" />
+          <rect x="38" y="6" width="20" height="8" rx="3" fill="rgba(250,204,21,0.6)" />
+          <rect x="62" y="6" width="8" height="8" rx="3" fill="rgba(45,212,191,0.6)" />
+        </g>
+        <g transform="translate(36 44)">
+          <circle cx="0" cy="0" r="6" fill="#38bdf8" stroke="rgba(255,255,255,0.6)" />
+          <circle cx="40" cy="12" r="6" fill="#facc15" stroke="rgba(255,255,255,0.6)" />
+          <circle cx="80" cy="-4" r="6" fill="#2dd4bf" stroke="rgba(255,255,255,0.6)" />
+          <path d="M0 0 L40 12 L80 -4" fill="none" stroke="url(#leanGlow)" stroke-width="3" stroke-linecap="round" />
+        </g>
+      </svg>
+    `,
+  },
+  {
     id: "velvet-syncopation",
     name: "Velvet Syncopation",
     description: "Three-lane rhythm rehearsal with the lounge trio's velvet slips.",
