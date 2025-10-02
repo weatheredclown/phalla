@@ -552,6 +552,7 @@ async function loadGame() {
   }
   const g = gSnap.data();
   currentGame = { id: gameId, ...g };
+  const gameDay = getCurrentDay();
   updateHeaderNav({ joined: false });
   isOwnerView = !!(auth.currentUser && g.ownerUserId === auth.currentUser.uid);
   els.gameTitle.textContent = g.gamename || "(no name)";
@@ -560,7 +561,7 @@ async function loadGame() {
     els.daySummary.style.display = isOwnerView ? "inline-block" : "none";
   }
   if (els.privateActionDay) {
-    els.privateActionDay.value = g.day ?? 0;
+    els.privateActionDay.value = gameDay;
   }
 
   // Meta row (last post, players, day, open)
@@ -613,7 +614,7 @@ async function loadGame() {
         </div>
       </td>
       <td class="alt2">${playerCount}</td>
-      <td class="alt1">${g.day ?? 0}</td>
+      <td class="alt1">${gameDay}</td>
       <td class="alt2">${g.open ? "Yes" : "No"}</td>
     `)
   );
@@ -1790,7 +1791,7 @@ els.postReply.addEventListener("click", async () => {
   setPublicActionsStatus("");
 
   const actionsToRecord = [];
-  const currentDay = currentGame?.day ?? 0;
+  const currentDay = getCurrentDay();
 
   let voteSelected = false;
   let unvoteSelected = false;
@@ -2113,7 +2114,7 @@ els.voteRecordForm?.addEventListener("submit", async (event) => {
   const target = targetId ? findPlayerById(targetId) : null;
   const targetName = target?.name || "";
   const notes = (els.voteNotes?.value || "").trim();
-  const day = currentGame?.day ?? 0;
+  const day = getCurrentDay();
   if (!targetId) {
     setPlayerToolsStatus("Enter a vote target first.", "error");
     return;
@@ -2179,7 +2180,7 @@ els.claimRecordForm?.addEventListener("submit", async (event) => {
     selectedRole === CUSTOM_ROLE_OPTION_VALUE
       ? (els.claimRoleCustom?.value || "").trim()
       : selectedRole.trim();
-  const day = currentGame?.day ?? 0;
+  const day = getCurrentDay();
   if (!role) {
     setPlayerToolsStatus("Enter a role to claim.", "error");
     return;
@@ -2216,7 +2217,7 @@ els.notebookRecordForm?.addEventListener("submit", async (event) => {
   const target = targetId ? findPlayerById(targetId) : null;
   const targetName = target?.name || "";
   const notes = (els.notebookNotes?.value || "").trim();
-  const day = currentGame?.day ?? 0;
+  const day = getCurrentDay();
   if (!targetId) {
     setPlayerToolsStatus("Choose a notebook target first.", "error");
     return;
@@ -2303,13 +2304,13 @@ function formatDate(value) {
 
 function parseDayInput(input) {
   if (!input) {
-    return currentGame?.day ?? 0;
+    return getCurrentDay();
   }
-  const value = parseInt(input.value, 10);
-  if (Number.isFinite(value) && value >= 0) {
-    return value;
+  const parsed = parseDayNumber(input.value);
+  if (parsed !== null && parsed >= 0) {
+    return parsed;
   }
-  return currentGame?.day ?? 0;
+  return getCurrentDay();
 }
 
 function setPlayerToolsStatus(message, type = "info") {
@@ -2363,22 +2364,11 @@ function coerceBoolean(value, defaultValue = false) {
 }
 
 function getCurrentGameDay() {
-  if (!currentGame) {
-    return 0;
-  }
-  const rawDay = currentGame.day;
-  if (typeof rawDay === "number") {
-    return rawDay;
-  }
-  if (typeof rawDay === "string") {
-    const parsed = parseInt(rawDay, 10);
-    return Number.isFinite(parsed) ? parsed : 0;
-  }
-  return 0;
+  return getCurrentDay();
 }
 
 function hasGameDayStarted() {
-  return getCurrentGameDay() > 0;
+  return getCurrentDay() > 0;
 }
 
 function isGameCurrentlyActive() {
@@ -2483,6 +2473,33 @@ function normalizeIdentifier(value) {
     return value.trim();
   }
   return String(value).trim();
+}
+
+function parseDayNumber(value) {
+  if (value === null || value === undefined) {
+    return null;
+  }
+  if (typeof value === "number") {
+    return Number.isFinite(value) ? value : null;
+  }
+  if (typeof value === "string") {
+    const trimmed = value.trim();
+    if (!trimmed) {
+      return null;
+    }
+    const parsed = Number.parseInt(trimmed, 10);
+    return Number.isFinite(parsed) ? parsed : null;
+  }
+  return null;
+}
+
+function normalizeDayValue(value, defaultValue = 0) {
+  const parsed = parseDayNumber(value);
+  return parsed === null ? defaultValue : parsed;
+}
+
+function getCurrentDay() {
+  return normalizeDayValue(currentGame?.day, 0);
 }
 
 function targetsMatch(a = {}, b = {}) {
@@ -2768,8 +2785,8 @@ function shouldInvalidateAction(data = {}, context = {}) {
   if (!dataCategory || dataCategory !== contextCategory) {
     return false;
   }
-  const dataDay = data.day ?? 0;
-  const contextDay = context.day ?? 0;
+  const dataDay = normalizeDayValue(data.day);
+  const contextDay = normalizeDayValue(context.day);
   switch (contextCategory) {
     case "private": {
       const dataAction = normalizeActionName(data.actionName);
@@ -3806,7 +3823,7 @@ async function renderVoteTallies() {
   }
   section.style.display = "block";
   body.innerHTML = "";
-  const day = currentGame.day ?? 0;
+  const day = getCurrentDay();
   if (status) {
     status.textContent = `Vote tally · Day ${day}`;
   }
@@ -3849,7 +3866,7 @@ async function renderVoteTallies() {
   const extraTargets = new Map();
   snapshot.forEach((docSnap) => {
     const data = docSnap.data() || {};
-    if ((data.day ?? 0) !== day) {
+    if (normalizeDayValue(data.day) !== day) {
       return;
     }
     if (data.valid === false) {
@@ -3965,7 +3982,7 @@ async function ensureActionsLoadedForDays(days = []) {
     return;
   }
   const numericDays = days
-    .map((value) => (Number.isFinite(value) ? value : null))
+    .map((value) => normalizeDayValue(value, null))
     .filter((value) => value !== null);
   const missing = numericDays.filter((day) => !actionsByDayCache.has(day));
   if (!missing.length) {
@@ -3988,10 +4005,11 @@ async function ensureActionsLoadedForDays(days = []) {
 }
 
 function getActionsForDay(day) {
-  if (!Number.isFinite(day)) {
+  const normalizedDay = normalizeDayValue(day, null);
+  if (normalizedDay === null) {
     return [];
   }
-  return actionHistoryContext.actionsByDay.get(day) || [];
+  return actionHistoryContext.actionsByDay.get(normalizedDay) || [];
 }
 
 function isPlayerBlockedOnDay(playerId, day) {
@@ -4044,8 +4062,8 @@ function getFirstActionForPlayerOnDay(playerId, day, options = {}) {
 }
 
 function describeSeerResolution(action = {}) {
-  const day = action.day ?? 0;
-  const currentDay = currentGame?.day ?? 0;
+  const day = normalizeDayValue(action.day);
+  const currentDay = getCurrentDay();
   if (day === currentDay) {
     return null;
   }
@@ -4077,8 +4095,8 @@ function describeSeerResolution(action = {}) {
 }
 
 function describeTrackerResolution(action = {}) {
-  const day = action.day ?? 0;
-  const currentDay = currentGame?.day ?? 0;
+  const day = normalizeDayValue(action.day);
+  const currentDay = getCurrentDay();
   if (day === currentDay) {
     return null;
   }
@@ -4105,8 +4123,8 @@ function describeTrackerResolution(action = {}) {
 }
 
 function describeBlockResolution(action = {}) {
-  const day = action.day ?? 0;
-  const currentDay = currentGame?.day ?? 0;
+  const day = normalizeDayValue(action.day);
+  const currentDay = getCurrentDay();
   if (day === currentDay) {
     return null;
   }
@@ -4179,8 +4197,8 @@ function describeActionStatus(action = {}) {
     }
   }
   const category = normalizeActionName(action.category);
-  const day = action.day ?? 0;
-  const currentDay = currentGame?.day ?? 0;
+  const day = normalizeDayValue(action.day);
+  const currentDay = getCurrentDay();
   if (category === "vote") {
     return day === currentDay ? "Pending" : "Counted";
   }
@@ -4266,7 +4284,7 @@ async function renderActionHistory() {
     return;
   }
   actions.sort((a, b) => {
-    const dayDiff = (b.day ?? 0) - (a.day ?? 0);
+    const dayDiff = normalizeDayValue(b.day) - normalizeDayValue(a.day);
     if (dayDiff !== 0) {
       return dayDiff;
     }
@@ -4275,7 +4293,7 @@ async function renderActionHistory() {
   const uniqueDays = Array.from(
     new Set(
       actions
-        .map((action) => (Number.isFinite(action.day) ? action.day : null))
+        .map((action) => normalizeDayValue(action.day, null))
         .filter((day) => day !== null)
     )
   );
@@ -4288,7 +4306,7 @@ async function renderActionHistory() {
   }
   const grouped = new Map();
   actions.forEach((action) => {
-    const dayValue = action.day ?? 0;
+    const dayValue = normalizeDayValue(action.day);
     if (!grouped.has(dayValue)) {
       grouped.set(dayValue, []);
     }
@@ -4662,7 +4680,7 @@ async function handleModeratorKick(playerId) {
     setModeratorStatus("Only the owner can remove players.", "error");
     return;
   }
-  if ((currentGame.day ?? 0) > 0) {
+  if (getCurrentDay() > 0) {
     setModeratorStatus("Players can only be removed before the game starts (Day 0).", "error");
     return;
   }
