@@ -140,6 +140,46 @@ const games = [
     `,
   },
   {
+    id: "dream-team-breakout",
+    name: "Dream Team Breakout",
+    description: "Plan six simultaneous moves to sneak the quartet into the stadium gates.",
+    url: "./dream-team-breakout/index.html",
+    thumbnail: `
+      <svg viewBox="0 0 160 120" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Dream Team Breakout preview">
+        <defs>
+          <linearGradient id="cityGlow" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0%" stop-color="#38bdf8" />
+            <stop offset="100%" stop-color="#7b5bff" />
+          </linearGradient>
+        </defs>
+        <rect x="6" y="6" width="148" height="108" rx="18" fill="rgba(9, 14, 28, 0.95)" stroke="rgba(120,255,255,0.4)" />
+        <g transform="translate(24 20)">
+          <rect x="0" y="0" width="112" height="80" rx="14" fill="rgba(10,18,36,0.9)" stroke="url(#cityGlow)" />
+          <g stroke="rgba(120,255,255,0.25)" stroke-width="1">
+            ${Array.from({ length: 3 }, (_, i) => `<line x1="16" y1="${20 + i * 20}" x2="96" y2="${20 + i * 20}" />`).join("")}
+            ${Array.from({ length: 3 }, (_, i) => `<line x1="${32 + i * 20}" y1="8" x2="${32 + i * 20}" y2="72" />`).join("")}
+          </g>
+          <g>
+            <rect x="84" y="8" width="20" height="16" rx="6" fill="rgba(59,130,246,0.45)" stroke="rgba(56,189,248,0.8)" />
+            <rect x="84" y="32" width="20" height="16" rx="6" fill="rgba(59,130,246,0.3)" stroke="rgba(123,91,255,0.6)" />
+            <rect x="84" y="56" width="20" height="16" rx="6" fill="rgba(59,130,246,0.3)" stroke="rgba(123,91,255,0.6)" />
+          </g>
+          <g>
+            <circle cx="32" cy="20" r="8" fill="#facc15" stroke="rgba(17,24,39,0.85)" />
+            <circle cx="52" cy="20" r="8" fill="#f97316" stroke="rgba(17,24,39,0.85)" />
+            <circle cx="32" cy="44" r="8" fill="#38bdf8" stroke="rgba(17,24,39,0.85)" />
+            <circle cx="52" cy="60" r="8" fill="#ec4899" stroke="rgba(17,24,39,0.85)" />
+          </g>
+          <g stroke="rgba(234,179,8,0.7)" stroke-width="2">
+            <path d="M24 52h20" stroke-dasharray="2 4" />
+            <circle cx="44" cy="52" r="4" fill="rgba(250,204,21,0.35)" />
+          </g>
+          <rect x="20" y="8" width="12" height="12" rx="4" fill="rgba(34,197,94,0.35)" stroke="rgba(34,197,94,0.9)" />
+        </g>
+      </svg>
+    `,
+  },
+  {
     id: "speed-zone",
     name: "Speed Zone",
     description: "Chart a cannonball sprint past sirens, tolls, and neon checkpoints.",
