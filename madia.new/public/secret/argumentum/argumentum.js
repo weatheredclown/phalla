@@ -4,6 +4,31 @@ const TETRA_HEIGHT = 20;
 const TRANSFORM_COST = { earth: 20, water: 30 };
 const SHIFT_THRESHOLD = 100;
 
+const infusionMapping = {
+  sedimentary: "geolocked",
+  igneous: "volcanic",
+  metamorphic: "flux",
+  crystal: "prismatic"
+};
+
+const infusionLabels = {
+  volcanic: "VO",
+  geolocked: "GL",
+  flux: "FX",
+  prismatic: "PR"
+};
+
+const infusionTargets = {
+  volcanic: "igneous",
+  geolocked: "sedimentary",
+  flux: "metamorphic",
+  prismatic: "crystal"
+};
+
+function formatInfusionName(type) {
+  return type ? type.charAt(0).toUpperCase() + type.slice(1) : "";
+}
+
 const rockTypes = [
   { id: "sedimentary", label: "Se", meter: "earth" },
   { id: "igneous", label: "Ig", meter: "fire" },
@@ -82,6 +107,8 @@ const pieceQueueEl = document.getElementById("piece-queue");
 const tetraminoBoardEl = document.getElementById("tetramino-board");
 const flowGridEl = document.getElementById("flow-grid");
 const eventLogEl = document.getElementById("event-log");
+const bridgeInventoryEl = document.getElementById("bridge-inventory");
+const bridgeHintEl = document.getElementById("bridge-hint");
 const chargeTransformBtn = document.getElementById("charge-transform");
 const cancelTransformBtn = document.getElementById("cancel-transform");
 const transformToolbar = document.getElementById("transform-toolbar");
@@ -104,10 +131,14 @@ let pieceQueue = [];
 let activePiece = null;
 let dropIntervalId = null;
 let dropDelay = 900;
-let availableBridges = 0;
+let bridgeSchematics = [];
 let routeMode = false;
 let routeSelection = [];
+let bridgePreview = null;
+let bridgePreviewTimeout = null;
+let pendingInfusions = [];
 let shiftOrientation = 0;
+let planIdCounter = 0;
 
 const flowNodes = initializeFlowNodes();
 
@@ -131,7 +162,16 @@ function initializeMatchBoard() {
 
 function createRandomTile() {
   const base = rockTypes[Math.floor(Math.random() * rockTypes.length)];
-  return { ...base, empowered: false };
+  return createTile(base);
+}
+
+function createTile(base) {
+  return { ...base, empowered: false, infusion: null };
+}
+
+function createTileOfType(id) {
+  const base = rockTypes.find((rock) => rock.id === id);
+  return base ? createTile(base) : createRandomTile();
 }
 
 function createsMatch(x, y) {
@@ -154,14 +194,41 @@ function renderMatchBoard() {
     row.forEach((tile, x) => {
       const tileEl = document.createElement("button");
       tileEl.type = "button";
-      tileEl.className = `rock-tile rock-${tile.id}`;
+      const classes = ["rock-tile", `rock-${tile.id}`];
       if (tile.empowered) {
-        tileEl.classList.add("rock-empowered");
+        classes.push("rock-empowered");
       }
-      tileEl.textContent = tile.label;
+      if (tile.infusion) {
+        classes.push("rock-infused", `rock-${tile.infusion}`);
+      }
+      tileEl.className = classes.join(" ");
       tileEl.setAttribute("data-x", x);
       tileEl.setAttribute("data-y", y);
+      const ariaLabel = [`${tile.label} rock`];
+      if (tile.empowered) {
+        ariaLabel.push("empowered");
+      }
+      if (tile.infusion) {
+        ariaLabel.push(`${tile.infusion} infusion`);
+      }
+      tileEl.setAttribute("aria-label", ariaLabel.join(", "));
+      const label = document.createElement("span");
+      label.className = "rock-label";
+      label.textContent = tile.label;
+      tileEl.append(label);
+      if (tile.infusion) {
+        const badge = document.createElement("span");
+        badge.className = `rock-state ${tile.infusion}`;
+        badge.textContent = infusionLabels[tile.infusion] ?? tile.infusion.slice(0, 2).toUpperCase();
+        tileEl.append(badge);
+        tileEl.title = `${tile.label} — ${tile.infusion} infusion`;
+      } else {
+        tileEl.title = tile.label;
+      }
       tileEl.addEventListener("click", () => onTileClick(x, y));
+      if (selectedTile && selectedTile.x === x && selectedTile.y === y) {
+        tileEl.classList.add("selected");
+      }
       matchBoardEl.append(tileEl);
       matchNodes.push(tileEl);
     });
@@ -286,8 +353,9 @@ function findAllMatches() {
 
 function resolveMatches(matches) {
   const matchSummary = new Map();
+  const infusionSummary = { volcanic: 0, geolocked: 0, flux: 0, prismatic: 0 };
+  const geolockedAnchors = [];
   matches.forEach(({ x, y, tile }) => {
-    const key = `${x}-${y}`;
     matchBoard[y][x] = null;
     const data = matchSummary.get(tile.id) ?? { count: 0, empowered: 0, meter: tile.meter };
     data.count += 1;
@@ -295,10 +363,17 @@ function resolveMatches(matches) {
       data.empowered += 1;
     }
     matchSummary.set(tile.id, data);
+    if (tile.infusion && infusionSummary[tile.infusion] !== undefined) {
+      infusionSummary[tile.infusion] += 1;
+      if (tile.infusion === "geolocked") {
+        geolockedAnchors.push({ x, id: tile.id });
+      }
+    }
   });
 
   collapseColumns();
   refillColumns();
+  const restoredColumns = reinforceGeolockedAnchors(geolockedAnchors);
   renderMatchBoard();
 
   matchSummary.forEach((data, id) => {
@@ -306,6 +381,66 @@ function resolveMatches(matches) {
     addResources(rockTypes.find((rock) => rock.id === id).meter, data.count * 8 + data.empowered * 12);
     enqueueTetramino(id, data.count, data.empowered);
   });
+
+  applyInfusionRewards(infusionSummary, restoredColumns);
+  applyPendingInfusions();
+}
+
+function reinforceGeolockedAnchors(anchors) {
+  if (anchors.length === 0) {
+    return 0;
+  }
+  const columns = new Map();
+  anchors.forEach(({ x, id }) => {
+    if (!columns.has(x)) {
+      columns.set(x, id);
+    }
+  });
+  columns.forEach((id, x) => {
+    const replacement = createTileOfType(id);
+    replacement.empowered = true;
+    matchBoard[0][x] = replacement;
+  });
+  return columns.size;
+}
+
+function applyInfusionRewards(infusionSummary, restoredColumns) {
+  if (!infusionSummary) {
+    return;
+  }
+  if (infusionSummary.volcanic) {
+    addResources("fire", infusionSummary.volcanic * 14);
+    enqueueTetramino("igneous", infusionSummary.volcanic, 0);
+    const surgeText = infusionSummary.volcanic === 1 ? "surge" : "surges";
+    logEvent(`Volcanic infusion ignited ${infusionSummary.volcanic} bonus fire ${surgeText}.`);
+  }
+  if (infusionSummary.flux) {
+    addResources("water", infusionSummary.flux * 10);
+    resourceMeterState.shift = Math.min(100, resourceMeterState.shift + infusionSummary.flux * 12);
+    updateMeters();
+    logEvent(`Flux infusion accelerated shift charge across ${infusionSummary.flux} rock${
+      infusionSummary.flux > 1 ? "s" : ""
+    }.`);
+  }
+  if (infusionSummary.prismatic) {
+    addResources("earth", infusionSummary.prismatic * 6);
+    addResources("fire", infusionSummary.prismatic * 6);
+    addResources("water", infusionSummary.prismatic * 6);
+    addResources("shift", infusionSummary.prismatic * 10);
+    logEvent(`Prismatic resonance cascaded through ${infusionSummary.prismatic} match${
+      infusionSummary.prismatic > 1 ? "es" : ""
+    }.`);
+  }
+  if (infusionSummary.geolocked) {
+    const columnText = restoredColumns ?? 0;
+    if (columnText > 0) {
+      logEvent(
+        `Geolocked memory reformed ${columnText} column${columnText === 1 ? "" : "s"} with empowered anchors.`
+      );
+    } else {
+      logEvent("Geolocked memory fortified existing anchors.");
+    }
+  }
 }
 
 function collapseColumns() {
@@ -428,6 +563,7 @@ function placePiece() {
     return;
   }
   const placedId = activePiece.id;
+  const placedRotation = activePiece.rotation;
   const matrix = pieceDefinitions[activePiece.id].rotations[activePiece.rotation];
   for (let y = 0; y < matrix.length; y += 1) {
     for (let x = 0; x < matrix[y].length; x += 1) {
@@ -447,7 +583,7 @@ function placePiece() {
   activePiece = null;
   const cleared = clearLines();
   if (cleared > 0) {
-    handleLineClear(cleared, placedId);
+    handleLineClear(cleared, placedId, placedRotation);
   }
   spawnNextPiece();
 }
@@ -468,11 +604,11 @@ function clearLines() {
   return cleared;
 }
 
-function handleLineClear(count, id) {
+function handleLineClear(count, id, rotationIndex = 0) {
   const awardType = id ?? "sedimentary";
   logEvent(`Cleared ${count} reactor line${count > 1 ? "s" : ""}. Bridges readied.`);
   addResources(mapPieceToMeter(awardType), 14 * count);
-  extendFlowWithBridges(count, awardType);
+  extendFlowWithBridges(count, awardType, rotationIndex);
 }
 
 function mapPieceToMeter(id) {
@@ -634,13 +770,15 @@ function initializeFlowNodes() {
     if (conduits.has(i)) {
       kind = "conduit";
     }
-    nodes.push({ kind, bridged: false });
+    nodes.push({ kind, bridged: false, locked: false, schematic: null });
   }
   return nodes;
 }
 
 function renderFlowGrid() {
   flowGridEl.innerHTML = "";
+  const previewCells = new Set(bridgePreview?.cells ?? []);
+  const previewValid = bridgePreview?.valid ?? false;
   flowNodes.forEach((node, index) => {
     const cell = document.createElement("button");
     cell.type = "button";
@@ -653,12 +791,20 @@ function renderFlowGrid() {
       cell.textContent = "C";
     } else if (node.bridged) {
       cell.classList.add("bridge");
-      cell.textContent = "B";
+      if (node.locked) {
+        cell.classList.add("locked");
+        cell.textContent = "";
+      } else {
+        cell.textContent = "B";
+      }
     } else {
       cell.textContent = "";
     }
     if (routeSelection.includes(index)) {
       cell.classList.add("route-selected");
+    }
+    if (previewCells.has(index)) {
+      cell.classList.add(previewValid ? "bridge-preview" : "bridge-invalid");
     }
     cell.addEventListener("click", () => onFlowNodeClick(index));
     flowGridEl.append(cell);
@@ -679,41 +825,228 @@ function onFlowNodeClick(index) {
     renderFlowGrid();
     return;
   }
-  if (availableBridges <= 0) {
-    logEvent("No forged bridges ready. Clear reactor lines to craft more.");
+  if (bridgeSchematics.length === 0) {
+    logEvent("No schematics ready. Clear reactor lines to craft more.");
+    setBridgePreview([index], false);
     return;
   }
-  node.bridged = true;
-  availableBridges -= 1;
-  routeSelection.push(index);
-  logEvent("Installed a bridge segment into the flow trails.");
-  renderFlowGrid();
-  updateRouteButton();
-  evaluateNetwork();
+  attemptPlaceSchematic(index);
 }
 
-function extendFlowWithBridges(count, id) {
-  logEvent(`Stored ${count} bridge segment${count > 1 ? "s" : ""} for the network.`);
+function extendFlowWithBridges(count, id, rotationIndex = 0) {
+  const plan = createBridgePlan(id, rotationIndex);
+  if (!plan) {
+    return;
+  }
+  for (let i = 0; i < count; i += 1) {
+    bridgeSchematics.push({ ...plan, uid: `${plan.id}-${planIdCounter}` });
+    planIdCounter += 1;
+  }
+  logEvent(
+    `Drafted ${count} ${plan.label} schematic${count > 1 ? "s" : ""} from the reactor.`
+  );
   routeMode = true;
-  availableBridges += count;
   updateRouteButton();
+  updateBridgeInventory();
+  updateBridgeHint();
   renderFlowGrid();
-  evaluateNetwork(id);
 }
 
 function updateRouteButton() {
   routeToggleBtn.textContent = routeMode
-    ? `Routing Active (${availableBridges})`
-    : `Plan Routes (${availableBridges})`;
+    ? `Routing Active (${bridgeSchematics.length})`
+    : `Plan Routes (${bridgeSchematics.length})`;
 }
 
 function toggleRouteMode() {
   routeMode = !routeMode;
   if (!routeMode) {
     routeSelection = [];
+    if (bridgePreviewTimeout) {
+      window.clearTimeout(bridgePreviewTimeout);
+      bridgePreviewTimeout = null;
+    }
+    bridgePreview = null;
   }
   updateRouteButton();
+  updateBridgeHint();
   renderFlowGrid();
+}
+
+function createBridgePlan(id, rotationIndex = 0) {
+  const definition = pieceDefinitions[id];
+  if (!definition) {
+    return null;
+  }
+  const rotation = definition.rotations[rotationIndex] ?? definition.rotations[0];
+  const cells = [];
+  rotation.forEach((row, y) => {
+    row.forEach((value, x) => {
+      if (value) {
+        cells.push({ x, y });
+      }
+    });
+  });
+  if (cells.length === 0) {
+    return null;
+  }
+  const minX = Math.min(...cells.map((cell) => cell.x));
+  const minY = Math.min(...cells.map((cell) => cell.y));
+  const normalized = cells.map((cell) => ({ x: cell.x - minX, y: cell.y - minY }));
+  const width = Math.max(...normalized.map((cell) => cell.x)) + 1;
+  const height = Math.max(...normalized.map((cell) => cell.y)) + 1;
+  return {
+    id,
+    rotation: rotationIndex,
+    cells: normalized,
+    width,
+    height,
+    label: mapPieceToSchematicLabel(id)
+  };
+}
+
+function mapPieceToSchematicLabel(id) {
+  switch (id) {
+    case "igneous":
+      return "Volcanic Span";
+    case "metamorphic":
+      return "Flux Channel";
+    case "crystal":
+      return "Prism Arch";
+    default:
+      return "Stonework Bridge";
+  }
+}
+
+function attemptPlaceSchematic(anchorIndex) {
+  const plan = bridgeSchematics[0];
+  if (!plan) {
+    return;
+  }
+  const baseRow = Math.floor(anchorIndex / 6);
+  const baseCol = anchorIndex % 6;
+  const targetCells = [];
+  let valid = true;
+  plan.cells.forEach((cell) => {
+    const row = baseRow + cell.y;
+    const col = baseCol + cell.x;
+    if (row < 0 || row >= 6 || col < 0 || col >= 6) {
+      valid = false;
+      return;
+    }
+    const index = row * 6 + col;
+    const target = flowNodes[index];
+    if (!target || target.kind !== "empty" || target.bridged) {
+      valid = false;
+      return;
+    }
+    targetCells.push(index);
+  });
+  const previewCells = Array.from(
+    new Set([
+      ...targetCells,
+      ...plan.cells
+        .map((cell) => {
+          const row = baseRow + cell.y;
+          const col = baseCol + cell.x;
+          if (row < 0 || row >= 6 || col < 0 || col >= 6) {
+            return null;
+          }
+          return row * 6 + col;
+        })
+        .filter((value) => value !== null)
+    ])
+  );
+  if (!valid || targetCells.length !== plan.cells.length) {
+    setBridgePreview(previewCells.length ? previewCells : [anchorIndex], false);
+    logEvent("Schematic can't lock there. Choose an open lattice that fits the shape.");
+    return;
+  }
+  targetCells.forEach((targetIndex) => {
+    const target = flowNodes[targetIndex];
+    target.bridged = true;
+    target.locked = true;
+    target.kind = "bridge";
+    target.schematic = plan.id;
+  });
+  bridgeSchematics.shift();
+  setBridgePreview(targetCells, true);
+  routeSelection = Array.from(new Set([...routeSelection, ...targetCells]));
+  logEvent(`Locked a ${plan.label} into the flow lattice.`);
+  updateBridgeInventory();
+  updateRouteButton();
+  updateBridgeHint();
+  evaluateNetwork(plan.id);
+}
+
+function setBridgePreview(cells, valid) {
+  if (bridgePreviewTimeout) {
+    window.clearTimeout(bridgePreviewTimeout);
+    bridgePreviewTimeout = null;
+  }
+  bridgePreview = { cells, valid };
+  renderFlowGrid();
+  bridgePreviewTimeout = window.setTimeout(() => {
+    bridgePreview = null;
+    renderFlowGrid();
+  }, 900);
+}
+
+function updateBridgeInventory() {
+  if (!bridgeInventoryEl) {
+    return;
+  }
+  bridgeInventoryEl.innerHTML = "";
+  if (bridgeSchematics.length === 0) {
+    const empty = document.createElement("p");
+    empty.className = "schematic-label";
+    empty.textContent = "No schematics queued.";
+    bridgeInventoryEl.append(empty);
+    updateBridgeHint();
+    return;
+  }
+  bridgeSchematics.forEach((plan, index) => {
+    const card = document.createElement("div");
+    card.className = "schematic-card";
+    if (index === 0) {
+      card.classList.add("active");
+    }
+    const grid = document.createElement("div");
+    grid.className = "schematic-grid";
+    grid.style.gridTemplateColumns = `repeat(${plan.width}, 10px)`;
+    grid.style.gridTemplateRows = `repeat(${plan.height}, 10px)`;
+    const filled = new Set(plan.cells.map((cell) => `${cell.x}-${cell.y}`));
+    for (let y = 0; y < plan.height; y += 1) {
+      for (let x = 0; x < plan.width; x += 1) {
+        const cell = document.createElement("div");
+        if (filled.has(`${x}-${y}`)) {
+          cell.classList.add("filled");
+        }
+        grid.append(cell);
+      }
+    }
+    const label = document.createElement("span");
+    label.className = "schematic-label";
+    label.textContent = `${plan.label} (${plan.cells.length} nodes)`;
+    card.append(grid, label);
+    bridgeInventoryEl.append(card);
+  });
+  updateBridgeHint();
+}
+
+function updateBridgeHint() {
+  if (!bridgeHintEl) {
+    return;
+  }
+  if (bridgeSchematics.length === 0) {
+    bridgeHintEl.textContent = "Clear reactor lines to forge new schematics.";
+    return;
+  }
+  if (!routeMode) {
+    bridgeHintEl.textContent = "Enable Plan Routes to slot the next schematic.";
+    return;
+  }
+  bridgeHintEl.textContent = "Select a lattice cell to anchor the highlighted schematic footprint.";
 }
 
 function evaluateNetwork(idHint) {
@@ -772,9 +1105,80 @@ function evaluateNetwork(idHint) {
 }
 
 function completeCircuit(idHint) {
-  logEvent("Completed a flow circuit. Energy surges through the lattice!");
+  const infusion = determineInfusion(idHint);
+  logEvent(
+    `Completed a flow circuit. Energy surges through the lattice${
+      infusion ? ` and a ${formatInfusionName(infusion)} shard forms.` : "."
+    }`
+  );
   addResources(idHint ? mapPieceToMeter(idHint) : "earth", 20);
   addResources("fire", 10);
+  if (infusion) {
+    queueInfusion(infusion);
+  }
+}
+
+function determineInfusion(idHint) {
+  if (idHint && infusionMapping[idHint]) {
+    return infusionMapping[idHint];
+  }
+  const types = Object.keys(infusionLabels);
+  if (types.length === 0) {
+    return null;
+  }
+  return types[Math.floor(Math.random() * types.length)];
+}
+
+function queueInfusion(type) {
+  pendingInfusions.push(type);
+  applyPendingInfusions();
+}
+
+function applyPendingInfusions() {
+  if (pendingInfusions.length === 0) {
+    return;
+  }
+  const remaining = [];
+  let infusedAny = false;
+  pendingInfusions.forEach((type) => {
+    const infused = infuseTileWithState(type);
+    if (infused) {
+      infusedAny = true;
+      logEvent(
+        `Infused a ${infused.tile.label} rock with ${formatInfusionName(type)} energy.`
+      );
+    } else {
+      remaining.push(type);
+    }
+  });
+  pendingInfusions = remaining;
+  if (infusedAny) {
+    renderMatchBoard();
+  }
+}
+
+function infuseTileWithState(type) {
+  const targetId = infusionTargets[type];
+  const preferred = [];
+  const fallback = [];
+  matchBoard.forEach((row) => {
+    row.forEach((tile) => {
+      if (!tile.infusion) {
+        if (!targetId || tile.id === targetId) {
+          preferred.push(tile);
+        } else {
+          fallback.push(tile);
+        }
+      }
+    });
+  });
+  const pool = preferred.length > 0 ? preferred : fallback;
+  if (pool.length === 0) {
+    return null;
+  }
+  const tile = pool[Math.floor(Math.random() * pool.length)];
+  tile.infusion = type;
+  return { tile };
 }
 
 function logEvent(message) {
@@ -857,5 +1261,8 @@ window.addEventListener("keydown", onKeyDown);
 
 initializeMatchBoard();
 renderTetraminoBoard();
+updateBridgeInventory();
+updateBridgeHint();
+updateRouteButton();
 renderFlowGrid();
 startDropLoop();
