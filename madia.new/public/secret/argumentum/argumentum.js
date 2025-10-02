@@ -1393,6 +1393,25 @@ function renderIsometricBoard() {
       isometricBoardEl.append(cellEl);
     }
   }
+  if (
+    fallingPixel &&
+    typeof fallingPixel.column === "number" &&
+    typeof fallingPixel.targetRow === "number" &&
+    fallingPixel.targetRow >= 0 &&
+    fallingPixel.targetRow < TETRA_HEIGHT
+  ) {
+    const landingCell = tetraBoard[fallingPixel.targetRow][fallingPixel.column];
+    if (landingCell) {
+      const highlightEl = document.createElement("div");
+      highlightEl.className = "pixel-target-highlight";
+      highlightEl.style.transform = `translate3d(${fallingPixel.column * ISO_CELL_SIZE}px, ${fallingPixel.targetRow * ISO_CELL_SIZE}px, 0)`;
+      const stackHeight = Array.isArray(landingCell.pixels) ? landingCell.pixels.length : 0;
+      const landingHeight = stackHeight * PIXEL_LAYER_HEIGHT;
+      const travelHeight = Math.max((fallingPixel.height ?? 0) - landingHeight, PIXEL_LAYER_HEIGHT * 2);
+      highlightEl.style.setProperty("--column-height", `${travelHeight}px`);
+      isometricBoardEl.append(highlightEl);
+    }
+  }
   if (fallingPixel) {
     const pixelEl = document.createElement("div");
     pixelEl.className = `falling-pixel pixel-${fallingPixel.color}`;
