@@ -34,6 +34,42 @@ const games = [
     `,
   },
   {
+    id: "amore-express",
+    name: "Amore Express",
+    description: "Chart cul-de-sac deliveries while keeping scooter trails pristine.",
+    url: "./amore-express/index.html",
+    thumbnail: `
+      <svg viewBox="0 0 160 120" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Amore Express preview">
+        <defs>
+          <linearGradient id="amoreGlow" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0%" stop-color="#38bdf8" />
+            <stop offset="100%" stop-color="#f97316" />
+          </linearGradient>
+          <linearGradient id="trailFade" x1="0" y1="0" x2="1" y2="0">
+            <stop offset="0%" stop-color="rgba(56,189,248,0.6)" />
+            <stop offset="100%" stop-color="rgba(249,115,22,0.6)" />
+          </linearGradient>
+        </defs>
+        <rect x="8" y="8" width="144" height="104" rx="18" fill="rgba(10,15,30,0.92)" stroke="url(#amoreGlow)" />
+        <circle cx="60" cy="60" r="30" fill="rgba(250,204,21,0.2)" stroke="rgba(250,204,21,0.65)" stroke-width="3" />
+        <path d="M60 30c16 0 30 13 30 30s-14 30-30 30-30-13-30-30 14-30 30-30z" fill="rgba(249,115,22,0.25)" stroke="rgba(249,115,22,0.75)" stroke-width="2" />
+        <path d="M60 30L60 90" stroke="rgba(249,115,22,0.75)" stroke-width="3" />
+        <path d="M30 60L90 60" stroke="rgba(249,115,22,0.75)" stroke-width="3" />
+        <circle cx="48" cy="48" r="5" fill="#f97316" />
+        <circle cx="72" cy="68" r="5" fill="#ef4444" />
+        <circle cx="50" cy="72" r="6" fill="#fbbf24" />
+        <path d="M96 76c10-10 30-10 38 0" stroke="url(#trailFade)" stroke-width="6" stroke-linecap="round" stroke-linejoin="round" />
+        <g transform="translate(102 70)">
+          <circle cx="0" cy="20" r="6" fill="#38bdf8" stroke="rgba(148,163,184,0.6)" />
+          <circle cx="28" cy="20" r="6" fill="#7b5bff" stroke="rgba(148,163,184,0.6)" />
+          <path d="M2 8h16l8 12" fill="none" stroke="#38bdf8" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" />
+          <circle cx="8" cy="8" r="4" fill="#38bdf8" />
+          <circle cx="24" cy="20" r="3" fill="#f97316" />
+        </g>
+      </svg>
+    `,
+  },
+  {
     id: "velvet-syncopation",
     name: "Velvet Syncopation",
     description: "Three-lane rhythm rehearsal with the lounge trio's velvet slips.",
