@@ -68,6 +68,38 @@ const games = [
     `,
   },
   {
+    id: "amore-express",
+    name: "Amore Express",
+    description: "Plan neon scooter runs through the cul-de-sac without tangling past deliveries.",
+    url: "./amore-express/index.html",
+    thumbnail: `
+      <svg viewBox="0 0 160 120" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Amore Express preview">
+        <defs>
+          <linearGradient id="routeGlow" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0%" stop-color="#7b5bff" />
+            <stop offset="100%" stop-color="#38bdf8" />
+          </linearGradient>
+          <linearGradient id="scooterBody" x1="0" x2="0" y1="0" y2="1">
+            <stop offset="0%" stop-color="rgba(248,113,113,0.95)" />
+            <stop offset="100%" stop-color="rgba(236,72,153,0.75)" />
+          </linearGradient>
+        </defs>
+        <rect x="10" y="10" width="140" height="100" rx="20" fill="rgba(9,14,28,0.9)" stroke="rgba(120,255,255,0.4)" />
+        <path d="M30 84h84c6 0 12-4 14-10l8-26" fill="none" stroke="url(#routeGlow)" stroke-width="6" stroke-linecap="round" stroke-linejoin="round" opacity="0.85" />
+        <path d="M34 46c12-16 28-26 48-26 16 0 30 6 42 18" fill="none" stroke="rgba(56,189,248,0.4)" stroke-width="4" stroke-linecap="round" stroke-dasharray="8 8" />
+        <g transform="translate(50 64)">
+          <path d="M8 0h24l10 16-8 10H8z" fill="url(#scooterBody)" stroke="rgba(248,250,252,0.8)" stroke-width="1.5" />
+          <circle cx="14" cy="34" r="10" fill="rgba(15,23,42,0.9)" stroke="url(#routeGlow)" stroke-width="4" />
+          <circle cx="42" cy="34" r="10" fill="rgba(15,23,42,0.9)" stroke="url(#routeGlow)" stroke-width="4" />
+          <path d="M22 10h12l6 8" fill="none" stroke="rgba(248,250,252,0.9)" stroke-width="3" stroke-linecap="round" />
+        </g>
+        <circle cx="42" cy="32" r="6" fill="rgba(248,250,252,0.85)" stroke="rgba(236,72,153,0.8)" stroke-width="2" />
+        <rect x="24" y="20" width="36" height="18" rx="6" fill="rgba(123,91,255,0.25)" stroke="rgba(120,255,255,0.3)" />
+        <rect x="102" y="72" width="26" height="18" rx="6" fill="rgba(123,91,255,0.35)" stroke="rgba(120,255,255,0.3)" />
+      </svg>
+    `,
+  },
+  {
     id: "prototype",
     name: "Prototype Cabinet",
     description: "Drop a new game folder in \"secret\" and point the cab here.",
