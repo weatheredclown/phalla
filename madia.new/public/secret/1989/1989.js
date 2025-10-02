@@ -751,8 +751,16 @@ function setFullscreenButtonState(active) {
     return;
   }
   fullscreenButton.setAttribute("aria-pressed", active ? "true" : "false");
-  fullscreenButton.textContent = active ? "🗗 Windowed" : "⛶ Fullscreen";
-  fullscreenButton.title = active ? "Exit fullscreen" : "Enter fullscreen";
+  fullscreenButton.innerHTML = "";
+  const label = document.createElement("span");
+  label.className = "button-label";
+  label.textContent = active ? "Mode 7 Off" : "Mode 7 On";
+  const hint = document.createElement("span");
+  hint.className = "button-hint";
+  hint.setAttribute("aria-hidden", "true");
+  hint.textContent = active ? "⏏" : "▶";
+  fullscreenButton.append(label, hint);
+  fullscreenButton.title = active ? "Exit fullscreen (Mode 7)" : "Enter fullscreen (Mode 7)";
 }
 
 async function toggleFullscreen() {
