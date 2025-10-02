@@ -4,12 +4,12 @@
  */
 const games = [
   {
-    id: "road-house",
-    name: "Road House",
+    id: "cooler-chaos",
+    name: "Cooler Chaos",
     description: "Contain the Double Deuce chaos by sliding rowdies into the exits before glass locks the grid.",
-    url: "./road-house/index.html",
+    url: "./cooler-chaos/index.html",
     thumbnail: `
-      <svg viewBox="0 0 160 120" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Road House preview">
+      <svg viewBox="0 0 160 120" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Cooler Chaos preview">
         <defs>
           <linearGradient id="floorGlow" x1="0" y1="0" x2="1" y2="1">
             <stop offset="0%" stop-color="#38bdf8" />
