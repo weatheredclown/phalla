@@ -5,8 +5,18 @@ const TRANSFORM_COST = { earth: 20, water: 30 };
 const SHIFT_THRESHOLD = 100;
 const DROP_DELAY_BASE = 900;
 const DROP_DELAY_MIN = 400;
-const STRAIN_TICK_AMOUNT = 0.4;
-const ROTATION_KICKS = [0, -1, 1, -2, 2];
+const INTEGRITY_TICK_AMOUNT = 0.4;
+const ROTATION_KICKS = [
+  { x: 0, y: 0 },
+  { x: -1, y: 0 },
+  { x: 1, y: 0 },
+  { x: 0, y: -1 },
+  { x: -2, y: 0 },
+  { x: 2, y: 0 },
+  { x: -1, y: -1 },
+  { x: 1, y: -1 }
+];
+const COMBO_TIMEOUT_MS = 6200;
 
 const infusionMapping = {
   sedimentary: "geolocked",
@@ -113,12 +123,42 @@ const pieceDefinitions = {
         [1, 1, 0, 0],
         [0, 1, 0, 0],
         [0, 0, 0, 0]
+      ],
+      [
+        [0, 0, 0, 0],
+        [0, 1, 1, 0],
+        [1, 1, 0, 0],
+        [0, 0, 0, 0]
+      ],
+      [
+        [1, 0, 0, 0],
+        [1, 1, 0, 0],
+        [0, 1, 0, 0],
+        [0, 0, 0, 0]
       ]
     ]
   },
   crystal: {
     colorClass: "filled-crystal",
     rotations: [
+      [
+        [0, 1, 1, 0],
+        [0, 1, 1, 0],
+        [0, 0, 0, 0],
+        [0, 0, 0, 0]
+      ],
+      [
+        [0, 1, 1, 0],
+        [0, 1, 1, 0],
+        [0, 0, 0, 0],
+        [0, 0, 0, 0]
+      ],
+      [
+        [0, 1, 1, 0],
+        [0, 1, 1, 0],
+        [0, 0, 0, 0],
+        [0, 0, 0, 0]
+      ],
       [
         [0, 1, 1, 0],
         [0, 1, 1, 0],
@@ -148,13 +188,20 @@ const cancelTransformBtn = document.getElementById("cancel-transform");
 const transformToolbar = document.getElementById("transform-toolbar");
 const shiftBoardBtn = document.getElementById("shift-board");
 const routeToggleBtn = document.getElementById("route-toggle");
+const reactorHudEl = document.querySelector(".reactor-hud");
 const scoreMetricEl = document.getElementById("score-metric");
 const linesMetricEl = document.getElementById("lines-metric");
+const comboMetricEl = document.getElementById("combo-metric");
 const circuitsMetricEl = document.getElementById("circuits-metric");
 const scoreDisplayEl = document.getElementById("score-display");
 const linesDisplayEl = document.getElementById("lines-display");
+const comboDisplayEl = document.getElementById("combo-display");
+const comboMultiplierEl = document.getElementById("combo-multiplier");
 const circuitsDisplayEl = document.getElementById("circuits-display");
-const strainMeterEl = document.getElementById("strain-meter");
+const integrityMetricEl = document.getElementById("integrity-metric");
+const integrityBarEl = document.querySelector(".integrity-bar");
+const integrityFillEl = document.getElementById("integrity-fill");
+const integrityValueEl = document.getElementById("integrity-value");
 const reactorAlertEl = document.getElementById("reactor-alert");
 const restartButton = document.getElementById("restart-game");
 
@@ -191,9 +238,18 @@ let scoreState = {
   score: 0,
   lines: 0,
   circuits: 0,
-  strain: 20
+  integrity: 100,
+  maxCombo: 0
 };
 let alertTimeoutId = null;
+const comboState = {
+  streak: 0,
+  multiplier: 1,
+  timeoutId: null,
+  lastEvent: null
+};
+let audioContextInstance = null;
+let audioUnlocked = false;
 
 function createMatrix(rows, cols, value) {
   return Array.from({ length: rows }, () => Array.from({ length: cols }, () => value));
@@ -229,12 +285,35 @@ function updateScoreboard() {
   if (circuitsDisplayEl) {
     circuitsDisplayEl.textContent = scoreState.circuits.toString();
   }
-  if (strainMeterEl) {
-    const value = Math.max(0, Math.min(100, scoreState.strain));
-    strainMeterEl.value = value;
-    strainMeterEl.setAttribute("aria-valuenow", Math.round(value).toString());
+  if (comboDisplayEl) {
+    comboDisplayEl.textContent = comboState.streak > 0 ? comboState.streak.toString() : "—";
   }
-  updateAlertForStrain();
+  if (comboMultiplierEl) {
+    comboMultiplierEl.textContent = `x${comboState.multiplier.toFixed(1)}`;
+  }
+  if (comboMetricEl) {
+    comboMetricEl.classList.toggle("combo-active", comboState.streak > 0);
+  }
+  if (reactorHudEl) {
+    reactorHudEl.classList.toggle("combo-active", comboState.streak > 0);
+  }
+  const integrity = Math.max(0, Math.min(100, scoreState.integrity));
+  if (integrityFillEl) {
+    integrityFillEl.style.width = `${integrity}%`;
+  }
+  if (integrityValueEl) {
+    integrityValueEl.textContent = `${Math.round(integrity)}%`;
+  }
+  if (integrityMetricEl) {
+    const warning = integrity <= 45 && integrity > 25;
+    const critical = integrity <= 25;
+    integrityMetricEl.classList.toggle("integrity-warning", warning);
+    integrityMetricEl.classList.toggle("integrity-critical", critical);
+  }
+  if (integrityBarEl) {
+    integrityBarEl.setAttribute("aria-valuenow", Math.round(integrity).toString());
+  }
+  updateAlertForIntegrity();
 }
 
 function showAlert(message, level = "info", holdMs = 2400) {
@@ -250,35 +329,41 @@ function showAlert(message, level = "info", holdMs = 2400) {
   if (holdMs > 0) {
     alertTimeoutId = window.setTimeout(() => {
       alertTimeoutId = null;
-      updateAlertForStrain();
+      updateAlertForIntegrity();
     }, holdMs);
   }
 }
 
-function updateAlertForStrain() {
+function updateAlertForIntegrity() {
   if (!reactorAlertEl || gameOver || alertTimeoutId) {
     return;
   }
   let level = "calm";
   let message = "";
-  if (scoreState.strain >= 80) {
+  const integrity = Math.max(0, Math.min(100, scoreState.integrity));
+  if (integrity <= 20) {
     level = "danger";
-    message = "Critical strain! Vent lines immediately.";
-  } else if (scoreState.strain >= 55) {
+    message = "Integrity failing! Vent lines immediately.";
+  } else if (integrity <= 45) {
     level = "warning";
-    message = "Strain rising—clear lines or seal circuits.";
-  } else if (scoreState.strain <= 15) {
-    message = "Stability nominal.";
+    message = "Integrity wavering—seal circuits or clear lines.";
+  } else if (comboState.streak >= 3) {
+    level = "info";
+    message = `Combo ${comboState.streak}! Reactor harmony amplifies.`;
+  } else if (integrity >= 90) {
+    message = "Reactor stable and radiant.";
   }
   reactorAlertEl.textContent = message;
   reactorAlertEl.className = `reactor-alert ${level}`;
 }
 
-function awardScore(amount, anchor) {
+function awardScore(amount, anchor, { comboEligible = true } = {}) {
   if (gameOver || !amount) {
     return;
   }
-  scoreState.score += Math.round(amount);
+  const multiplier = comboEligible ? comboState.multiplier : 1;
+  const finalAmount = Math.round(amount * multiplier);
+  scoreState.score += finalAmount;
   updateScoreboard();
   flashMetric(scoreMetricEl);
   if (anchor) {
@@ -289,37 +374,173 @@ function awardScore(amount, anchor) {
   }
 }
 
-function increaseStrain(amount, message) {
+function damageIntegrity(amount, message) {
   if (!amount || gameOver) {
     return;
   }
-  scoreState.strain = Math.min(100, scoreState.strain + amount);
+  scoreState.integrity = Math.max(0, Math.min(100, scoreState.integrity - amount));
   updateScoreboard();
   if (message) {
-    const level = scoreState.strain >= 80 ? "danger" : "warning";
+    const level = scoreState.integrity <= 25 ? "danger" : "warning";
     showAlert(message, level);
   }
-  if (scoreState.strain >= 100) {
-    triggerGameOver("Reactor strain exceeded safe tolerances. Flow lattice collapses.");
+  if (scoreState.integrity <= 0) {
+    triggerGameOver("Reactor integrity collapsed. Flow lattice dissolves.");
   }
 }
 
-function decreaseStrain(amount, message) {
+function restoreIntegrity(amount, message) {
   if (!amount || gameOver) {
     return;
   }
-  scoreState.strain = Math.max(0, scoreState.strain - amount);
+  scoreState.integrity = Math.max(0, Math.min(100, scoreState.integrity + amount));
   updateScoreboard();
   if (message) {
     showAlert(message, "info");
   }
 }
 
-function applyStrainTick() {
+function applyIntegrityDrift() {
   if (!activePiece || reactorBusy || gameOver) {
     return;
   }
-  increaseStrain(STRAIN_TICK_AMOUNT);
+  damageIntegrity(INTEGRITY_TICK_AMOUNT);
+}
+
+const AUDIO_CUES = {
+  match: { freq: 540, duration: 0.16, type: "sine", volume: 0.12 },
+  line: { freq: 360, duration: 0.22, type: "triangle", volume: 0.16 },
+  comboBreak: { freq: 180, duration: 0.3, type: "sawtooth", volume: 0.12 },
+  gameover: { freq: 120, duration: 0.6, type: "square", volume: 0.1 }
+};
+
+function ensureAudioContext() {
+  if (audioContextInstance) {
+    return audioContextInstance;
+  }
+  if (!window.AudioContext && !window.webkitAudioContext) {
+    return null;
+  }
+  try {
+    audioContextInstance = new (window.AudioContext || window.webkitAudioContext)();
+  } catch (error) {
+    console.warn("Unable to initialise audio context", error);
+    audioContextInstance = null;
+  }
+  return audioContextInstance;
+}
+
+function unlockAudioContext() {
+  const context = ensureAudioContext();
+  if (!context) {
+    return;
+  }
+  context.resume().catch(() => {});
+  audioUnlocked = true;
+}
+
+function playCue(name) {
+  const cue = AUDIO_CUES[name];
+  if (!cue) {
+    return;
+  }
+  const context = ensureAudioContext();
+  if (!context) {
+    return;
+  }
+  if (context.state === "suspended" && audioUnlocked) {
+    context.resume().catch(() => {});
+  }
+  const now = context.currentTime;
+  const oscillator = context.createOscillator();
+  oscillator.type = cue.type || "sine";
+  oscillator.frequency.setValueAtTime(cue.freq, now);
+  const gain = context.createGain();
+  const volume = cue.volume ?? 0.16;
+  gain.gain.setValueAtTime(volume, now);
+  gain.gain.exponentialRampToValueAtTime(0.001, now + cue.duration);
+  oscillator.connect(gain).connect(context.destination);
+  oscillator.start(now);
+  oscillator.stop(now + cue.duration);
+}
+
+function setComboVisuals(active) {
+  matchBoardEl.classList.toggle("combo-glow", active);
+  tetraminoBoardEl.classList.toggle("combo-glow", active);
+}
+
+function scheduleComboDecay() {
+  if (comboState.timeoutId) {
+    window.clearTimeout(comboState.timeoutId);
+  }
+  comboState.timeoutId = window.setTimeout(() => {
+    comboState.timeoutId = null;
+    breakCombo("decay");
+  }, COMBO_TIMEOUT_MS);
+}
+
+function registerCombo(amount = 1, source = "match", anchor) {
+  if (gameOver) {
+    return;
+  }
+  const increment = Math.max(1, Math.round(amount));
+  comboState.streak += increment;
+  comboState.lastEvent = source;
+  comboState.multiplier = Math.min(3.5, 1 + Math.max(0, comboState.streak - 1) * 0.25);
+  const previousMax = scoreState.maxCombo;
+  scoreState.maxCombo = Math.max(scoreState.maxCombo, comboState.streak);
+  updateScoreboard();
+  setComboVisuals(true);
+  if (anchor) {
+    anchor.classList.add("combo-celebration");
+    window.setTimeout(() => anchor.classList.remove("combo-celebration"), 620);
+  }
+  scheduleComboDecay();
+  playCue(source === "line" ? "line" : "match");
+  if (comboState.streak > 1 && comboState.streak > previousMax) {
+    logEvent(
+      `Combo ${comboState.streak} amplified (${comboState.multiplier.toFixed(1)}x resonance).`
+    );
+  }
+}
+
+function breakCombo(reason = "decay", { silent = false } = {}) {
+  if (comboState.timeoutId) {
+    window.clearTimeout(comboState.timeoutId);
+    comboState.timeoutId = null;
+  }
+  if (comboState.streak === 0) {
+    return;
+  }
+  if (!silent) {
+    playCue("comboBreak");
+    if (reason === "decay") {
+      showAlert("Combo energy dissipated.", "warning");
+    }
+    let logMessage = null;
+    switch (reason) {
+      case "dud":
+        logMessage = "Combo fizzled with no successful link.";
+        break;
+      case "stalled":
+        logMessage = "Combo stalled under reactor pressure.";
+        break;
+      case "decay":
+        logMessage = "Combo resonance faded.";
+        break;
+      default:
+        logMessage = reason !== "silent" ? "Combo chain collapsed." : null;
+        break;
+    }
+    if (logMessage) {
+      logEvent(logMessage);
+    }
+  }
+  comboState.streak = 0;
+  comboState.multiplier = 1;
+  comboState.lastEvent = null;
+  setComboVisuals(false);
+  updateScoreboard();
 }
 
 function stopDropLoop() {
@@ -338,8 +559,10 @@ function triggerGameOver(message) {
   isResolvingMatches = false;
   stopDropLoop();
   showAlert(message, "danger", 0);
+  breakCombo("silent", { silent: true });
   if (restartButton) {
-    restartButton.hidden = false;
+    restartButton.disabled = false;
+    restartButton.classList.add("ready");
   }
   if (shiftBoardBtn) {
     shiftBoardBtn.disabled = true;
@@ -356,6 +579,7 @@ function triggerGameOver(message) {
   tetraminoBoardEl.classList.add("board-disabled");
   flowGridEl.classList.add("board-disabled");
   logEvent("Reactor shutdown engaged. Restart to attempt a new run.");
+  playCue("gameover");
 }
 
 function startNewRun(isInitial = false) {
@@ -368,7 +592,8 @@ function startNewRun(isInitial = false) {
     alertTimeoutId = null;
   }
   if (restartButton) {
-    restartButton.hidden = true;
+    restartButton.disabled = true;
+    restartButton.classList.remove("ready");
   }
   chargeTransformBtn.disabled = false;
   routeToggleBtn.disabled = false;
@@ -415,13 +640,15 @@ function startNewRun(isInitial = false) {
     score: 0,
     lines: 0,
     circuits: 0,
-    strain: 20
+    integrity: 100,
+    maxCombo: 0
   };
+  breakCombo("reset", { silent: true });
   updateScoreboard();
   if (!isInitial) {
-    showAlert("Stability restored. Reconnect the lattice to climb again.", "info");
+    showAlert("Integrity restored. Reconnect the lattice to climb again.", "info");
   } else {
-    updateAlertForStrain();
+    updateAlertForIntegrity();
   }
   startDropLoop();
 }
@@ -552,6 +779,7 @@ async function onTileClick(x, y) {
     swapTiles(selectedTile, { x, y });
     getTileElement(selectedTile.x, selectedTile.y).classList.remove("selected");
     selectedTile = null;
+    breakCombo("dud");
     return;
   }
 
@@ -684,11 +912,12 @@ async function resolveMatches(matches) {
   });
 
   if (totalMatches > 0) {
-    awardScore(totalMatches * 8 + totalEmpowered * 6, matchBoardEl);
-    const strainRelief = Math.min(8, totalMatches + totalEmpowered * 2);
-    if (strainRelief > 0) {
-      decreaseStrain(strainRelief);
+    const integrityBoost = Math.min(8, totalMatches + totalEmpowered * 2);
+    if (integrityBoost > 0) {
+      restoreIntegrity(integrityBoost);
     }
+    registerCombo(Math.max(1, matchSummary.size), "match", matchBoardEl);
+    awardScore(totalMatches * 8 + totalEmpowered * 6, matchBoardEl);
   }
 
   applyInfusionRewards(infusionSummary, restoredColumns);
@@ -906,7 +1135,8 @@ async function placePiece() {
     if (cleared > 0) {
       handleLineClear(cleared, placedId, placedRotation);
     } else {
-      increaseStrain(6, "Shard stacks rise and strain escalates.");
+      damageIntegrity(6, "Shard stacks tower and integrity buckles.");
+      breakCombo("stalled");
     }
   } finally {
     reactorBusy = false;
@@ -952,8 +1182,9 @@ function handleLineClear(count, id, rotationIndex = 0) {
   logEvent(`Cleared ${count} reactor line${count > 1 ? "s" : ""}. Bridges readied.`);
   scoreState.lines += count;
   flashMetric(linesMetricEl);
+  registerCombo(Math.max(1, count), "line", tetraminoBoardEl);
   awardScore(count * 120, tetraminoBoardEl);
-  decreaseStrain(12 + count * 3, "Line clears vent reactor strain.");
+  restoreIntegrity(12 + count * 3, "Line clears fortify the reactor's integrity.");
   addResources(mapPieceToMeter(awardType), 14 * count);
   extendFlowWithBridges(count, awardType, rotationIndex);
 }
@@ -1023,7 +1254,7 @@ function dropStep() {
   }
   if (!collides(activePiece, 0, 1)) {
     activePiece.y += 1;
-    applyStrainTick();
+    applyIntegrityDrift();
     renderTetraminoBoard();
   } else {
     placePiece();
@@ -1038,8 +1269,9 @@ function rotatePiece(direction = 1) {
   const total = definition.rotations.length;
   const nextRotation = (activePiece.rotation + direction + total) % total;
   for (const offset of ROTATION_KICKS) {
-    if (!collides(activePiece, offset, 0, nextRotation)) {
-      activePiece.x += offset;
+    if (!collides(activePiece, offset.x, offset.y, nextRotation)) {
+      activePiece.x += offset.x;
+      activePiece.y += offset.y;
       activePiece.rotation = nextRotation;
       renderTetraminoBoard();
       return;
@@ -1063,7 +1295,7 @@ function softDrop() {
   }
   if (!collides(activePiece, 0, 1)) {
     activePiece.y += 1;
-    applyStrainTick();
+    applyIntegrityDrift();
     renderTetraminoBoard();
   }
 }
@@ -1089,7 +1321,7 @@ function applyTransformation(x, y) {
   exitTransformMode();
   logEvent(`Empowered a ${tile.id} rock via flow resonance.`);
   addResources("shift", 16);
-  increaseStrain(5, "Channeling resonance strains the reactor core.");
+  damageIntegrity(5, "Channeling resonance taxes the core's integrity.");
 }
 
 function enterTransformMode() {
@@ -1225,7 +1457,7 @@ function extendFlowWithBridges(count, id, rotationIndex = 0) {
     `Drafted ${count} ${plan.label} schematic${count > 1 ? "s" : ""} from the reactor.`
   );
   awardScore(count * 20, flowGridEl);
-  decreaseStrain(Math.min(6, count * 2));
+  restoreIntegrity(Math.min(6, count * 2));
   routeMode = true;
   updateRouteButton();
   updateBridgeInventory();
@@ -1361,7 +1593,7 @@ function attemptPlaceSchematic(anchorIndex) {
   routeSelection = Array.from(new Set([...routeSelection, ...targetCells]));
   logEvent(`Locked a ${plan.label} into the flow lattice.`);
   awardScore(plan.cells.length * 12, flowGridEl);
-  decreaseStrain(Math.min(8, plan.cells.length * 2));
+  restoreIntegrity(Math.min(8, plan.cells.length * 2));
   updateBridgeInventory();
   updateRouteButton();
   updateBridgeHint();
@@ -1508,7 +1740,7 @@ function completeCircuit(idHint) {
   scoreState.circuits += 1;
   flashMetric(circuitsMetricEl);
   awardScore(180 + (infusion ? 40 : 0), flowGridEl);
-  decreaseStrain(18, "Circuit sealed and stability returns.");
+  restoreIntegrity(18, "Circuit sealed and stability surges.");
   if (infusion) {
     queueInfusion(infusion);
   }
@@ -1607,7 +1839,7 @@ function applyShiftActuation() {
   updateMeters();
   shiftBoardBtn.disabled = true;
   reorientNetwork();
-  decreaseStrain(10, "Actuation vents strain across the flow lattice.");
+  restoreIntegrity(10, "Actuation vents stress across the flow lattice.");
   startDropLoop();
   logEvent("Actuated shift realigned the reactor relative to the flow grid.");
 }
@@ -1671,6 +1903,8 @@ routeToggleBtn.addEventListener("click", toggleRouteMode);
 if (restartButton) {
   restartButton.addEventListener("click", () => startNewRun(false));
 }
+document.addEventListener("pointerdown", unlockAudioContext, { once: true });
+document.addEventListener("keydown", unlockAudioContext, { once: true });
 window.addEventListener("keydown", onKeyDown);
 
 startNewRun(true);
