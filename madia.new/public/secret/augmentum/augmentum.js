@@ -2256,6 +2256,20 @@ function stabilizeFlow() {
   if (restoreAmount <= 0) {
     return;
   }
+  const releasedNodes = new Set();
+  completeSpans.forEach((span) => {
+    flowNodes.forEach((node, index) => {
+      const spanId = node.schematic ?? `span-${index}`;
+      if (!node.locked || spanId !== span.id) {
+        return;
+      }
+      node.locked = false;
+      node.bridged = false;
+      node.kind = "empty";
+      node.schematic = null;
+      releasedNodes.add(index);
+    });
+  });
   const spanCount = completeSpans.length;
   const nodeCount = totalNodes;
   const spanLabel = spanCount === 1 ? "" : "s";
@@ -2266,6 +2280,9 @@ function stabilizeFlow() {
   logEvent(
     `Stabilized ${spanCount} locked span${spanLabel}, reclaiming ${restoreAmount} integrity across ${nodeCount} node${nodeLabel}.`
   );
+  if (releasedNodes.size > 0) {
+    logEvent("Released the stabilized spans, clearing space for new schematics.");
+  }
   routeSelection = [];
   renderFlowGrid();
   updateBridgeHint();
