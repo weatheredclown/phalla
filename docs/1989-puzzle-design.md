@@ -42,3 +42,11 @@
 - **Routing challenge:** Players must lock in a safe path before the dice settle on a high-risk face, threading alternate highways, detours, and rest stops to avoid hazard nodes while still clearing every checkpoint in sequence.
 - **Escalating threats:** Rival crews leak false traffic reports, shifting hazard tiles mid-turn, and patrol markers sweep ahead of the player whenever consecutive high-risk icons appear.
 - **Actuation twist:** Earning a rare ``Bypass`` actuation cancels one checkpoint requirement, but forces an immediate reroute that consumes the current movement roll and shifts the risk icons for the next throw.
+
+## Level 43: All Dogs Go to Heaven
+- **Inspirational roots:** Follows a rakish canine who bolts from the afterlife to gamble on a second shot at living, nodding to the animated cult classic without quoting it directly.
+- **Anchor pieces:** The Clock of Life hourglass with visible Time-Sand, neon betting tables studded with micro-puzzle slots, and shimmering Life Chips that pour back into the clock.
+- **Core mechanic:** A constantly draining Time-Sand meter ticks down in real time; players dive into adjacent Betting Puzzles to convert quick solves into Life Chips that refill the hourglass before it empties.
+- **Resource loop:** Each completed puzzle spits out Life Chips equal to the player's streak, demanding sharp routing across the parlor floor to plug the winnings into the clock before the sand drops too low.
+- **Risk dilemma:** Longer, high-stakes puzzles promise jackpots of Life Chips but chew through Time-Sand while they resolve, forcing players to weigh desperation gambles against safer rapid-fire solves.
+- **Failure condition:** Letting the Time-Sand run dry snaps the Clock of Life and sends Charlie back upstairs, resetting the run and wiping any banked multipliers.
