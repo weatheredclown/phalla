@@ -176,6 +176,35 @@ const pieceDefinitions = {
         [0, 0, 0, 0]
       ]
     ]
+  },
+  monolith: {
+    colorClass: "filled-monolith",
+    rotations: [
+      [
+        [0, 0, 0, 0],
+        [1, 1, 1, 1],
+        [0, 0, 0, 0],
+        [0, 0, 0, 0]
+      ],
+      [
+        [0, 0, 1, 0],
+        [0, 0, 1, 0],
+        [0, 0, 1, 0],
+        [0, 0, 1, 0]
+      ],
+      [
+        [0, 0, 0, 0],
+        [0, 0, 0, 0],
+        [1, 1, 1, 1],
+        [0, 0, 0, 0]
+      ],
+      [
+        [0, 1, 0, 0],
+        [0, 1, 0, 0],
+        [0, 1, 0, 0],
+        [0, 1, 0, 0]
+      ]
+    ]
   }
 };
 
@@ -1134,6 +1163,8 @@ function getQueueColor(id) {
       return "#64b5f6";
     case "crystal":
       return "#b39ddb";
+    case "monolith":
+      return "#cbd5f5";
     default:
       return "#90a4ae";
   }
@@ -1279,6 +1310,8 @@ function mapPieceToMeter(id) {
       return "water";
     case "crystal":
       return "shift";
+    case "monolith":
+      return "shift";
     default:
       return "earth";
   }
@@ -1404,10 +1437,12 @@ function renderIsometricBoard() {
     if (landingCell) {
       const highlightEl = document.createElement("div");
       highlightEl.className = "pixel-target-highlight";
-      highlightEl.style.transform = `translate3d(${fallingPixel.column * ISO_CELL_SIZE}px, ${fallingPixel.targetRow * ISO_CELL_SIZE}px, 0)`;
       const stackHeight = Array.isArray(landingCell.pixels) ? landingCell.pixels.length : 0;
       const landingHeight = stackHeight * PIXEL_LAYER_HEIGHT;
       const travelHeight = Math.max((fallingPixel.height ?? 0) - landingHeight, PIXEL_LAYER_HEIGHT * 2);
+      highlightEl.style.width = `${ISO_CELL_SIZE}px`;
+      highlightEl.style.height = `${ISO_CELL_SIZE}px`;
+      highlightEl.style.transform = `translate3d(${fallingPixel.column * ISO_CELL_SIZE}px, ${fallingPixel.targetRow * ISO_CELL_SIZE}px, ${landingHeight}px)`;
       highlightEl.style.setProperty("--column-height", `${travelHeight}px`);
       isometricBoardEl.append(highlightEl);
     }
@@ -1955,6 +1990,8 @@ function mapPieceToSchematicLabel(id) {
       return "Flux Channel";
     case "crystal":
       return "Prism Arch";
+    case "monolith":
+      return "Monolith Column";
     default:
       return "Stonework Bridge";
   }
@@ -2400,13 +2437,18 @@ function applyShiftActuation() {
   }
   resourceMeterState.shift = 0;
   shiftOrientation = (shiftOrientation + 1) % 4;
+  pieceQueue.unshift({ id: "monolith", rotation: 0 });
+  updateQueueDisplay();
+  if (!activePiece) {
+    spawnNextPiece();
+  }
   dropDelay = Math.max(DROP_DELAY_MIN, dropDelay - 80);
   updateMeters();
   shiftBoardBtn.disabled = true;
   reorientNetwork();
   restoreIntegrity(10, "Actuation vents stress across the flow lattice.");
   startDropLoop();
-  logEvent("Actuated shift realigned the reactor relative to the flow grid.");
+  logEvent("Actuated shift realigned the reactor and forged a monolith column for precise drops.");
 }
 
 function reorientNetwork() {
