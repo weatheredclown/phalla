@@ -390,6 +390,53 @@ const games = [
     `,
   },
   {
+    id: "captains-echo",
+    name: "Captain's Echo",
+    description: "Stage the four-beat desk salute before the dean snuffs the Carpe Diem spark.",
+    url: "./captains-echo/index.html",
+    thumbnail: `
+      <svg viewBox="0 0 160 120" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Captain's Echo preview">
+        <defs>
+          <linearGradient id="echoGlow" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0%" stop-color="#38bdf8" />
+            <stop offset="100%" stop-color="#7b5bff" />
+          </linearGradient>
+          <linearGradient id="deskWood" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="rgba(249,115,22,0.6)" />
+            <stop offset="100%" stop-color="rgba(249,115,22,0.35)" />
+          </linearGradient>
+        </defs>
+        <rect x="6" y="6" width="148" height="108" rx="18" fill="rgba(5,8,20,0.92)" stroke="rgba(120,255,255,0.4)" />
+        <rect x="16" y="18" width="128" height="84" rx="16" fill="rgba(9,14,32,0.9)" stroke="rgba(120,255,255,0.25)" />
+        <path d="M16 68h128" stroke="rgba(120,255,255,0.18)" stroke-width="2" stroke-linecap="round" />
+        <g>
+          <circle cx="40" cy="32" r="12" fill="rgba(56,189,248,0.35)" stroke="rgba(56,189,248,0.6)" />
+          <circle cx="80" cy="30" r="10" fill="rgba(123,91,255,0.3)" stroke="rgba(123,91,255,0.6)" />
+          <circle cx="120" cy="34" r="12" fill="rgba(248,113,113,0.28)" stroke="rgba(248,113,113,0.6)" />
+        </g>
+        <g transform="translate(30 72)">
+          <rect x="0" y="0" width="30" height="18" rx="6" fill="url(#deskWood)" stroke="rgba(148,163,184,0.4)" />
+          <rect x="4" y="-8" width="22" height="10" rx="4" fill="rgba(56,189,248,0.2)" stroke="rgba(56,189,248,0.5)" />
+          <rect x="6" y="6" width="18" height="6" rx="2" fill="rgba(15,23,42,0.85)" />
+        </g>
+        <g transform="translate(65 72)">
+          <rect x="0" y="0" width="30" height="18" rx="6" fill="url(#deskWood)" stroke="rgba(148,163,184,0.4)" />
+          <rect x="4" y="-10" width="22" height="12" rx="5" fill="rgba(123,91,255,0.22)" stroke="rgba(123,91,255,0.55)" />
+          <rect x="6" y="6" width="18" height="6" rx="2" fill="rgba(15,23,42,0.85)" />
+        </g>
+        <g transform="translate(100 72)">
+          <rect x="0" y="0" width="30" height="18" rx="6" fill="url(#deskWood)" stroke="rgba(148,163,184,0.4)" />
+          <rect x="4" y="-6" width="22" height="8" rx="3" fill="rgba(248,113,113,0.22)" stroke="rgba(248,113,113,0.55)" />
+          <rect x="6" y="6" width="18" height="6" rx="2" fill="rgba(15,23,42,0.85)" />
+        </g>
+        <path d="M32 52 C48 48 64 48 80 52 C96 56 112 56 128 52" fill="none" stroke="url(#echoGlow)" stroke-width="3" stroke-linecap="round" stroke-dasharray="6 6" />
+        <circle cx="28" cy="92" r="4" fill="#38bdf8" />
+        <circle cx="64" cy="94" r="4" fill="#7b5bff" />
+        <circle cx="100" cy="92" r="4" fill="#f97316" />
+      </svg>
+    `,
+  },
+  {
     id: "prototype",
     name: "Prototype Cabinet",
     description: "Drop a new game folder in \"secret\" and point the cab here.",
