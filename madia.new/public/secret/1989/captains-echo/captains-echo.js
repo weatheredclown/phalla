@@ -1,3 +1,7 @@
+import { mountParticleField } from "../particles.js";
+
+mountParticleField();
+
 const students = [
   {
     id: "neil",

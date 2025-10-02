@@ -1,3 +1,7 @@
+import { mountParticleField } from "../particles.js";
+
+mountParticleField();
+
 const BOARD_WIDTH = 8;
 const BOARD_HEIGHT = 14;
 const LANE_COLUMNS = [2, 3, 4, 5];

@@ -1,3 +1,7 @@
+import { mountParticleField } from "../particles.js";
+
+mountParticleField();
+
 const ROWS = 5;
 const COLS = 6;
 const CHAOS_LIMIT = 18;

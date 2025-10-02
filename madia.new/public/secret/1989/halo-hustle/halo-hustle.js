@@ -1,3 +1,7 @@
+import { mountParticleField } from "../particles.js";
+
+mountParticleField();
+
 const MAX_TIME = 80;
 const STARTING_TIME = 60;
 const CHIP_TIME_VALUE = 4;

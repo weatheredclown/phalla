@@ -1,3 +1,7 @@
+import { mountParticleField } from "../particles.js";
+
+mountParticleField();
+
 const boardElement = document.getElementById("gossip-grid");
 const statusBar = document.getElementById("status-bar");
 const logList = document.getElementById("log-entries");

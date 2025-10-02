@@ -1,3 +1,7 @@
+import { mountParticleField } from "../particles.js";
+
+mountParticleField();
+
 const GRID_SIZE = 5;
 const LEVEL_DURATION_MS = 90_000;
 const TEMPERATURE_MAX = 100;

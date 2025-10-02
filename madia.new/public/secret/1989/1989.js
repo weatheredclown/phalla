@@ -1,3 +1,7 @@
+import { mountParticleField } from "./particles.js";
+
+mountParticleField({ density: 0.0001 });
+
 /**
  * Register launchable cabinets here. You can also import { registerGame }
  * elsewhere and call it at runtime for dynamic catalogs.

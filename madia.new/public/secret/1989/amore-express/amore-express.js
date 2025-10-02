@@ -1,3 +1,7 @@
+import { mountParticleField } from "../particles.js";
+
+mountParticleField();
+
 const boardSize = 6;
 const shop = { row: 2, col: 0, label: "Hub", name: "Amore Slices dispatch" };
 const houses = [

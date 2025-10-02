@@ -1,3 +1,7 @@
+import { mountParticleField } from "../particles.js";
+
+mountParticleField();
+
 const GRID_ROWS = 8;
 const GRID_COLS = 8;
 const TICK_MS = 1200;
