@@ -180,6 +180,51 @@ const games = [
     `,
   },
   {
+    id: "say-anything",
+    name: "Say Anything...",
+    description: "Sync emotional frequencies before the silence fractures the conversation.",
+    url: "./say-anything/index.html",
+    thumbnail: `
+      <svg viewBox="0 0 160 120" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Say Anything preview">
+        <defs>
+          <linearGradient id="sayBackdrop" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0%" stop-color="#38bdf8" />
+            <stop offset="100%" stop-color="#ec4899" />
+          </linearGradient>
+          <linearGradient id="sayGlow" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="rgba(56,189,248,0.25)" />
+            <stop offset="100%" stop-color="rgba(15,23,42,0.8)" />
+          </linearGradient>
+        </defs>
+        <rect x="8" y="10" width="144" height="100" rx="18" fill="rgba(6,11,26,0.92)" stroke="rgba(148,163,184,0.35)" />
+        <rect x="22" y="24" width="116" height="36" rx="12" fill="url(#sayGlow)" stroke="rgba(148,163,184,0.35)" />
+        <g fill="none" stroke="url(#sayBackdrop)" stroke-width="3" stroke-linecap="round">
+          <path d="M34 38c6-6 14-6 20 0" />
+          <path d="M102 38c6 6 14 6 20 0" />
+          <line x1="56" y1="32" x2="56" y2="48" />
+          <line x1="80" y1="28" x2="80" y2="52" />
+        </g>
+        <g fill="rgba(56,189,248,0.35)">
+          <circle cx="38" cy="36" r="6" />
+          <circle cx="54" cy="36" r="6" fill="rgba(148,163,184,0.6)" />
+          <circle cx="70" cy="36" r="6" />
+          <circle cx="102" cy="36" r="6" fill="rgba(236,72,153,0.55)" />
+          <circle cx="118" cy="36" r="6" fill="rgba(249,115,22,0.55)" />
+        </g>
+        <g transform="translate(40 70)">
+          <rect x="0" y="0" width="80" height="32" rx="10" fill="rgba(15,23,42,0.85)" stroke="rgba(148,163,184,0.35)" />
+          <circle cx="16" cy="16" r="9" fill="rgba(56,189,248,0.7)" stroke="rgba(148,163,184,0.5)" stroke-width="2" />
+          <circle cx="64" cy="16" r="9" fill="rgba(236,72,153,0.65)" stroke="rgba(148,163,184,0.5)" stroke-width="2" />
+          <rect x="32" y="8" width="16" height="6" rx="3" fill="rgba(148,163,184,0.6)" />
+          <rect x="32" y="18" width="16" height="6" rx="3" fill="rgba(148,163,184,0.6)" />
+          <rect x="-8" y="14" width="96" height="6" rx="3" fill="url(#sayBackdrop)" opacity="0.4" />
+        </g>
+        <path d="M24 74 L36 88" stroke="rgba(56,189,248,0.4)" stroke-width="3" stroke-linecap="round" />
+        <path d="M136 74 L124 88" stroke="rgba(236,72,153,0.4)" stroke-width="3" stroke-linecap="round" />
+      </svg>
+    `,
+  },
+  {
     id: "speed-zone",
     name: "Speed Zone",
     description: "Chart a cannonball sprint past sirens, tolls, and neon checkpoints.",
