@@ -68,6 +68,47 @@ const games = [
     `,
   },
   {
+    id: "speed-zone",
+    name: "Speed Zone",
+    description: "Chart a cannonball sprint past sirens, tolls, and neon checkpoints.",
+    url: "./speed-zone/index.html",
+    thumbnail: `
+      <svg viewBox="0 0 160 120" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Speed Zone preview">
+        <defs>
+          <linearGradient id="speedRoad" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0%" stop-color="#38bdf8" />
+            <stop offset="100%" stop-color="#f97316" />
+          </linearGradient>
+          <linearGradient id="speedSky" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="rgba(56,189,248,0.35)" />
+            <stop offset="100%" stop-color="rgba(15,23,42,0.8)" />
+          </linearGradient>
+        </defs>
+        <rect x="6" y="6" width="148" height="108" rx="18" fill="rgba(5,8,20,0.9)" stroke="rgba(120,255,255,0.4)" />
+        <rect x="12" y="12" width="136" height="96" rx="16" fill="url(#speedSky)" stroke="rgba(120,255,255,0.25)" />
+        <g stroke="url(#speedRoad)" stroke-width="4" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M24 86 L54 70 L86 82 L120 48" fill="none" />
+          <path d="M28 40 L60 32 L92 48 L132 28" fill="none" opacity="0.7" />
+        </g>
+        <g>
+          <circle cx="54" cy="70" r="7" fill="#38bdf8" stroke="rgba(120,255,255,0.6)" />
+          <circle cx="86" cy="82" r="7" fill="#f97316" stroke="rgba(255,255,255,0.4)" />
+          <circle cx="120" cy="48" r="8" fill="#7b5bff" stroke="rgba(255,255,255,0.6)" />
+          <circle cx="92" cy="48" r="6" fill="#facc15" stroke="rgba(255,255,255,0.45)" />
+        </g>
+        <g transform="translate(32 20)">
+          <rect x="72" y="0" width="28" height="28" rx="6" fill="rgba(15,23,42,0.85)" stroke="rgba(120,255,255,0.35)" />
+          <g transform="translate(76 4)" fill="#38bdf8" stroke="rgba(255,255,255,0.65)" stroke-width="1.2">
+            <rect x="0" y="0" width="6" height="6" rx="1" />
+            <rect x="8" y="4" width="6" height="6" rx="1" fill="#f97316" />
+            <rect x="4" y="12" width="6" height="6" rx="1" fill="#facc15" />
+            <rect x="12" y="16" width="6" height="6" rx="1" fill="#7b5bff" />
+          </g>
+        </g>
+      </svg>
+    `,
+  },
+  {
     id: "prototype",
     name: "Prototype Cabinet",
     description: "Drop a new game folder in \"secret\" and point the cab here.",
