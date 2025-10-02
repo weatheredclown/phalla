@@ -6,6 +6,10 @@ const SHIFT_THRESHOLD = 100;
 const DROP_DELAY_BASE = 900;
 const DROP_DELAY_MIN = 400;
 const INTEGRITY_TICK_AMOUNT = 0.4;
+const ROUTE_STABILIZE_MIN_LOCKED = 3;
+const ROUTE_STABILIZE_BASE = 4;
+const ROUTE_STABILIZE_PER_NODE = 2;
+const ROUTE_STABILIZE_COOLDOWN_MS = 15000;
 const ROTATION_KICKS = [
   { x: 0, y: 0 },
   { x: -1, y: 0 },
@@ -188,6 +192,7 @@ const cancelTransformBtn = document.getElementById("cancel-transform");
 const transformToolbar = document.getElementById("transform-toolbar");
 const shiftBoardBtn = document.getElementById("shift-board");
 const routeToggleBtn = document.getElementById("route-toggle");
+const stabilizeRouteBtn = document.getElementById("stabilize-route");
 const reactorHudEl = document.querySelector(".reactor-hud");
 const scoreMetricEl = document.getElementById("score-metric");
 const linesMetricEl = document.getElementById("lines-metric");
@@ -229,6 +234,8 @@ let bridgePreviewTimeout = null;
 let pendingInfusions = [];
 let shiftOrientation = 0;
 let planIdCounter = 0;
+let lastRouteStabilizeAt = 0;
+let stabilizeCooldownTimeout = null;
 
 let flowNodes = initializeFlowNodes();
 let isResolvingMatches = false;
@@ -575,6 +582,7 @@ function triggerGameOver(message) {
   }
   routeMode = false;
   updateRouteButton();
+  updateStabilizeButton();
   matchBoardEl.classList.add("board-disabled");
   tetraminoBoardEl.classList.add("board-disabled");
   flowGridEl.classList.add("board-disabled");
@@ -611,6 +619,11 @@ function startNewRun(isInitial = false) {
     bridgePreviewTimeout = null;
   }
   routeSelection = [];
+  lastRouteStabilizeAt = 0;
+  if (stabilizeCooldownTimeout) {
+    window.clearTimeout(stabilizeCooldownTimeout);
+    stabilizeCooldownTimeout = null;
+  }
   pieceQueue = [];
   activePiece = null;
   tetraBoard = createMatrix(TETRA_HEIGHT, TETRA_WIDTH, null);
@@ -1382,6 +1395,41 @@ function initializeFlowNodes() {
   return nodes;
 }
 
+function updateStabilizeButton() {
+  if (!stabilizeRouteBtn) {
+    return;
+  }
+  const now = Date.now();
+  const lockedCount = routeSelection.filter((index) => flowNodes[index]?.locked).length;
+  const onCooldown = now - lastRouteStabilizeAt < ROUTE_STABILIZE_COOLDOWN_MS;
+  const canStabilize =
+    routeMode &&
+    !gameOver &&
+    lockedCount >= ROUTE_STABILIZE_MIN_LOCKED &&
+    !onCooldown;
+  stabilizeRouteBtn.disabled = !canStabilize;
+  if (canStabilize) {
+    stabilizeRouteBtn.title = "Channel stored flow across the selected route to restore integrity.";
+  } else if (gameOver) {
+    stabilizeRouteBtn.title = "Reactor offline. Restart the run to stabilize routes again.";
+  } else if (!routeMode) {
+    stabilizeRouteBtn.title = "Enable Plan Routes to target bridges for stabilization.";
+  } else if (onCooldown) {
+    const remaining = Math.max(
+      0,
+      Math.ceil((ROUTE_STABILIZE_COOLDOWN_MS - (now - lastRouteStabilizeAt)) / 1000)
+    );
+    stabilizeRouteBtn.title =
+      remaining > 0
+        ? `Stabilizer recalibrating. Ready in ${remaining} second${remaining === 1 ? "" : "s"}.`
+        : "Stabilizer recalibrating.";
+  } else if (lockedCount < ROUTE_STABILIZE_MIN_LOCKED) {
+    stabilizeRouteBtn.title = "Select at least three locked bridges to steady the flow.";
+  } else {
+    stabilizeRouteBtn.title = "";
+  }
+}
+
 function renderFlowGrid() {
   flowGridEl.classList.toggle("board-disabled", gameOver);
   flowGridEl.innerHTML = "";
@@ -1417,6 +1465,7 @@ function renderFlowGrid() {
     cell.addEventListener("click", () => onFlowNodeClick(index));
     flowGridEl.append(cell);
   });
+  updateStabilizeButton();
 }
 
 function onFlowNodeClick(index) {
@@ -1487,6 +1536,39 @@ function toggleRouteMode() {
   updateRouteButton();
   updateBridgeHint();
   renderFlowGrid();
+}
+
+function stabilizeSelectedRoute() {
+  if (!routeMode || gameOver) {
+    return;
+  }
+  const now = Date.now();
+  if (now - lastRouteStabilizeAt < ROUTE_STABILIZE_COOLDOWN_MS) {
+    logEvent("Stabilizer still recalibrating. Give it a moment to recharge.");
+    updateStabilizeButton();
+    return;
+  }
+  const lockedNodes = routeSelection.filter((index) => flowNodes[index]?.locked);
+  if (lockedNodes.length < ROUTE_STABILIZE_MIN_LOCKED) {
+    logEvent("Select at least three locked bridges to channel stability.");
+    updateStabilizeButton();
+    return;
+  }
+  const restored = ROUTE_STABILIZE_BASE + lockedNodes.length * ROUTE_STABILIZE_PER_NODE;
+  restoreIntegrity(
+    restored,
+    "Stabilized flow routes reinforce the reactor's structural integrity."
+  );
+  logEvent(`Stabilized ${lockedNodes.length} bridge node${lockedNodes.length === 1 ? "" : "s"}.`);
+  lastRouteStabilizeAt = now;
+  if (stabilizeCooldownTimeout) {
+    window.clearTimeout(stabilizeCooldownTimeout);
+  }
+  stabilizeCooldownTimeout = window.setTimeout(() => {
+    stabilizeCooldownTimeout = null;
+    updateStabilizeButton();
+  }, ROUTE_STABILIZE_COOLDOWN_MS);
+  updateStabilizeButton();
 }
 
 function createBridgePlan(id, rotationIndex = 0) {
@@ -1905,6 +1987,9 @@ chargeTransformBtn.addEventListener("click", enterTransformMode);
 cancelTransformBtn.addEventListener("click", exitTransformMode);
 shiftBoardBtn.addEventListener("click", applyShiftActuation);
 routeToggleBtn.addEventListener("click", toggleRouteMode);
+if (stabilizeRouteBtn) {
+  stabilizeRouteBtn.addEventListener("click", stabilizeSelectedRoute);
+}
 if (restartButton) {
   restartButton.addEventListener("click", () => startNewRun(false));
 }
