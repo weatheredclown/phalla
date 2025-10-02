@@ -461,9 +461,44 @@ const overlayFrame = document.getElementById("overlay-frame");
 const frame = document.getElementById("game-frame");
 const title = document.getElementById("player-title");
 const description = document.getElementById("player-description");
+const fullscreenButton = document.getElementById("fullscreen-toggle");
 
 const gameLookup = new Map(games.map((game) => [game.id, game]));
 let lastFocusElement = null;
+
+function isOverlayFullscreen() {
+  return document.fullscreenElement === overlayFrame;
+}
+
+function setFullscreenButtonState(active) {
+  if (!fullscreenButton) {
+    return;
+  }
+  fullscreenButton.setAttribute("aria-pressed", active ? "true" : "false");
+  fullscreenButton.textContent = active ? "🗗 Windowed" : "⛶ Fullscreen";
+  fullscreenButton.title = active ? "Exit fullscreen" : "Enter fullscreen";
+}
+
+async function toggleFullscreen() {
+  if (!fullscreenButton) {
+    return;
+  }
+
+  if (isOverlayFullscreen()) {
+    try {
+      await document.exitFullscreen();
+    } catch (error) {
+      console.warn("Unable to exit fullscreen", error);
+    }
+    return;
+  }
+
+  try {
+    await overlayFrame.requestFullscreen();
+  } catch (error) {
+    console.warn("Fullscreen request was denied", error);
+  }
+}
 
 function renderGames() {
   const fragment = document.createDocumentFragment();
@@ -487,15 +522,22 @@ function openGame(game) {
   frame.src = game.url;
   overlay.hidden = false;
   overlay.dataset.activeGame = game.id;
+  setFullscreenButtonState(isOverlayFullscreen());
   requestAnimationFrame(() => {
     overlayFrame.focus({ preventScroll: true });
   });
 }
 
 function closeGame() {
+  if (isOverlayFullscreen()) {
+    document.exitFullscreen().catch((error) => {
+      console.warn("Unable to exit fullscreen", error);
+    });
+  }
   overlay.hidden = true;
   overlay.dataset.activeGame = "";
   frame.src = "";
+  setFullscreenButtonState(false);
   if (lastFocusElement && document.body.contains(lastFocusElement)) {
     lastFocusElement.focus({ preventScroll: true });
   } else {
@@ -523,11 +565,27 @@ grid.addEventListener("click", (event) => {
 closeButton.addEventListener("click", closeGame);
 overlayBackdrop.addEventListener("click", closeGame);
 
+fullscreenButton?.addEventListener("click", () => {
+  toggleFullscreen();
+});
+
 document.addEventListener("keydown", (event) => {
   if (event.key === "Escape" && overlay.hidden === false) {
+    if (isOverlayFullscreen()) {
+      document.exitFullscreen().catch(() => {
+        /* Ignore */
+      });
+      return;
+    }
     closeGame();
   }
 });
+
+document.addEventListener("fullscreenchange", () => {
+  setFullscreenButtonState(isOverlayFullscreen());
+});
+
+setFullscreenButtonState(false);
 
 export function registerGame(gameConfig) {
   const { id, name, description, url, thumbnail } = gameConfig;
