@@ -1,0 +1,31 @@
+[
+  {
+    "id": "level_50_title",
+    "positive": "isometric pixel art trophy cabinet, brushed metal, 32 color palette, cinematic rim light",
+    "negative": "low detail, photo, text watermark",
+    "model": "sdxl_base_1.0.safetensors",
+    "vae": "sdxl_vae.safetensors",
+    "sampler": "dpmpp_2m_sde",
+    "scheduler": "karras",
+    "steps": 30,
+    "cfg": 6.5,
+    "seed": 19890001,
+    "width": 512,
+    "height": 512,
+    "output_prefix": "1989/level_50/title"
+  },
+  {
+    "id": "level_49_avatar",
+    "positive": "16-bit arcade hero, leather jacket, neon skyline backdrop, stylized pixel art portrait",
+    "negative": "photo, blur, extra limbs",
+    "model": "sdxl_base_1.0.safetensors",
+    "sampler": "euler",
+    "scheduler": "normal",
+    "steps": 28,
+    "cfg": 7,
+    "seed": 19890002,
+    "width": 384,
+    "height": 512,
+    "output_prefix": "1989/level_49/avatar"
+  }
+]
