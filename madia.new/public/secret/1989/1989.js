@@ -4,6 +4,49 @@
  */
 const games = [
   {
+    id: "road-house",
+    name: "Road House",
+    description: "Contain the Double Deuce chaos by sliding rowdies into the exits before glass locks the grid.",
+    url: "./road-house/index.html",
+    thumbnail: `
+      <svg viewBox="0 0 160 120" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Road House preview">
+        <defs>
+          <linearGradient id="floorGlow" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0%" stop-color="#38bdf8" />
+            <stop offset="100%" stop-color="#f97316" />
+          </linearGradient>
+          <linearGradient id="floorBase" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="rgba(56,189,248,0.25)" />
+            <stop offset="100%" stop-color="rgba(15,23,42,0.85)" />
+          </linearGradient>
+        </defs>
+        <rect x="6" y="6" width="148" height="108" rx="18" fill="rgba(6,10,22,0.92)" stroke="rgba(148,163,184,0.4)" />
+        <rect x="18" y="18" width="124" height="84" rx="16" fill="url(#floorBase)" stroke="rgba(148,163,184,0.3)" />
+        <g stroke="rgba(148,163,184,0.22)" stroke-width="1">
+          ${Array.from({ length: 5 }, (_, i) => `<line x1="${34 + i * 18}" y1="24" x2="${34 + i * 18}" y2="96" />`).join("")}
+          ${Array.from({ length: 4 }, (_, i) => `<line x1="26" y1="${36 + i * 15}" x2="134" y2="${36 + i * 15}" />`).join("")}
+        </g>
+        <g>
+          <rect x="46" y="40" width="20" height="20" rx="5" fill="rgba(56,189,248,0.7)" stroke="rgba(56,189,248,0.8)" />
+          <rect x="70" y="40" width="20" height="20" rx="5" fill="rgba(249,115,22,0.7)" stroke="rgba(249,115,22,0.8)" />
+          <rect x="94" y="40" width="20" height="20" rx="5" fill="rgba(249,115,22,0.55)" stroke="rgba(249,115,22,0.6)" />
+          <rect x="70" y="64" width="20" height="20" rx="5" fill="rgba(148,163,184,0.35)" stroke="rgba(148,163,184,0.5)" />
+        </g>
+        <g stroke="url(#floorGlow)" stroke-width="4" stroke-linecap="round">
+          <line x1="26" y1="36" x2="26" y2="96" />
+          <line x1="134" y1="36" x2="134" y2="96" />
+          <line x1="50" y1="24" x2="120" y2="24" />
+          <line x1="50" y1="104" x2="120" y2="104" />
+        </g>
+        <circle cx="58" cy="50" r="5" fill="#38bdf8" stroke="rgba(255,255,255,0.6)" stroke-width="1.5" />
+        <circle cx="102" cy="50" r="5" fill="#f97316" stroke="rgba(255,255,255,0.6)" stroke-width="1.5" />
+        <circle cx="80" cy="74" r="5" fill="#94a3b8" stroke="rgba(255,255,255,0.5)" stroke-width="1.2" />
+        <path d="M58 50 L102 50" stroke="rgba(249,115,22,0.5)" stroke-width="3" stroke-linecap="round" />
+        <path d="M102 50 L80 74" stroke="rgba(148,163,184,0.55)" stroke-width="3" stroke-linecap="round" stroke-dasharray="4 4" />
+      </svg>
+    `,
+  },
+  {
     id: "cable-clash",
     name: "The Cable Clash",
     description: "Route the cobalt line across the ring while juking roaming rivals.",
