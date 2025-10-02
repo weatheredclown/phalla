@@ -3,6 +3,10 @@ const TETRA_WIDTH = 10;
 const TETRA_HEIGHT = 20;
 const TRANSFORM_COST = { earth: 20, water: 30 };
 const SHIFT_THRESHOLD = 100;
+const DROP_DELAY_BASE = 900;
+const DROP_DELAY_MIN = 400;
+const STRAIN_TICK_AMOUNT = 0.4;
+const ROTATION_KICKS = [0, -1, 1, -2, 2];
 
 const infusionMapping = {
   sedimentary: "geolocked",
@@ -48,8 +52,20 @@ const pieceDefinitions = {
       ],
       [
         [0, 0, 0, 0],
-        [0, 0, 1, 1],
+        [0, 1, 1, 1],
+        [0, 1, 0, 0],
+        [0, 0, 0, 0]
+      ],
+      [
+        [0, 0, 0, 0],
         [0, 1, 1, 0],
+        [0, 0, 1, 0],
+        [0, 0, 1, 0]
+      ],
+      [
+        [0, 0, 0, 0],
+        [0, 0, 1, 0],
+        [1, 1, 1, 0],
         [0, 0, 0, 0]
       ]
     ]
@@ -60,6 +76,24 @@ const pieceDefinitions = {
       [
         [0, 0, 0, 0],
         [1, 1, 1, 0],
+        [0, 1, 0, 0],
+        [0, 0, 0, 0]
+      ],
+      [
+        [0, 0, 1, 0],
+        [0, 1, 1, 0],
+        [0, 0, 1, 0],
+        [0, 0, 0, 0]
+      ],
+      [
+        [0, 0, 0, 0],
+        [0, 0, 1, 0],
+        [1, 1, 1, 0],
+        [0, 0, 0, 0]
+      ],
+      [
+        [0, 1, 0, 0],
+        [0, 1, 1, 0],
         [0, 1, 0, 0],
         [0, 0, 0, 0]
       ]
@@ -114,6 +148,15 @@ const cancelTransformBtn = document.getElementById("cancel-transform");
 const transformToolbar = document.getElementById("transform-toolbar");
 const shiftBoardBtn = document.getElementById("shift-board");
 const routeToggleBtn = document.getElementById("route-toggle");
+const scoreMetricEl = document.getElementById("score-metric");
+const linesMetricEl = document.getElementById("lines-metric");
+const circuitsMetricEl = document.getElementById("circuits-metric");
+const scoreDisplayEl = document.getElementById("score-display");
+const linesDisplayEl = document.getElementById("lines-display");
+const circuitsDisplayEl = document.getElementById("circuits-display");
+const strainMeterEl = document.getElementById("strain-meter");
+const reactorAlertEl = document.getElementById("reactor-alert");
+const restartButton = document.getElementById("restart-game");
 
 let matchBoard = [];
 let matchNodes = [];
@@ -130,7 +173,7 @@ let tetraBoard = createMatrix(TETRA_HEIGHT, TETRA_WIDTH, null);
 let pieceQueue = [];
 let activePiece = null;
 let dropIntervalId = null;
-let dropDelay = 900;
+let dropDelay = DROP_DELAY_BASE;
 let bridgeSchematics = [];
 let routeMode = false;
 let routeSelection = [];
@@ -140,10 +183,247 @@ let pendingInfusions = [];
 let shiftOrientation = 0;
 let planIdCounter = 0;
 
-const flowNodes = initializeFlowNodes();
+let flowNodes = initializeFlowNodes();
+let isResolvingMatches = false;
+let reactorBusy = false;
+let gameOver = false;
+let scoreState = {
+  score: 0,
+  lines: 0,
+  circuits: 0,
+  strain: 20
+};
+let alertTimeoutId = null;
 
 function createMatrix(rows, cols, value) {
   return Array.from({ length: rows }, () => Array.from({ length: cols }, () => value));
+}
+
+function delay(ms) {
+  return new Promise((resolve) => {
+    window.setTimeout(resolve, ms);
+  });
+}
+
+function isInputLocked() {
+  return reactorBusy || isResolvingMatches || gameOver;
+}
+
+function flashMetric(element) {
+  if (!element) {
+    return;
+  }
+  element.classList.remove("pulse");
+  // Force reflow to restart animation
+  void element.offsetWidth; // eslint-disable-line no-void
+  element.classList.add("pulse");
+}
+
+function updateScoreboard() {
+  if (scoreDisplayEl) {
+    scoreDisplayEl.textContent = scoreState.score.toLocaleString();
+  }
+  if (linesDisplayEl) {
+    linesDisplayEl.textContent = scoreState.lines.toString();
+  }
+  if (circuitsDisplayEl) {
+    circuitsDisplayEl.textContent = scoreState.circuits.toString();
+  }
+  if (strainMeterEl) {
+    const value = Math.max(0, Math.min(100, scoreState.strain));
+    strainMeterEl.value = value;
+    strainMeterEl.setAttribute("aria-valuenow", Math.round(value).toString());
+  }
+  updateAlertForStrain();
+}
+
+function showAlert(message, level = "info", holdMs = 2400) {
+  if (!reactorAlertEl) {
+    return;
+  }
+  if (alertTimeoutId) {
+    window.clearTimeout(alertTimeoutId);
+    alertTimeoutId = null;
+  }
+  reactorAlertEl.textContent = message ?? "";
+  reactorAlertEl.className = `reactor-alert ${level}`;
+  if (holdMs > 0) {
+    alertTimeoutId = window.setTimeout(() => {
+      alertTimeoutId = null;
+      updateAlertForStrain();
+    }, holdMs);
+  }
+}
+
+function updateAlertForStrain() {
+  if (!reactorAlertEl || gameOver || alertTimeoutId) {
+    return;
+  }
+  let level = "calm";
+  let message = "";
+  if (scoreState.strain >= 80) {
+    level = "danger";
+    message = "Critical strain! Vent lines immediately.";
+  } else if (scoreState.strain >= 55) {
+    level = "warning";
+    message = "Strain rising—clear lines or seal circuits.";
+  } else if (scoreState.strain <= 15) {
+    message = "Stability nominal.";
+  }
+  reactorAlertEl.textContent = message;
+  reactorAlertEl.className = `reactor-alert ${level}`;
+}
+
+function awardScore(amount, anchor) {
+  if (gameOver || !amount) {
+    return;
+  }
+  scoreState.score += Math.round(amount);
+  updateScoreboard();
+  flashMetric(scoreMetricEl);
+  if (anchor) {
+    anchor.classList.add("reward-flash");
+    window.setTimeout(() => {
+      anchor.classList.remove("reward-flash");
+    }, 520);
+  }
+}
+
+function increaseStrain(amount, message) {
+  if (!amount || gameOver) {
+    return;
+  }
+  scoreState.strain = Math.min(100, scoreState.strain + amount);
+  updateScoreboard();
+  if (message) {
+    const level = scoreState.strain >= 80 ? "danger" : "warning";
+    showAlert(message, level);
+  }
+  if (scoreState.strain >= 100) {
+    triggerGameOver("Reactor strain exceeded safe tolerances. Flow lattice collapses.");
+  }
+}
+
+function decreaseStrain(amount, message) {
+  if (!amount || gameOver) {
+    return;
+  }
+  scoreState.strain = Math.max(0, scoreState.strain - amount);
+  updateScoreboard();
+  if (message) {
+    showAlert(message, "info");
+  }
+}
+
+function applyStrainTick() {
+  if (!activePiece || reactorBusy || gameOver) {
+    return;
+  }
+  increaseStrain(STRAIN_TICK_AMOUNT);
+}
+
+function stopDropLoop() {
+  if (dropIntervalId) {
+    window.clearInterval(dropIntervalId);
+    dropIntervalId = null;
+  }
+}
+
+function triggerGameOver(message) {
+  if (gameOver) {
+    return;
+  }
+  gameOver = true;
+  reactorBusy = false;
+  isResolvingMatches = false;
+  stopDropLoop();
+  showAlert(message, "danger", 0);
+  if (restartButton) {
+    restartButton.hidden = false;
+  }
+  if (shiftBoardBtn) {
+    shiftBoardBtn.disabled = true;
+  }
+  chargeTransformBtn.disabled = true;
+  routeToggleBtn.disabled = true;
+  transformMode = false;
+  if (transformToolbar) {
+    transformToolbar.hidden = true;
+  }
+  routeMode = false;
+  updateRouteButton();
+  matchBoardEl.classList.add("board-disabled");
+  tetraminoBoardEl.classList.add("board-disabled");
+  flowGridEl.classList.add("board-disabled");
+  logEvent("Reactor shutdown engaged. Restart to attempt a new run.");
+}
+
+function startNewRun(isInitial = false) {
+  stopDropLoop();
+  gameOver = false;
+  reactorBusy = false;
+  isResolvingMatches = false;
+  if (alertTimeoutId) {
+    window.clearTimeout(alertTimeoutId);
+    alertTimeoutId = null;
+  }
+  if (restartButton) {
+    restartButton.hidden = true;
+  }
+  chargeTransformBtn.disabled = false;
+  routeToggleBtn.disabled = false;
+  transformMode = false;
+  if (transformToolbar) {
+    transformToolbar.hidden = true;
+  }
+  matchBoardEl.classList.remove("board-disabled", "resolving");
+  tetraminoBoardEl.classList.remove("board-disabled", "board-busy");
+  flowGridEl.classList.remove("board-disabled");
+  selectedTile = null;
+  bridgePreview = null;
+  if (bridgePreviewTimeout) {
+    window.clearTimeout(bridgePreviewTimeout);
+    bridgePreviewTimeout = null;
+  }
+  routeSelection = [];
+  pieceQueue = [];
+  activePiece = null;
+  tetraBoard = createMatrix(TETRA_HEIGHT, TETRA_WIDTH, null);
+  dropDelay = DROP_DELAY_BASE;
+  shiftOrientation = 0;
+  pendingInfusions = [];
+  bridgeSchematics = [];
+  planIdCounter = 0;
+  flowNodes = initializeFlowNodes();
+  resourceMeterState = { earth: 0, water: 0, fire: 0, shift: 0 };
+  updateMeters();
+  shiftBoardBtn.disabled = true;
+  initializeMatchBoard();
+  resetTetraminoBoard();
+  updateBridgeInventory();
+  updateBridgeHint();
+  updateRouteButton();
+  flowGridEl.innerHTML = "";
+  renderFlowGrid();
+  eventLogEl.innerHTML = "";
+  logEvent(
+    isInitial
+      ? "Reactor calibration online. Forge matches to begin the flow."
+      : "Reactor rebooted. Forge matches to rebuild momentum."
+  );
+  scoreState = {
+    score: 0,
+    lines: 0,
+    circuits: 0,
+    strain: 20
+  };
+  updateScoreboard();
+  if (!isInitial) {
+    showAlert("Stability restored. Reconnect the lattice to climb again.", "info");
+  } else {
+    updateAlertForStrain();
+  }
+  startDropLoop();
 }
 
 function initializeMatchBoard() {
@@ -188,6 +468,9 @@ function createsMatch(x, y) {
 }
 
 function renderMatchBoard() {
+  matchBoardEl.classList.toggle("transform-mode", transformMode);
+  matchBoardEl.classList.toggle("resolving", isResolvingMatches);
+  matchBoardEl.classList.toggle("board-disabled", gameOver);
   matchBoardEl.innerHTML = "";
   matchNodes = [];
   matchBoard.forEach((row, y) => {
@@ -235,7 +518,10 @@ function renderMatchBoard() {
   });
 }
 
-function onTileClick(x, y) {
+async function onTileClick(x, y) {
+  if (isInputLocked()) {
+    return;
+  }
   if (transformMode) {
     applyTransformation(x, y);
     return;
@@ -269,7 +555,7 @@ function onTileClick(x, y) {
     return;
   }
 
-  resolveMatches(matches);
+  await resolveMatches(matches);
   selectedTile = null;
 }
 
@@ -351,7 +637,19 @@ function findAllMatches() {
   return matches;
 }
 
-function resolveMatches(matches) {
+async function resolveMatches(matches) {
+  if (!matches || matches.length === 0) {
+    return;
+  }
+  isResolvingMatches = true;
+  matchBoardEl.classList.add("resolving");
+  const animatedNodes = matches
+    .map(({ x, y }) => getTileElement(x, y))
+    .filter((node) => Boolean(node));
+  animatedNodes.forEach((node) => {
+    node.classList.add("rock-resolving");
+  });
+  await delay(220);
   const matchSummary = new Map();
   const infusionSummary = { volcanic: 0, geolocked: 0, flux: 0, prismatic: 0 };
   const geolockedAnchors = [];
@@ -374,16 +672,29 @@ function resolveMatches(matches) {
   collapseColumns();
   refillColumns();
   const restoredColumns = reinforceGeolockedAnchors(geolockedAnchors);
-  renderMatchBoard();
 
+  let totalMatches = 0;
+  let totalEmpowered = 0;
   matchSummary.forEach((data, id) => {
+    totalMatches += data.count;
+    totalEmpowered += data.empowered;
     logEvent(`Matched ${data.count} ${id} rocks${data.empowered ? " with empowered resonance" : ""}.`);
     addResources(rockTypes.find((rock) => rock.id === id).meter, data.count * 8 + data.empowered * 12);
     enqueueTetramino(id, data.count, data.empowered);
   });
 
+  if (totalMatches > 0) {
+    awardScore(totalMatches * 8 + totalEmpowered * 6, matchBoardEl);
+    const strainRelief = Math.min(8, totalMatches + totalEmpowered * 2);
+    if (strainRelief > 0) {
+      decreaseStrain(strainRelief);
+    }
+  }
+
   applyInfusionRewards(infusionSummary, restoredColumns);
   applyPendingInfusions();
+  isResolvingMatches = false;
+  renderMatchBoard();
 }
 
 function reinforceGeolockedAnchors(anchors) {
@@ -468,6 +779,9 @@ function refillColumns() {
 }
 
 function enqueueTetramino(id, count, empoweredCount) {
+  if (gameOver) {
+    return;
+  }
   const definition = pieceDefinitions[id];
   if (!definition) {
     return;
@@ -520,10 +834,15 @@ function getQueueColor(id) {
 }
 
 function spawnNextPiece() {
+  if (gameOver) {
+    return;
+  }
   if (pieceQueue.length === 0) {
+    updateQueueDisplay();
     return;
   }
   const next = pieceQueue.shift();
+  updateQueueDisplay();
   activePiece = {
     ...next,
     x: 3,
@@ -531,10 +850,9 @@ function spawnNextPiece() {
     rotation: next.rotation ?? 0
   };
   if (collides(activePiece, 0, 0)) {
-    logEvent("The reactor is overwhelmed. Network flow resets.");
-    resetTetraminoBoard();
+    triggerGameOver("The reactor is overwhelmed by backlog shards.");
+    return;
   }
-  updateQueueDisplay();
   renderTetraminoBoard();
 }
 
@@ -558,55 +876,84 @@ function collides(piece, offsetX, offsetY, rotationIndex = piece.rotation) {
   return false;
 }
 
-function placePiece() {
-  if (!activePiece) {
+async function placePiece() {
+  if (!activePiece || reactorBusy) {
     return;
   }
+  reactorBusy = true;
   const placedId = activePiece.id;
   const placedRotation = activePiece.rotation;
   const matrix = pieceDefinitions[activePiece.id].rotations[activePiece.rotation];
-  for (let y = 0; y < matrix.length; y += 1) {
-    for (let x = 0; x < matrix[y].length; x += 1) {
-      if (!matrix[y][x]) {
-        continue;
-      }
-      const boardX = activePiece.x + x;
-      const boardY = activePiece.y + y;
-      if (boardY >= 0 && boardY < TETRA_HEIGHT) {
-        tetraBoard[boardY][boardX] = {
-          id: activePiece.id,
-          className: pieceDefinitions[activePiece.id].colorClass
-        };
+  try {
+    for (let y = 0; y < matrix.length; y += 1) {
+      for (let x = 0; x < matrix[y].length; x += 1) {
+        if (!matrix[y][x]) {
+          continue;
+        }
+        const boardX = activePiece.x + x;
+        const boardY = activePiece.y + y;
+        if (boardY >= 0 && boardY < TETRA_HEIGHT) {
+          tetraBoard[boardY][boardX] = {
+            id: activePiece.id,
+            className: pieceDefinitions[activePiece.id].colorClass
+          };
+        }
       }
     }
+    activePiece = null;
+    renderTetraminoBoard();
+    const cleared = await clearLines();
+    if (cleared > 0) {
+      handleLineClear(cleared, placedId, placedRotation);
+    } else {
+      increaseStrain(6, "Shard stacks rise and strain escalates.");
+    }
+  } finally {
+    reactorBusy = false;
+    if (!gameOver) {
+      spawnNextPiece();
+      renderTetraminoBoard();
+    }
   }
-  activePiece = null;
-  const cleared = clearLines();
-  if (cleared > 0) {
-    handleLineClear(cleared, placedId, placedRotation);
-  }
-  spawnNextPiece();
 }
 
-function clearLines() {
-  let cleared = 0;
+async function clearLines() {
+  const rowsToClear = [];
   for (let y = TETRA_HEIGHT - 1; y >= 0; y -= 1) {
     if (tetraBoard[y].every((cell) => cell)) {
-      tetraBoard.splice(y, 1);
-      tetraBoard.unshift(Array.from({ length: TETRA_WIDTH }, () => null));
-      cleared += 1;
-      y += 1;
+      rowsToClear.push(y);
     }
   }
-  if (cleared > 0) {
-    renderTetraminoBoard();
+  if (rowsToClear.length === 0) {
+    return 0;
   }
-  return cleared;
+  rowsToClear.forEach((row) => {
+    for (let x = 0; x < TETRA_WIDTH; x += 1) {
+      const cell = tetraBoard[row][x];
+      if (cell) {
+        tetraBoard[row][x] = { ...cell, clearing: true };
+      }
+    }
+  });
+  renderTetraminoBoard();
+  await delay(260);
+  rowsToClear
+    .sort((a, b) => b - a)
+    .forEach((row) => {
+      tetraBoard.splice(row, 1);
+      tetraBoard.unshift(Array.from({ length: TETRA_WIDTH }, () => null));
+    });
+  renderTetraminoBoard();
+  return rowsToClear.length;
 }
 
 function handleLineClear(count, id, rotationIndex = 0) {
   const awardType = id ?? "sedimentary";
   logEvent(`Cleared ${count} reactor line${count > 1 ? "s" : ""}. Bridges readied.`);
+  scoreState.lines += count;
+  flashMetric(linesMetricEl);
+  awardScore(count * 120, tetraminoBoardEl);
+  decreaseStrain(12 + count * 3, "Line clears vent reactor strain.");
   addResources(mapPieceToMeter(awardType), 14 * count);
   extendFlowWithBridges(count, awardType, rotationIndex);
 }
@@ -633,6 +980,8 @@ function resetTetraminoBoard() {
 }
 
 function renderTetraminoBoard() {
+  tetraminoBoardEl.classList.toggle("board-busy", reactorBusy);
+  tetraminoBoardEl.classList.toggle("board-disabled", gameOver);
   tetraminoBoardEl.innerHTML = "";
   for (let y = 0; y < TETRA_HEIGHT; y += 1) {
     for (let x = 0; x < TETRA_WIDTH; x += 1) {
@@ -641,6 +990,9 @@ function renderTetraminoBoard() {
       const value = tetraBoard[y][x];
       if (value) {
         cell.classList.add(value.className);
+        if (value.clearing) {
+          cell.classList.add("line-clearing");
+        }
       }
       if (activePiece) {
         const matrix = pieceDefinitions[activePiece.id].rotations[activePiece.rotation];
@@ -662,31 +1014,41 @@ function renderTetraminoBoard() {
 }
 
 function dropStep() {
+  if (gameOver || reactorBusy) {
+    return;
+  }
   if (!activePiece) {
     spawnNextPiece();
     return;
   }
   if (!collides(activePiece, 0, 1)) {
     activePiece.y += 1;
+    applyStrainTick();
+    renderTetraminoBoard();
   } else {
     placePiece();
   }
-  renderTetraminoBoard();
 }
 
-function rotatePiece() {
-  if (!activePiece) {
+function rotatePiece(direction = 1) {
+  if (!activePiece || isInputLocked()) {
     return;
   }
-  const nextRotation = (activePiece.rotation + 1) % pieceDefinitions[activePiece.id].rotations.length;
-  if (!collides(activePiece, 0, 0, nextRotation)) {
-    activePiece.rotation = nextRotation;
-    renderTetraminoBoard();
+  const definition = pieceDefinitions[activePiece.id];
+  const total = definition.rotations.length;
+  const nextRotation = (activePiece.rotation + direction + total) % total;
+  for (const offset of ROTATION_KICKS) {
+    if (!collides(activePiece, offset, 0, nextRotation)) {
+      activePiece.x += offset;
+      activePiece.rotation = nextRotation;
+      renderTetraminoBoard();
+      return;
+    }
   }
 }
 
 function movePiece(offset) {
-  if (!activePiece) {
+  if (!activePiece || isInputLocked()) {
     return;
   }
   if (!collides(activePiece, offset, 0)) {
@@ -696,16 +1058,20 @@ function movePiece(offset) {
 }
 
 function softDrop() {
-  if (!activePiece) {
+  if (!activePiece || isInputLocked()) {
     return;
   }
   if (!collides(activePiece, 0, 1)) {
     activePiece.y += 1;
+    applyStrainTick();
     renderTetraminoBoard();
   }
 }
 
 function applyTransformation(x, y) {
+  if (gameOver) {
+    return;
+  }
   const tile = matchBoard[y][x];
   if (tile.empowered) {
     logEvent("This rock already carries a charged state.");
@@ -723,9 +1089,13 @@ function applyTransformation(x, y) {
   exitTransformMode();
   logEvent(`Empowered a ${tile.id} rock via flow resonance.`);
   addResources("shift", 16);
+  increaseStrain(5, "Channeling resonance strains the reactor core.");
 }
 
 function enterTransformMode() {
+  if (gameOver) {
+    return;
+  }
   if (transformMode) {
     return;
   }
@@ -736,15 +1106,20 @@ function enterTransformMode() {
   transformMode = true;
   transformToolbar.hidden = false;
   chargeTransformBtn.disabled = true;
+  renderMatchBoard();
 }
 
 function exitTransformMode() {
   transformMode = false;
   transformToolbar.hidden = true;
   chargeTransformBtn.disabled = false;
+  renderMatchBoard();
 }
 
 function addResources(type, amount) {
+  if (gameOver) {
+    return;
+  }
   resourceMeterState[type] = Math.min(100, resourceMeterState[type] + amount);
   updateMeters();
   if (resourceMeterState.shift >= SHIFT_THRESHOLD) {
@@ -776,6 +1151,7 @@ function initializeFlowNodes() {
 }
 
 function renderFlowGrid() {
+  flowGridEl.classList.toggle("board-disabled", gameOver);
   flowGridEl.innerHTML = "";
   const previewCells = new Set(bridgePreview?.cells ?? []);
   const previewValid = bridgePreview?.valid ?? false;
@@ -834,6 +1210,9 @@ function onFlowNodeClick(index) {
 }
 
 function extendFlowWithBridges(count, id, rotationIndex = 0) {
+  if (gameOver) {
+    return;
+  }
   const plan = createBridgePlan(id, rotationIndex);
   if (!plan) {
     return;
@@ -845,6 +1224,8 @@ function extendFlowWithBridges(count, id, rotationIndex = 0) {
   logEvent(
     `Drafted ${count} ${plan.label} schematic${count > 1 ? "s" : ""} from the reactor.`
   );
+  awardScore(count * 20, flowGridEl);
+  decreaseStrain(Math.min(6, count * 2));
   routeMode = true;
   updateRouteButton();
   updateBridgeInventory();
@@ -859,6 +1240,9 @@ function updateRouteButton() {
 }
 
 function toggleRouteMode() {
+  if (gameOver) {
+    return;
+  }
   routeMode = !routeMode;
   if (!routeMode) {
     routeSelection = [];
@@ -919,6 +1303,9 @@ function mapPieceToSchematicLabel(id) {
 }
 
 function attemptPlaceSchematic(anchorIndex) {
+  if (gameOver) {
+    return;
+  }
   const plan = bridgeSchematics[0];
   if (!plan) {
     return;
@@ -973,6 +1360,8 @@ function attemptPlaceSchematic(anchorIndex) {
   setBridgePreview(targetCells, true);
   routeSelection = Array.from(new Set([...routeSelection, ...targetCells]));
   logEvent(`Locked a ${plan.label} into the flow lattice.`);
+  awardScore(plan.cells.length * 12, flowGridEl);
+  decreaseStrain(Math.min(8, plan.cells.length * 2));
   updateBridgeInventory();
   updateRouteButton();
   updateBridgeHint();
@@ -1105,6 +1494,9 @@ function evaluateNetwork(idHint) {
 }
 
 function completeCircuit(idHint) {
+  if (gameOver) {
+    return;
+  }
   const infusion = determineInfusion(idHint);
   logEvent(
     `Completed a flow circuit. Energy surges through the lattice${
@@ -1113,6 +1505,10 @@ function completeCircuit(idHint) {
   );
   addResources(idHint ? mapPieceToMeter(idHint) : "earth", 20);
   addResources("fire", 10);
+  scoreState.circuits += 1;
+  flashMetric(circuitsMetricEl);
+  awardScore(180 + (infusion ? 40 : 0), flowGridEl);
+  decreaseStrain(18, "Circuit sealed and stability returns.");
   if (infusion) {
     queueInfusion(infusion);
   }
@@ -1130,12 +1526,15 @@ function determineInfusion(idHint) {
 }
 
 function queueInfusion(type) {
+  if (gameOver) {
+    return;
+  }
   pendingInfusions.push(type);
   applyPendingInfusions();
 }
 
 function applyPendingInfusions() {
-  if (pendingInfusions.length === 0) {
+  if (gameOver || pendingInfusions.length === 0) {
     return;
   }
   const remaining = [];
@@ -1191,22 +1590,25 @@ function logEvent(message) {
 }
 
 function startDropLoop() {
-  if (dropIntervalId) {
-    window.clearInterval(dropIntervalId);
+  stopDropLoop();
+  if (gameOver) {
+    return;
   }
   dropIntervalId = window.setInterval(dropStep, dropDelay);
 }
 
 function applyShiftActuation() {
-  if (resourceMeterState.shift < SHIFT_THRESHOLD) {
+  if (resourceMeterState.shift < SHIFT_THRESHOLD || gameOver) {
     return;
   }
   resourceMeterState.shift = 0;
   shiftOrientation = (shiftOrientation + 1) % 4;
-  dropDelay = Math.max(400, dropDelay - 80);
+  dropDelay = Math.max(DROP_DELAY_MIN, dropDelay - 80);
   updateMeters();
   shiftBoardBtn.disabled = true;
   reorientNetwork();
+  decreaseStrain(10, "Actuation vents strain across the flow lattice.");
+  startDropLoop();
   logEvent("Actuated shift realigned the reactor relative to the flow grid.");
 }
 
@@ -1226,6 +1628,9 @@ function reorientNetwork() {
 }
 
 function onKeyDown(event) {
+  if (gameOver) {
+    return;
+  }
   switch (event.key) {
     case "ArrowLeft":
       movePiece(-1);
@@ -1239,14 +1644,20 @@ function onKeyDown(event) {
     case "ArrowUp":
     case "x":
     case "X":
-      rotatePiece();
+      rotatePiece(1);
+      break;
+    case "z":
+    case "Z":
+      rotatePiece(-1);
       break;
     case " ":
+      if (isInputLocked()) {
+        return;
+      }
       while (activePiece && !collides(activePiece, 0, 1)) {
         activePiece.y += 1;
       }
       placePiece();
-      renderTetraminoBoard();
       break;
     default:
       break;
@@ -1257,12 +1668,9 @@ chargeTransformBtn.addEventListener("click", enterTransformMode);
 cancelTransformBtn.addEventListener("click", exitTransformMode);
 shiftBoardBtn.addEventListener("click", applyShiftActuation);
 routeToggleBtn.addEventListener("click", toggleRouteMode);
+if (restartButton) {
+  restartButton.addEventListener("click", () => startNewRun(false));
+}
 window.addEventListener("keydown", onKeyDown);
 
-initializeMatchBoard();
-renderTetraminoBoard();
-updateBridgeInventory();
-updateBridgeHint();
-updateRouteButton();
-renderFlowGrid();
-startDropLoop();
+startNewRun(true);
