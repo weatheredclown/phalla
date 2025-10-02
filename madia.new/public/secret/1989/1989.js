@@ -34,6 +34,40 @@ const games = [
     `,
   },
   {
+    id: "velvet-syncopation",
+    name: "Velvet Syncopation",
+    description: "Three-lane rhythm rehearsal with the lounge trio's velvet slips.",
+    url: "./velvet-syncopation/index.html",
+    thumbnail: `
+      <svg viewBox="0 0 160 120" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Velvet Syncopation preview">
+        <defs>
+          <linearGradient id="velvetGlow" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0%" stop-color="#7b5bff" />
+            <stop offset="100%" stop-color="#38bdf8" />
+          </linearGradient>
+          <linearGradient id="keyShine" x1="0" x2="0" y1="0" y2="1">
+            <stop offset="0%" stop-color="rgba(255,255,255,0.9)" />
+            <stop offset="100%" stop-color="rgba(148,163,184,0.4)" />
+          </linearGradient>
+        </defs>
+        <rect x="8" y="8" width="144" height="104" rx="18" fill="rgba(10,15,30,0.92)" stroke="url(#velvetGlow)" />
+        <g transform="translate(24 24)">
+          <rect x="0" y="0" width="112" height="24" rx="10" fill="rgba(15,23,42,0.85)" stroke="rgba(120,255,255,0.35)" />
+          <rect x="0" y="36" width="112" height="24" rx="10" fill="rgba(15,23,42,0.85)" stroke="rgba(120,255,255,0.35)" />
+          <rect x="0" y="72" width="112" height="16" rx="8" fill="rgba(15,23,42,0.75)" stroke="rgba(120,255,255,0.25)" />
+          ${[0, 1, 2, 3, 4].map((i) => `<rect x="${4 + i * 22}" y="4" width="16" height="16" rx="4" fill="url(#keyShine)" />`).join("")}
+          ${[0, 1, 2, 3, 4].map((i) => `<rect x="${12 + i * 22}" y="40" width="16" height="16" rx="4" fill="rgba(123,91,255,0.65)" />`).join("")}
+          <g>
+            <circle cx="16" cy="80" r="6" fill="#38bdf8" />
+            <circle cx="48" cy="80" r="6" fill="#7b5bff" />
+            <circle cx="80" cy="80" r="6" fill="#f97316" />
+            <circle cx="104" cy="80" r="6" fill="#ec4899" />
+          </g>
+        </g>
+      </svg>
+    `,
+  },
+  {
     id: "prototype",
     name: "Prototype Cabinet",
     description: "Drop a new game folder in \"secret\" and point the cab here.",
