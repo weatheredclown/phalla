@@ -1859,7 +1859,12 @@ function reorientNetwork() {
   renderFlowGrid();
 }
 
+const scrollBlockingKeys = new Set(["ArrowLeft", "ArrowRight", "ArrowDown", "ArrowUp", " "]);
+
 function onKeyDown(event) {
+  if (scrollBlockingKeys.has(event.key)) {
+    event.preventDefault();
+  }
   if (gameOver) {
     return;
   }
