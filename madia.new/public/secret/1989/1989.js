@@ -174,8 +174,8 @@ const games = [
     `,
   },
   {
-    id: "argumentum",
-    name: "Argumentum",
+    id: "augmentum",
+    name: "Augmentum",
 
     description: "Synth-grid puzzle fusion hidden deep in the archives.",
     url: "../augmentum/index.html",
