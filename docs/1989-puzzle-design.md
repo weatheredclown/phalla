@@ -65,3 +65,11 @@
 - **Dynamic blockers:** Shadows refuse to sit still—every few beats they drift or dissolve into the dark, forcing quick sweeps or risk losing their dust payout until they reform.
 - **Resource pressure:** Pixie Dust is finite and decays if hoarded; drawing the conduit trail consumes dust segment by segment, so inefficient paths leave the Flight Meter starving before the gate.
 - **Actuation twist:** Slamming the "Think Happy Thoughts" button freezes every shadow in place for five seconds, buying just enough time to stack captures and chart an optimal dust flow before the night resumes.
+## Level 39: Weekend at Bernie's
+- **Inspirational roots:** A slapstick weekend of deception at a Hamptons beach house where two friends pretend their late boss is still living it up.
+- **Anchor pieces:** Bernie's unmoving figure seated center stage, a circular Movement Timer, a longer Tidal Timer sandglass, and patrol routes for nosey guests, house staff, and beach hazards.
+- **Core mechanic:** Forced Actuation and Timing—players race to finish quick micro-puzzles around the board to earn "Bernie Action" tokens that can jerk the corpse one space at a time.
+- **Pressure cooker:** The Movement Timer continually ticks down; if it expires before Bernie is shuffled somewhere convincing, the onlookers notice and the attempt collapses.
+- **Board hazards:** Maids, partygoers, and rolling tide markers advance on scripted beats, threatening to collide with Bernie unless players expend tokens to pivot or reposition him.
+- **Combo payoff:** Pulling off a multi-step Bernie routine that dupes an observer sparks a "Party Vibe" freeze—pausing the board and the fast timer for a short breather while awarding bonus token capacity.
+- **Level timer:** The overarching Tidal Timer limits how long the charade can last before the tide washes in and ends the seaside ruse, challenging players to string together efficient, comedic escapes.

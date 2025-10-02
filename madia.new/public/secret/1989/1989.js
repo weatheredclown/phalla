@@ -106,6 +106,43 @@ const games = [
     `,
   },
   {
+    id: "halo-hustle",
+    name: "Halo Hustle",
+    description: "Keep the Time-Sand alive with cup runs, lucky sums, and haloed sequences.",
+    url: "./halo-hustle/index.html",
+    thumbnail: `
+      <svg viewBox="0 0 160 120" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Halo Hustle preview">
+        <defs>
+          <linearGradient id="haloGlow" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0%" stop-color="#7b5bff" />
+            <stop offset="100%" stop-color="#14b8a6" />
+          </linearGradient>
+          <linearGradient id="sandFill" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="rgba(123,91,255,0.35)" />
+            <stop offset="100%" stop-color="rgba(20,184,166,0.2)" />
+          </linearGradient>
+        </defs>
+        <rect x="8" y="8" width="144" height="104" rx="18" fill="rgba(6,10,24,0.92)" stroke="rgba(148,163,184,0.35)" />
+        <g transform="translate(36 18)">
+          <rect x="0" y="0" width="88" height="84" rx="18" fill="rgba(10,16,32,0.9)" stroke="url(#haloGlow)" />
+          <path d="M24 14h40l-12 20 12 20H24l12-20z" fill="url(#sandFill)" stroke="rgba(148,163,184,0.35)" stroke-width="2" />
+          <circle cx="44" cy="12" r="10" fill="rgba(250,204,21,0.35)" stroke="#facc15" stroke-width="2" />
+          <circle cx="44" cy="72" r="14" fill="rgba(20,184,166,0.2)" stroke="rgba(20,184,166,0.75)" stroke-width="2" />
+          <g transform="translate(8 32)">
+            <circle cx="12" cy="0" r="6" fill="#facc15" stroke="rgba(17,24,39,0.9)" />
+            <circle cx="44" cy="0" r="6" fill="#38bdf8" stroke="rgba(17,24,39,0.9)" />
+            <circle cx="76" cy="0" r="6" fill="#ec4899" stroke="rgba(17,24,39,0.9)" />
+          </g>
+          <g transform="translate(18 54)">
+            <rect x="0" y="0" width="20" height="10" rx="5" fill="rgba(123,91,255,0.35)" />
+            <rect x="34" y="0" width="20" height="10" rx="5" fill="rgba(123,91,255,0.35)" />
+            <rect x="68" y="0" width="20" height="10" rx="5" fill="rgba(123,91,255,0.35)" />
+          </g>
+        </g>
+      </svg>
+    `,
+  },
+  {
     id: "velvet-syncopation",
     name: "Velvet Syncopation",
     description: "Three-lane rhythm rehearsal with the lounge trio's velvet slips.",
