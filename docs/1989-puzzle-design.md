@@ -50,3 +50,10 @@
 - **Dynamic blockers:** "Miscommunication" clouds spawn whenever Static, Guarded, or Doubtful blocks appear; missed sync windows or uncharged silences grow the cloud stack and drain the meter.
 - **Actuation twist:** Spending a Boombox Charge during scripted silence gaps keeps the flow alive, while lining up a positive combo (Love, Trust, Reassure) wipes all active miscommunication clouds in a "Commitment" burst.
 - **Difficulty curve:** Early beats introduce single positive pairings, then weave in offset responses, longer silence gaps, and alternating negative intrusions that demand rapid Boombox timing before a three-beat finale of perfect positives triggers a sweeping payoff.
+## Level 43: All Dogs Go to Heaven
+- **Inspirational roots:** Follows a rakish canine who bolts from the afterlife to gamble on a second shot at living, nodding to the animated cult classic without quoting it directly.
+- **Anchor pieces:** The Clock of Life hourglass with visible Time-Sand, neon betting tables studded with micro-puzzle slots, and shimmering Life Chips that pour back into the clock.
+- **Core mechanic:** A constantly draining Time-Sand meter ticks down in real time; players dive into adjacent Betting Puzzles to convert quick solves into Life Chips that refill the hourglass before it empties.
+- **Resource loop:** Each completed puzzle spits out Life Chips equal to the player's streak, demanding sharp routing across the parlor floor to plug the winnings into the clock before the sand drops too low.
+- **Risk dilemma:** Longer, high-stakes puzzles promise jackpots of Life Chips but chew through Time-Sand while they resolve, forcing players to weigh desperation gambles against safer rapid-fire solves.
+- **Failure condition:** Letting the Time-Sand run dry snaps the Clock of Life and sends Charlie back upstairs, resetting the run and wiping any banked multipliers.

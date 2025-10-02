@@ -287,6 +287,45 @@ const games = [
       </svg>
     `,
   },
+  {
+    id: "paper-trail-blaze",
+    name: "Paper Trail Blaze",
+    description: "Guide the bill past Blaze's scandals and into the archives before Capital dries up.",
+    url: "./blaze/index.html",
+    thumbnail: `
+      <svg viewBox="0 0 160 120" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Paper Trail Blaze preview">
+        <defs>
+          <linearGradient id="deskGlow" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0%" stop-color="#5eead4" />
+            <stop offset="100%" stop-color="#38bdf8" />
+          </linearGradient>
+          <linearGradient id="scandalGlow" x1="0" y1="0" x2="1" y2="0">
+            <stop offset="0%" stop-color="#f97316" />
+            <stop offset="100%" stop-color="#ef4444" />
+          </linearGradient>
+          <linearGradient id="paperTrail" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="rgba(94,234,212,0.7)" />
+            <stop offset="100%" stop-color="rgba(14,165,233,0.45)" />
+          </linearGradient>
+        </defs>
+        <rect x="8" y="8" width="144" height="104" rx="18" fill="rgba(6,10,22,0.92)" stroke="rgba(148,163,184,0.35)" />
+        <rect x="18" y="22" width="56" height="76" rx="12" fill="rgba(15,23,42,0.88)" stroke="url(#deskGlow)" />
+        <rect x="86" y="22" width="56" height="76" rx="12" fill="rgba(15,23,42,0.88)" stroke="url(#scandalGlow)" />
+        <g stroke="rgba(94,234,212,0.6)" stroke-width="3" stroke-linecap="round">
+          <path d="M42 36 C42 60 64 48 64 72" fill="none" />
+          <path d="M64 72 C70 84 90 82 96 94" fill="none" />
+        </g>
+        <g stroke="rgba(248,113,113,0.5)" stroke-width="3" stroke-linecap="round">
+          <path d="M112 36 C120 48 124 60 122 72" fill="none" />
+          <path d="M122 72 C118 86 98 88 96 94" fill="none" stroke-dasharray="4 4" />
+        </g>
+        <rect x="34" y="30" width="22" height="32" rx="8" fill="url(#paperTrail)" stroke="rgba(94,234,212,0.8)" />
+        <circle cx="118" cy="40" r="10" fill="rgba(248,113,113,0.75)" stroke="rgba(248,113,113,0.9)" />
+        <circle cx="98" cy="90" r="8" fill="rgba(251,191,36,0.75)" stroke="rgba(251,191,36,0.9)" />
+        <rect x="102" y="70" width="18" height="20" rx="6" fill="rgba(148,163,184,0.35)" stroke="rgba(148,163,184,0.6)" />
+      </svg>
+    `,
+  },
 ];
 
 const grid = document.getElementById("game-grid");
