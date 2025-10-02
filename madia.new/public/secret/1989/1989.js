@@ -390,6 +390,44 @@ const games = [
     `,
   },
   {
+    id: "kodiak-covenant",
+    name: "Kodiak Covenant",
+    description: "Coordinate guardian and cub trails while shielding them from the roaming hunter.",
+    url: "./kodiak-covenant/index.html",
+    thumbnail: `
+      <svg viewBox="0 0 160 120" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Kodiak Covenant preview">
+        <defs>
+          <linearGradient id="kodiakSky" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0%" stop-color="rgba(94,234,212,0.65)" />
+            <stop offset="100%" stop-color="rgba(15,23,42,0.85)" />
+          </linearGradient>
+          <linearGradient id="trailGlow" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="rgba(94,234,212,0.5)" />
+            <stop offset="100%" stop-color="rgba(56,189,248,0.25)" />
+          </linearGradient>
+        </defs>
+        <rect x="8" y="10" width="144" height="100" rx="18" fill="rgba(4,7,12,0.92)" stroke="rgba(94,234,212,0.35)" />
+        <rect x="22" y="24" width="116" height="72" rx="16" fill="url(#kodiakSky)" stroke="rgba(94,234,212,0.35)" />
+        <g stroke="rgba(94,234,212,0.28)" stroke-width="1.2">
+          ${Array.from({ length: 5 }, (_, i) => `<line x1="${34 + i * 18}" y1="28" x2="${34 + i * 18}" y2="92" />`).join("")}
+          ${Array.from({ length: 3 }, (_, i) => `<line x1="28" y1="${40 + i * 18}" x2="136" y2="${40 + i * 18}" />`).join("")}
+        </g>
+        <path d="M36 88 L70 72 L94 82 L118 48 L134 36" fill="none" stroke="url(#trailGlow)" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" />
+        <path d="M36 70 L58 58 L84 60" fill="none" stroke="rgba(250,204,21,0.4)" stroke-width="3" stroke-dasharray="6 6" stroke-linecap="round" />
+        <g>
+          <circle cx="70" cy="72" r="9" fill="rgba(249,115,22,0.85)" stroke="rgba(249,115,22,0.6)" stroke-width="2" />
+          <circle cx="94" cy="82" r="8" fill="rgba(56,189,248,0.85)" stroke="rgba(56,189,248,0.6)" stroke-width="2" />
+          <circle cx="118" cy="48" r="7" fill="rgba(226,232,240,0.9)" stroke="rgba(148,163,184,0.6)" stroke-width="2" />
+          <circle cx="134" cy="36" r="6" fill="rgba(163,230,53,0.8)" stroke="rgba(163,230,53,0.6)" stroke-width="2" />
+        </g>
+        <g stroke="rgba(148,163,184,0.35)" stroke-width="2" stroke-dasharray="4 6" stroke-linecap="round">
+          <line x1="46" y1="52" x2="58" y2="40" />
+          <line x1="82" y1="64" x2="94" y2="52" />
+        </g>
+      </svg>
+    `,
+  },
+  {
     id: "captains-echo",
     name: "Captain's Echo",
     description: "Stage the four-beat desk salute before the dean snuffs the Carpe Diem spark.",
