@@ -326,6 +326,47 @@ const games = [
       </svg>
     `,
   },
+  {
+    id: "second-star-flight",
+    name: "Second Star Flight (Re-issue)",
+    description: "Snare Lost Shadows and channel their Pixie Dust to charge the Flight Meter.",
+    url: "./second-star-flight/index.html",
+    thumbnail: `
+      <svg viewBox="0 0 160 120" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Second Star Flight (Re-issue) preview">
+        <defs>
+          <linearGradient id="nightSky" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="rgba(15,23,42,0.9)" />
+            <stop offset="100%" stop-color="rgba(2,6,23,0.95)" />
+          </linearGradient>
+          <radialGradient id="lanternBeam" cx="0.4" cy="0.3" r="0.7">
+            <stop offset="0%" stop-color="rgba(250,204,21,0.65)" />
+            <stop offset="100%" stop-color="rgba(250,204,21,0)" />
+          </radialGradient>
+          <linearGradient id="dustTrail" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0%" stop-color="#38bdf8" />
+            <stop offset="100%" stop-color="#ec4899" />
+          </linearGradient>
+        </defs>
+        <rect x="8" y="10" width="144" height="100" rx="18" fill="rgba(4,10,26,0.9)" stroke="rgba(148,163,184,0.35)" />
+        <rect x="22" y="24" width="116" height="72" rx="14" fill="url(#nightSky)" stroke="rgba(120,255,255,0.35)" />
+        <g stroke="rgba(120,255,255,0.15)" stroke-width="1">
+          ${Array.from({ length: 5 }, (_, i) => `<line x1="${34 + i * 18}" y1="34" x2="${34 + i * 18}" y2="86" />`).join("")}
+          ${Array.from({ length: 5 }, (_, i) => `<line x1="30" y1="${38 + i * 12}" x2="132" y2="${38 + i * 12}" />`).join("")}
+        </g>
+        <circle cx="58" cy="54" r="38" fill="url(#lanternBeam)" />
+        <circle cx="56" cy="56" r="8" fill="rgba(250,204,21,0.8)" stroke="rgba(250,250,250,0.6)" stroke-width="2" />
+        <g fill="#facc15" opacity="0.8">
+          <circle cx="86" cy="70" r="4" />
+          <circle cx="100" cy="48" r="5" />
+          <circle cx="76" cy="40" r="3.5" />
+        </g>
+        <path d="M32 92 C48 78 72 70 96 48" fill="none" stroke="url(#dustTrail)" stroke-width="4" stroke-linecap="round" />
+        <circle cx="32" cy="92" r="6" fill="#22d3ee" stroke="rgba(148,163,184,0.4)" />
+        <circle cx="118" cy="32" r="7" fill="#a855f7" stroke="rgba(148,163,184,0.4)" />
+        <rect x="112" y="18" width="28" height="10" rx="5" fill="rgba(56,189,248,0.3)" stroke="rgba(120,255,255,0.4)" />
+      </svg>
+    `,
+  },
 ];
 
 const grid = document.getElementById("game-grid");

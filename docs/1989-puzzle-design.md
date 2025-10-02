@@ -57,3 +57,11 @@
 - **Resource loop:** Each completed puzzle spits out Life Chips equal to the player's streak, demanding sharp routing across the parlor floor to plug the winnings into the clock before the sand drops too low.
 - **Risk dilemma:** Longer, high-stakes puzzles promise jackpots of Life Chips but chew through Time-Sand while they resolve, forcing players to weigh desperation gambles against safer rapid-fire solves.
 - **Failure condition:** Letting the Time-Sand run dry snaps the Clock of Life and sends Charlie back upstairs, resetting the run and wiping any banked multipliers.
+
+## Level 41: Second Star Flight (Re-issue)
+- **Inspirational roots:** Revisits the studio's flying boy classic through the lens of a moody re-release where Neverland has dimmed and only dust-fed lanterns hold back the night.
+- **Anchor pieces:** A six-by-six "Lost Shadow" grid, the Pixie Well reservoir in the lower corner, a distant Flight Gate, and a physical Flight Meter crown that only responds to flowing dust.
+- **Core mechanic:** Players ignite a roaming lantern beam that briefly reveals and captures drifting shadows; each bottled shadow vents Pixie Dust that must be threaded through conduits toward the Flight Gate.
+- **Dynamic blockers:** Shadows refuse to sit still—every few beats they drift or dissolve into the dark, forcing quick sweeps or risk losing their dust payout until they reform.
+- **Resource pressure:** Pixie Dust is finite and decays if hoarded; drawing the conduit trail consumes dust segment by segment, so inefficient paths leave the Flight Meter starving before the gate.
+- **Actuation twist:** Slamming the "Think Happy Thoughts" button freezes every shadow in place for five seconds, buying just enough time to stack captures and chart an optimal dust flow before the night resumes.
