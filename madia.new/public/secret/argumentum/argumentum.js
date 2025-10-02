@@ -892,64 +892,76 @@ function findAllMatches() {
   return matches;
 }
 
-async function resolveMatches(matches) {
+async function resolveMatches(initialMatches) {
+  let matches = initialMatches;
   if (!matches || matches.length === 0) {
     return;
   }
-  isResolvingMatches = true;
-  matchBoardEl.classList.add("resolving");
-  const animatedNodes = matches
-    .map(({ x, y }) => getTileElement(x, y))
-    .filter((node) => Boolean(node));
-  animatedNodes.forEach((node) => {
-    node.classList.add("rock-resolving");
-  });
-  await delay(220);
-  const matchSummary = new Map();
-  const infusionSummary = { volcanic: 0, geolocked: 0, flux: 0, prismatic: 0 };
-  const geolockedAnchors = [];
-  matches.forEach(({ x, y, tile }) => {
-    matchBoard[y][x] = null;
-    const data = matchSummary.get(tile.id) ?? { count: 0, empowered: 0, meter: tile.meter };
-    data.count += 1;
-    if (tile.empowered) {
-      data.empowered += 1;
-    }
-    matchSummary.set(tile.id, data);
-    if (tile.infusion && infusionSummary[tile.infusion] !== undefined) {
-      infusionSummary[tile.infusion] += 1;
-      if (tile.infusion === "geolocked") {
-        geolockedAnchors.push({ x, id: tile.id });
+
+  while (matches && matches.length > 0) {
+    isResolvingMatches = true;
+    matchBoardEl.classList.add("resolving");
+    const animatedNodes = matches
+      .map(({ x, y }) => getTileElement(x, y))
+      .filter((node) => Boolean(node));
+    animatedNodes.forEach((node) => {
+      node.classList.add("rock-resolving");
+    });
+    await delay(220);
+
+    const matchSummary = new Map();
+    const infusionSummary = { volcanic: 0, geolocked: 0, flux: 0, prismatic: 0 };
+    const geolockedAnchors = [];
+    matches.forEach(({ x, y, tile }) => {
+      matchBoard[y][x] = null;
+      const data = matchSummary.get(tile.id) ?? { count: 0, empowered: 0, meter: tile.meter };
+      data.count += 1;
+      if (tile.empowered) {
+        data.empowered += 1;
       }
+      matchSummary.set(tile.id, data);
+      if (tile.infusion && infusionSummary[tile.infusion] !== undefined) {
+        infusionSummary[tile.infusion] += 1;
+        if (tile.infusion === "geolocked") {
+          geolockedAnchors.push({ x, id: tile.id });
+        }
+      }
+    });
+
+    collapseColumns();
+    refillColumns();
+    const restoredColumns = reinforceGeolockedAnchors(geolockedAnchors);
+
+    let totalMatches = 0;
+    let totalEmpowered = 0;
+    matchSummary.forEach((data, id) => {
+      totalMatches += data.count;
+      totalEmpowered += data.empowered;
+      logEvent(`Matched ${data.count} ${id} rocks${data.empowered ? " with empowered resonance" : ""}.`);
+      addResources(rockTypes.find((rock) => rock.id === id).meter, data.count * 8 + data.empowered * 12);
+      enqueueTetramino(id, data.count, data.empowered);
+    });
+
+    if (totalMatches > 0) {
+      const integrityBoost = Math.min(8, totalMatches + totalEmpowered * 2);
+      if (integrityBoost > 0) {
+        restoreIntegrity(integrityBoost);
+      }
+      registerCombo(Math.max(1, matchSummary.size), "match", matchBoardEl);
+      awardScore(totalMatches * 8 + totalEmpowered * 6, matchBoardEl);
     }
-  });
 
-  collapseColumns();
-  refillColumns();
-  const restoredColumns = reinforceGeolockedAnchors(geolockedAnchors);
-
-  let totalMatches = 0;
-  let totalEmpowered = 0;
-  matchSummary.forEach((data, id) => {
-    totalMatches += data.count;
-    totalEmpowered += data.empowered;
-    logEvent(`Matched ${data.count} ${id} rocks${data.empowered ? " with empowered resonance" : ""}.`);
-    addResources(rockTypes.find((rock) => rock.id === id).meter, data.count * 8 + data.empowered * 12);
-    enqueueTetramino(id, data.count, data.empowered);
-  });
-
-  if (totalMatches > 0) {
-    const integrityBoost = Math.min(8, totalMatches + totalEmpowered * 2);
-    if (integrityBoost > 0) {
-      restoreIntegrity(integrityBoost);
+    applyInfusionRewards(infusionSummary, restoredColumns);
+    applyPendingInfusions();
+    renderMatchBoard();
+    matches = findAllMatches();
+    if (matches.length > 0) {
+      await delay(160);
     }
-    registerCombo(Math.max(1, matchSummary.size), "match", matchBoardEl);
-    awardScore(totalMatches * 8 + totalEmpowered * 6, matchBoardEl);
   }
 
-  applyInfusionRewards(infusionSummary, restoredColumns);
-  applyPendingInfusions();
   isResolvingMatches = false;
+  matchBoardEl.classList.remove("resolving");
   renderMatchBoard();
 }
 
