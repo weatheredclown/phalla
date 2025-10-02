@@ -57,3 +57,12 @@
 - **Resource loop:** Each completed puzzle spits out Life Chips equal to the player's streak, demanding sharp routing across the parlor floor to plug the winnings into the clock before the sand drops too low.
 - **Risk dilemma:** Longer, high-stakes puzzles promise jackpots of Life Chips but chew through Time-Sand while they resolve, forcing players to weigh desperation gambles against safer rapid-fire solves.
 - **Failure condition:** Letting the Time-Sand run dry snaps the Clock of Life and sends Charlie back upstairs, resetting the run and wiping any banked multipliers.
+
+## Level 39: Weekend at Bernie's
+- **Inspirational roots:** A slapstick weekend of deception at a Hamptons beach house where two friends pretend their late boss is still living it up.
+- **Anchor pieces:** Bernie's unmoving figure seated center stage, a circular Movement Timer, a longer Tidal Timer sandglass, and patrol routes for nosey guests, house staff, and beach hazards.
+- **Core mechanic:** Forced Actuation and Timing—players race to finish quick micro-puzzles around the board to earn "Bernie Action" tokens that can jerk the corpse one space at a time.
+- **Pressure cooker:** The Movement Timer continually ticks down; if it expires before Bernie is shuffled somewhere convincing, the onlookers notice and the attempt collapses.
+- **Board hazards:** Maids, partygoers, and rolling tide markers advance on scripted beats, threatening to collide with Bernie unless players expend tokens to pivot or reposition him.
+- **Combo payoff:** Pulling off a multi-step Bernie routine that dupes an observer sparks a "Party Vibe" freeze—pausing the board and the fast timer for a short breather while awarding bonus token capacity.
+- **Level timer:** The overarching Tidal Timer limits how long the charade can last before the tide washes in and ends the seaside ruse, challenging players to string together efficient, comedic escapes.
