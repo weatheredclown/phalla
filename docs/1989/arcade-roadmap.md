@@ -1,0 +1,34 @@
+# 1989 Arcade Improvement Roadmap
+
+## Current State Snapshot
+- **Arcade shell relies on a fully hard-coded catalog.** The landing page renders a simple grid of cards and a modal iframe player, while `1989.js` stores every cabinet definition (copy, URL, bespoke SVG thumbnail) inside a single array literal. Updates require editing that script directly, and the UI has no affordances beyond the bare "Play" control. 【F:madia.new/public/secret/1989/index.html†L10-L66】【F:madia.new/public/secret/1989/1989.js†L5-L889】
+- **Every game repeats the same presentation scaffold.** Titles such as Cooler Chaos and Say Anything ship identical HTML structure for headers, dual-column layouts, briefing sections, logs, and footers, only changing copy and IDs. Each page also brings its own copy of the same base CSS (scanlines, header styles, briefing panels, key labels) with minor palette tweaks. Maintaining shared behavior or accessibility fixes means touching dozens of files. 【F:madia.new/public/secret/1989/cooler-chaos/index.html†L1-L113】【F:madia.new/public/secret/1989/say-anything/index.html†L1-L123】【F:madia.new/public/secret/1989/cooler-chaos/cooler-chaos.css†L1-L160】【F:madia.new/public/secret/1989/say-anything/say-anything.css†L1-L160】
+- **Game logic is handcrafted per cabinet with limited configurability.** Mechanics such as Cooler Chaos's spawn cadence and combo clearing live in bespoke scripts, while Amore Express bakes its entire order schedule into a static array. Balancing, analytics hooks, or alternate difficulty ladders demand code edits for each title instead of data-driven tuning. 【F:madia.new/public/secret/1989/cooler-chaos/cooler-chaos.js†L241-L462】【F:madia.new/public/secret/1989/amore-express/amore-express.js†L1-L90】
+
+## Strategic Themes & Key Initiatives
+
+### 1. Catalog & Infrastructure
+- **Externalize cabinet metadata.** Move the game list (id, name, level, blurb, thumbnail asset path) into a JSON or Firestore collection and generate cards at build/runtime. Pair with lightweight thumbnail images or sprite sheets instead of inline SVG strings to shrink `1989.js`. 【F:madia.new/public/secret/1989/1989.js†L5-L728】
+- **Add discovery features to the shell.** Layer filters (by level bracket, mechanic, estimated playtime) and a search affordance above the grid, backed by the structured metadata. Provide a manifest-driven "What's New" badge rather than relying on manual copy tweaks. 【F:madia.new/public/secret/1989/index.html†L10-L28】【F:madia.new/public/secret/1989/1989.js†L5-L72】
+- **Introduce build tooling for the secret annex.** A minimal Vite/Rollup setup can compile shared JS/CSS, hash assets, and tree-shake unused helpers, preparing the directory for Firebase Hosting's CDN caching without changing Firebase deployment flows.
+
+### 2. Shared UI & Accessibility
+- **Create a reusable game layout module.** Extract the repeated header, briefing, simulator shell, event log, and footer into shared partials (e.g., `game-shell.html` + `game-shell.css`) that each cabinet imports. Ship shared components (buttons, meters, key legends) as web components or ES module helpers to guarantee consistent semantics and focus management. 【F:madia.new/public/secret/1989/cooler-chaos/index.html†L10-L111】【F:madia.new/public/secret/1989/say-anything/index.html†L10-L123】
+- **Centralize theming tokens.** Publish a global CSS layer that defines typography, scanline overlays, spacing, and panel treatments once, letting individual games override only palette variables. This eliminates the current copy/paste blocks and simplifies dark-mode or responsive fixes. 【F:madia.new/public/secret/1989/cooler-chaos/cooler-chaos.css†L1-L160】【F:madia.new/public/secret/1989/say-anything/say-anything.css†L1-L160】
+- **Harden the arcade overlay.** Add a focus trap, loading indicator, and keyboard shortcuts (arrow navigation, quick-close) to the player modal so it behaves like a polished launcher instead of a basic iframe swap. 【F:madia.new/public/secret/1989/index.html†L19-L64】【F:madia.new/public/secret/1989/1989.js†L779-L858】
+
+### 3. Gameplay Depth & Progression
+- **Parameterize difficulty curves.** Expose knobs (spawn rates, combo thresholds, hazard timers) via configuration files so the Level 50→1 ladder can scale systematically. For example, Cooler Chaos could read spawn tables per stage rather than using a single pair of probabilities, enabling progressive pressure without rewriting logic. 【F:madia.new/public/secret/1989/cooler-chaos/cooler-chaos.js†L430-L462】
+- **Script scenario playlists.** Replace static schedules such as Amore Express's fixed delivery queue with seedable generators or YAML playlists, allowing multiple scenario packs (story mode, endless, daily challenge) without code churn. 【F:madia.new/public/secret/1989/amore-express/amore-express.js†L1-L90】
+- **Instrument session telemetry.** Standardize hooks that fire lifecycle events (start, reset, victory, failure, notable combos) so the arcade shell can surface achievements, leaderboards, or resume points once Firebase integration arrives.
+
+### 4. Content Operations & QA
+- **Authoring pipeline.** Document how to add a new cabinet: update metadata, drop assets, extend configuration. Provide linting/prettier rules for cabinet scripts and shared CI checks to catch regressions early.
+- **Playtest tooling.** Build a "debug HUD" toggle (exposed through a shared helper) that surfaces internal timers, state snapshots, and RNG seeds for easier balancing across all titles.
+
+## Phased Delivery Plan
+
+1. **Foundation Sprint (Weeks 1–2).** Stand up the build pipeline, extract shared CSS/HTML modules, and migrate the existing cabinet list into external data while keeping functional parity. Prioritize non-invasive refactors so QA can verify no gameplay drifts. 【F:madia.new/public/secret/1989/1989.js†L5-L728】【F:madia.new/public/secret/1989/cooler-chaos/index.html†L10-L111】
+2. **Experience Sprint (Weeks 3–4).** Enhance the arcade shell with filters, metadata-driven badges, accessibility upgrades, and the improved overlay UX. Roll shared focus handling back into each cabinet via the new layout module. 【F:madia.new/public/secret/1989/index.html†L10-L64】【F:madia.new/public/secret/1989/1989.js†L779-L858】
+3. **Progression Sprint (Weeks 5–6).** Parameterize key mechanics (spawn tables, order playlists) and wire telemetry events so the ladder can scale cleanly from Level 50 to Level 1 and report progress to Firebase later. Apply the new config model to Cooler Chaos and Amore Express as exemplars before expanding to the remaining cabinets. 【F:madia.new/public/secret/1989/cooler-chaos/cooler-chaos.js†L430-L462】【F:madia.new/public/secret/1989/amore-express/amore-express.js†L1-L90】
+4. **Polish & QA Sprint (Weeks 7–8).** Add authoring docs, debug HUD hooks, and regression tests for shared components. Finish with focused playtests per cabinet to validate the new progression knobs and capture telemetry baselines for future analytics.
