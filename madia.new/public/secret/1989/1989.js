@@ -4,12 +4,12 @@
  */
 const games = [
   {
-    id: "argumentum",
-    name: "Argumentum",
+    id: "augmentum",
+    name: "Augmentum",
     description: "Synth-grid puzzle fusion hidden deep in the archives.",
-    url: "../argumentum/index.html",
+    url: "../augmentum/index.html",
     thumbnail: `
-      <svg viewBox="0 0 160 120" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Argumentum preview">
+      <svg viewBox="0 0 160 120" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Augmentum preview">
         <defs>
           <linearGradient id="gridGlow" x1="0%" y1="0%" x2="100%" y2="100%">
             <stop offset="0%" stop-color="#7b5bff" />
@@ -71,7 +71,7 @@ const games = [
     id: "prototype",
     name: "Prototype Cabinet",
     description: "Drop a new game folder in \"secret\" and point the cab here.",
-    url: "../argumentum/index.html",
+    url: "../augmentum/index.html",
     thumbnail: `
       <svg viewBox="0 0 160 120" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Placeholder cabinet">
         <defs>
