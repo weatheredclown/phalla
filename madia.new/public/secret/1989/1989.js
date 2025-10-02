@@ -4,8 +4,44 @@
  */
 const games = [
   {
-    id: "augmentum",
-    name: "Augmentum",
+    id: "cable-clash",
+    name: "The Cable Clash",
+    description: "Route the cobalt line across the ring while juking roaming rivals.",
+    url: "./cable-clash/index.html",
+    thumbnail: `
+      <svg viewBox="0 0 160 120" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="The Cable Clash preview">
+        <defs>
+          <linearGradient id="postGlow" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0%" stop-color="#38bdf8" />
+            <stop offset="100%" stop-color="#f87171" />
+          </linearGradient>
+          <linearGradient id="canvasFill" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="rgba(56,189,248,0.35)" />
+            <stop offset="100%" stop-color="rgba(15,23,42,0.65)" />
+          </linearGradient>
+        </defs>
+        <rect x="8" y="10" width="144" height="100" rx="18" fill="rgba(5,8,20,0.92)" stroke="rgba(148,163,184,0.35)" />
+        <rect x="24" y="28" width="112" height="64" rx="12" fill="url(#canvasFill)" stroke="rgba(148,163,184,0.4)" />
+        <g stroke="url(#postGlow)" stroke-width="3" stroke-linecap="round">
+          <line x1="36" y1="36" x2="36" y2="84" />
+          <line x1="124" y1="36" x2="124" y2="84" />
+        </g>
+        <g>
+          <circle cx="36" cy="34" r="6" fill="#38bdf8" />
+          <circle cx="124" cy="90" r="6" fill="#f87171" />
+          <circle cx="124" cy="34" r="5" fill="#facc15" />
+          <circle cx="36" cy="90" r="5" fill="#f97316" />
+        </g>
+        <path d="M36 62 C64 52 92 72 124 56" fill="none" stroke="rgba(59,130,246,0.8)" stroke-width="4" stroke-linecap="round" />
+        <path d="M36 90 L60 72 L84 90" fill="none" stroke="rgba(148,163,184,0.6)" stroke-width="3" stroke-dasharray="4 6" />
+        <circle cx="96" cy="58" r="7" fill="rgba(248,113,113,0.8)" stroke="rgba(248,250,252,0.7)" stroke-width="2" />
+      </svg>
+    `,
+  },
+  {
+    id: "argumentum",
+    name: "Argumentum",
+
     description: "Synth-grid puzzle fusion hidden deep in the archives.",
     url: "../augmentum/index.html",
     thumbnail: `
