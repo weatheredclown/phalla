@@ -44,6 +44,7 @@ const syncSkips = new Set();
 const leftCells = [];
 const rightCells = [];
 const syncCells = [];
+const syncStepBadges = new Map();
 
 let harmony = STARTING_HARMONY;
 let playing = false;
@@ -121,15 +122,18 @@ function buildTimeline() {
       title.textContent = event.title;
       const steps = document.createElement("div");
       steps.className = "sequence-steps";
+      const stepBadges = [];
       event.sequence.forEach((code) => {
         const step = document.createElement("span");
         step.className = "sequence-step";
         step.textContent = noteStyles[code]?.label ?? code;
         steps.append(step);
+        stepBadges.push(step);
       });
       wrapper.append(title, steps);
       cell.append(wrapper);
       cell.setAttribute("aria-label", `Sync cue after beat ${beatIndex + 1}: ${event.title}`);
+      syncStepBadges.set(beatIndex, stepBadges);
     }
     syncCells.push(cell);
   });
@@ -200,6 +204,7 @@ function startBeatWindow(beatIndex) {
     leftCells[beatIndex].classList.add("is-cleared");
     rightCells[beatIndex].classList.add("is-cleared");
     if (syncCells[beatIndex]) {
+      syncCells[beatIndex].classList.remove("is-miss");
       syncCells[beatIndex].classList.add("is-cleared");
     }
     syncSkips.add(beatIndex);
@@ -215,6 +220,8 @@ function startBeatWindow(beatIndex) {
     rightHit: false,
   };
 
+  leftCells[beatIndex].classList.remove("is-cleared", "is-miss", "is-hit");
+  rightCells[beatIndex].classList.remove("is-cleared", "is-miss", "is-hit");
   leftCells[beatIndex].classList.add("is-active");
   rightCells[beatIndex].classList.add("is-active");
   updateStatus(`Beat ${beatIndex + 1} of ${chart.length}: lock both brothers.`);
@@ -258,6 +265,8 @@ function resolveBeatWindow() {
       return;
     }
     logEvent(`Beat ${beatIndex + 1}: both brothers locked in.`, "positive");
+    leftCells[beatIndex].classList.add("is-cleared");
+    rightCells[beatIndex].classList.add("is-cleared");
     lastBeatPerfect = true;
   } else {
     const missText =
@@ -265,6 +274,12 @@ function resolveBeatWindow() {
         ? "both brothers slipped"
         : `${misses[0]} brother slipped`;
     logEvent(`Beat ${beatIndex + 1}: ${missText}.`, "warning");
+    if (!beatWindow.leftHit) {
+      leftCells[beatIndex].classList.add("is-miss");
+    }
+    if (!beatWindow.rightHit) {
+      rightCells[beatIndex].classList.add("is-miss");
+    }
     lastBeatPerfect = false;
   }
 
@@ -296,13 +311,19 @@ function startSyncWindow(beatIndex) {
     return;
   }
 
+  syncCells[beatIndex].classList.remove("is-cleared", "is-miss");
   syncCells[beatIndex].classList.add("is-active");
+  const stepBadges = syncStepBadges.get(beatIndex) ?? [];
+  stepBadges.forEach((badge) => {
+    badge.classList.remove("is-hit", "is-miss", "is-complete");
+  });
   syncWindow = {
     beatIndex,
     sequence: [...event.sequence],
     progress: 0,
     title: event.title,
     complete: false,
+    failed: false,
     lastBeatPerfect,
   };
   updateStatus(`Sync cue: ${event.title} after beat ${beatIndex + 1}.`);
@@ -334,6 +355,9 @@ function resolveSyncWindow() {
       return;
     }
     logEvent(`Sync cue ${event.title} landed cleanly.`, "positive");
+    syncCells[beatIndex]?.classList.add("is-cleared");
+    const badges = syncStepBadges.get(beatIndex) ?? [];
+    badges.forEach((badge) => badge.classList.add("is-complete"));
     if (syncWindow.lastBeatPerfect) {
       triggerShowstopper(beatIndex);
     }
@@ -344,6 +368,7 @@ function resolveSyncWindow() {
       return;
     }
     logEvent(`Sync cue ${event.title} slipped out of time.`, "warning");
+    syncCells[beatIndex]?.classList.add("is-miss");
   }
 
   syncWindow = null;
@@ -390,19 +415,34 @@ function handleInput(code) {
   if (beatWindow && !beatWindow.autoCleared) {
     if (code === beatWindow.leftCode) {
       beatWindow.leftHit = true;
+      leftCells[beatWindow.beatIndex].classList.add("is-hit");
     }
     if (code === beatWindow.rightCode) {
       beatWindow.rightHit = true;
+      rightCells[beatWindow.beatIndex].classList.add("is-hit");
     }
   }
 
   if (syncWindow && !syncWindow.autoSkipped && !syncWindow.complete) {
+    if (syncWindow.failed) {
+      return;
+    }
     const expected = syncWindow.sequence[syncWindow.progress];
     if (code === expected) {
       syncWindow.progress += 1;
+      const badges = syncStepBadges.get(syncWindow.beatIndex);
+      const badge = badges?.[syncWindow.progress - 1];
+      badge?.classList.add("is-hit");
       if (syncWindow.progress === syncWindow.sequence.length) {
         syncWindow.complete = true;
       }
+    } else if (!syncWindow.failed && noteStyles[code]) {
+      syncWindow.failed = true;
+      const badges = syncStepBadges.get(syncWindow.beatIndex);
+      const badge = badges?.[syncWindow.progress];
+      badge?.classList.add("is-miss");
+      syncWindow.complete = false;
+      syncCells[syncWindow.beatIndex]?.classList.add("is-miss");
     }
   }
 }
@@ -481,7 +521,10 @@ function updateStatus(message) {
 }
 
 function clearHighlights() {
-  leftCells.forEach((cell) => cell.classList.remove("is-active", "is-cleared"));
-  rightCells.forEach((cell) => cell.classList.remove("is-active", "is-cleared"));
-  syncCells.forEach((cell) => cell.classList.remove("is-active", "is-cleared"));
+  leftCells.forEach((cell) => cell.classList.remove("is-active", "is-cleared", "is-hit", "is-miss"));
+  rightCells.forEach((cell) => cell.classList.remove("is-active", "is-cleared", "is-hit", "is-miss"));
+  syncCells.forEach((cell) => cell.classList.remove("is-active", "is-cleared", "is-miss"));
+  syncStepBadges.forEach((badges) => {
+    badges.forEach((badge) => badge.classList.remove("is-hit", "is-miss", "is-complete"));
+  });
 }

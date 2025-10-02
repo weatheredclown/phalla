@@ -41,10 +41,11 @@ const games = [
   {
     id: "argumentum",
     name: "Argumentum",
+
     description: "Synth-grid puzzle fusion hidden deep in the archives.",
-    url: "../argumentum/index.html",
+    url: "../augmentum/index.html",
     thumbnail: `
-      <svg viewBox="0 0 160 120" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Argumentum preview">
+      <svg viewBox="0 0 160 120" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Augmentum preview">
         <defs>
           <linearGradient id="gridGlow" x1="0%" y1="0%" x2="100%" y2="100%">
             <stop offset="0%" stop-color="#7b5bff" />
@@ -65,6 +66,42 @@ const games = [
         <rect x="104" y="40" width="24" height="24" rx="6" fill="url(#tileFill)" stroke="rgba(123,91,255,0.9)" />
         <circle cx="48" cy="72" r="12" fill="rgba(56,189,248,0.4)" stroke="#38bdf8" />
         <circle cx="72" cy="88" r="8" fill="rgba(248,113,113,0.35)" stroke="#f97316" />
+      </svg>
+    `,
+  },
+  {
+    id: "amore-express",
+    name: "Amore Express",
+    description: "Chart cul-de-sac deliveries while keeping scooter trails pristine.",
+    url: "./amore-express/index.html",
+    thumbnail: `
+      <svg viewBox="0 0 160 120" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Amore Express preview">
+        <defs>
+          <linearGradient id="amoreGlow" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0%" stop-color="#38bdf8" />
+            <stop offset="100%" stop-color="#f97316" />
+          </linearGradient>
+          <linearGradient id="trailFade" x1="0" y1="0" x2="1" y2="0">
+            <stop offset="0%" stop-color="rgba(56,189,248,0.6)" />
+            <stop offset="100%" stop-color="rgba(249,115,22,0.6)" />
+          </linearGradient>
+        </defs>
+        <rect x="8" y="8" width="144" height="104" rx="18" fill="rgba(10,15,30,0.92)" stroke="url(#amoreGlow)" />
+        <circle cx="60" cy="60" r="30" fill="rgba(250,204,21,0.2)" stroke="rgba(250,204,21,0.65)" stroke-width="3" />
+        <path d="M60 30c16 0 30 13 30 30s-14 30-30 30-30-13-30-30 14-30 30-30z" fill="rgba(249,115,22,0.25)" stroke="rgba(249,115,22,0.75)" stroke-width="2" />
+        <path d="M60 30L60 90" stroke="rgba(249,115,22,0.75)" stroke-width="3" />
+        <path d="M30 60L90 60" stroke="rgba(249,115,22,0.75)" stroke-width="3" />
+        <circle cx="48" cy="48" r="5" fill="#f97316" />
+        <circle cx="72" cy="68" r="5" fill="#ef4444" />
+        <circle cx="50" cy="72" r="6" fill="#fbbf24" />
+        <path d="M96 76c10-10 30-10 38 0" stroke="url(#trailFade)" stroke-width="6" stroke-linecap="round" stroke-linejoin="round" />
+        <g transform="translate(102 70)">
+          <circle cx="0" cy="20" r="6" fill="#38bdf8" stroke="rgba(148,163,184,0.6)" />
+          <circle cx="28" cy="20" r="6" fill="#7b5bff" stroke="rgba(148,163,184,0.6)" />
+          <path d="M2 8h16l8 12" fill="none" stroke="#38bdf8" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" />
+          <circle cx="8" cy="8" r="4" fill="#38bdf8" />
+          <circle cx="24" cy="20" r="3" fill="#f97316" />
+        </g>
       </svg>
     `,
   },
@@ -103,10 +140,51 @@ const games = [
     `,
   },
   {
+    id: "speed-zone",
+    name: "Speed Zone",
+    description: "Chart a cannonball sprint past sirens, tolls, and neon checkpoints.",
+    url: "./speed-zone/index.html",
+    thumbnail: `
+      <svg viewBox="0 0 160 120" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Speed Zone preview">
+        <defs>
+          <linearGradient id="speedRoad" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0%" stop-color="#38bdf8" />
+            <stop offset="100%" stop-color="#f97316" />
+          </linearGradient>
+          <linearGradient id="speedSky" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="rgba(56,189,248,0.35)" />
+            <stop offset="100%" stop-color="rgba(15,23,42,0.8)" />
+          </linearGradient>
+        </defs>
+        <rect x="6" y="6" width="148" height="108" rx="18" fill="rgba(5,8,20,0.9)" stroke="rgba(120,255,255,0.4)" />
+        <rect x="12" y="12" width="136" height="96" rx="16" fill="url(#speedSky)" stroke="rgba(120,255,255,0.25)" />
+        <g stroke="url(#speedRoad)" stroke-width="4" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M24 86 L54 70 L86 82 L120 48" fill="none" />
+          <path d="M28 40 L60 32 L92 48 L132 28" fill="none" opacity="0.7" />
+        </g>
+        <g>
+          <circle cx="54" cy="70" r="7" fill="#38bdf8" stroke="rgba(120,255,255,0.6)" />
+          <circle cx="86" cy="82" r="7" fill="#f97316" stroke="rgba(255,255,255,0.4)" />
+          <circle cx="120" cy="48" r="8" fill="#7b5bff" stroke="rgba(255,255,255,0.6)" />
+          <circle cx="92" cy="48" r="6" fill="#facc15" stroke="rgba(255,255,255,0.45)" />
+        </g>
+        <g transform="translate(32 20)">
+          <rect x="72" y="0" width="28" height="28" rx="6" fill="rgba(15,23,42,0.85)" stroke="rgba(120,255,255,0.35)" />
+          <g transform="translate(76 4)" fill="#38bdf8" stroke="rgba(255,255,255,0.65)" stroke-width="1.2">
+            <rect x="0" y="0" width="6" height="6" rx="1" />
+            <rect x="8" y="4" width="6" height="6" rx="1" fill="#f97316" />
+            <rect x="4" y="12" width="6" height="6" rx="1" fill="#facc15" />
+            <rect x="12" y="16" width="6" height="6" rx="1" fill="#7b5bff" />
+          </g>
+        </g>
+      </svg>
+    `,
+  },
+  {
     id: "prototype",
     name: "Prototype Cabinet",
     description: "Drop a new game folder in \"secret\" and point the cab here.",
-    url: "../argumentum/index.html",
+    url: "../augmentum/index.html",
     thumbnail: `
       <svg viewBox="0 0 160 120" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Placeholder cabinet">
         <defs>
