@@ -438,6 +438,91 @@ const games = [
           <rect x="0" y="0" width="100" height="18" rx="8" fill="rgba(10,16,32,0.88)" stroke="rgba(56,189,248,0.35)" />
           <rect x="6" y="4" width="88" height="10" rx="5" fill="rgba(56,189,248,0.35)" stroke="rgba(168,85,247,0.45)" />
         </g>
+          </svg>
+    `,
+  },
+  {
+    id: "kodiak-covenant",
+    name: "Kodiak Covenant",
+    description: "Coordinate guardian and cub trails while shielding them from the roaming hunter.",
+    url: "./kodiak-covenant/index.html",
+    thumbnail: `
+      <svg viewBox="0 0 160 120" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Kodiak Covenant preview">
+        <defs>
+          <linearGradient id="kodiakSky" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0%" stop-color="rgba(94,234,212,0.65)" />
+            <stop offset="100%" stop-color="rgba(15,23,42,0.85)" />
+          </linearGradient>
+          <linearGradient id="trailGlow" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="rgba(94,234,212,0.5)" />
+            <stop offset="100%" stop-color="rgba(56,189,248,0.25)" />
+          </linearGradient>
+        </defs>
+        <rect x="8" y="10" width="144" height="100" rx="18" fill="rgba(4,7,12,0.92)" stroke="rgba(94,234,212,0.35)" />
+        <rect x="22" y="24" width="116" height="72" rx="16" fill="url(#kodiakSky)" stroke="rgba(94,234,212,0.35)" />
+        <g stroke="rgba(94,234,212,0.28)" stroke-width="1.2">
+          ${Array.from({ length: 5 }, (_, i) => `<line x1="${34 + i * 18}" y1="28" x2="${34 + i * 18}" y2="92" />`).join("")}
+          ${Array.from({ length: 3 }, (_, i) => `<line x1="28" y1="${40 + i * 18}" x2="136" y2="${40 + i * 18}" />`).join("")}
+        </g>
+        <path d="M36 88 L70 72 L94 82 L118 48 L134 36" fill="none" stroke="url(#trailGlow)" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" />
+        <path d="M36 70 L58 58 L84 60" fill="none" stroke="rgba(250,204,21,0.4)" stroke-width="3" stroke-dasharray="6 6" stroke-linecap="round" />
+        <g>
+          <circle cx="70" cy="72" r="9" fill="rgba(249,115,22,0.85)" stroke="rgba(249,115,22,0.6)" stroke-width="2" />
+          <circle cx="94" cy="82" r="8" fill="rgba(56,189,248,0.85)" stroke="rgba(56,189,248,0.6)" stroke-width="2" />
+          <circle cx="118" cy="48" r="7" fill="rgba(226,232,240,0.9)" stroke="rgba(148,163,184,0.6)" stroke-width="2" />
+          <circle cx="134" cy="36" r="6" fill="rgba(163,230,53,0.8)" stroke="rgba(163,230,53,0.6)" stroke-width="2" />
+        </g>
+        <g stroke="rgba(148,163,184,0.35)" stroke-width="2" stroke-dasharray="4 6" stroke-linecap="round">
+          <line x1="46" y1="52" x2="58" y2="40" />
+          <line x1="82" y1="64" x2="94" y2="52" />
+        </g>
+      </svg>
+    `,
+  },
+  {
+    id: "captains-echo",
+    name: "Captain's Echo",
+    description: "Stage the four-beat desk salute before the dean snuffs the Carpe Diem spark.",
+    url: "./captains-echo/index.html",
+    thumbnail: `
+      <svg viewBox="0 0 160 120" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Captain's Echo preview">
+        <defs>
+          <linearGradient id="echoGlow" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0%" stop-color="#38bdf8" />
+            <stop offset="100%" stop-color="#7b5bff" />
+          </linearGradient>
+          <linearGradient id="deskWood" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="rgba(249,115,22,0.6)" />
+            <stop offset="100%" stop-color="rgba(249,115,22,0.35)" />
+          </linearGradient>
+        </defs>
+        <rect x="6" y="6" width="148" height="108" rx="18" fill="rgba(5,8,20,0.92)" stroke="rgba(120,255,255,0.4)" />
+        <rect x="16" y="18" width="128" height="84" rx="16" fill="rgba(9,14,32,0.9)" stroke="rgba(120,255,255,0.25)" />
+        <path d="M16 68h128" stroke="rgba(120,255,255,0.18)" stroke-width="2" stroke-linecap="round" />
+        <g>
+          <circle cx="40" cy="32" r="12" fill="rgba(56,189,248,0.35)" stroke="rgba(56,189,248,0.6)" />
+          <circle cx="80" cy="30" r="10" fill="rgba(123,91,255,0.3)" stroke="rgba(123,91,255,0.6)" />
+          <circle cx="120" cy="34" r="12" fill="rgba(248,113,113,0.28)" stroke="rgba(248,113,113,0.6)" />
+        </g>
+        <g transform="translate(30 72)">
+          <rect x="0" y="0" width="30" height="18" rx="6" fill="url(#deskWood)" stroke="rgba(148,163,184,0.4)" />
+          <rect x="4" y="-8" width="22" height="10" rx="4" fill="rgba(56,189,248,0.2)" stroke="rgba(56,189,248,0.5)" />
+          <rect x="6" y="6" width="18" height="6" rx="2" fill="rgba(15,23,42,0.85)" />
+        </g>
+        <g transform="translate(65 72)">
+          <rect x="0" y="0" width="30" height="18" rx="6" fill="url(#deskWood)" stroke="rgba(148,163,184,0.4)" />
+          <rect x="4" y="-10" width="22" height="12" rx="5" fill="rgba(123,91,255,0.22)" stroke="rgba(123,91,255,0.55)" />
+          <rect x="6" y="6" width="18" height="6" rx="2" fill="rgba(15,23,42,0.85)" />
+        </g>
+        <g transform="translate(100 72)">
+          <rect x="0" y="0" width="30" height="18" rx="6" fill="url(#deskWood)" stroke="rgba(148,163,184,0.4)" />
+          <rect x="4" y="-6" width="22" height="8" rx="3" fill="rgba(248,113,113,0.22)" stroke="rgba(248,113,113,0.55)" />
+          <rect x="6" y="6" width="18" height="6" rx="2" fill="rgba(15,23,42,0.85)" />
+        </g>
+        <path d="M32 52 C48 48 64 48 80 52 C96 56 112 56 128 52" fill="none" stroke="url(#echoGlow)" stroke-width="3" stroke-linecap="round" stroke-dasharray="6 6" />
+        <circle cx="28" cy="92" r="4" fill="#38bdf8" />
+        <circle cx="64" cy="94" r="4" fill="#7b5bff" />
+        <circle cx="100" cy="92" r="4" fill="#f97316" />
       </svg>
     `,
   },
@@ -513,9 +598,44 @@ const overlayFrame = document.getElementById("overlay-frame");
 const frame = document.getElementById("game-frame");
 const title = document.getElementById("player-title");
 const description = document.getElementById("player-description");
+const fullscreenButton = document.getElementById("fullscreen-toggle");
 
 const gameLookup = new Map(games.map((game) => [game.id, game]));
 let lastFocusElement = null;
+
+function isOverlayFullscreen() {
+  return document.fullscreenElement === overlayFrame;
+}
+
+function setFullscreenButtonState(active) {
+  if (!fullscreenButton) {
+    return;
+  }
+  fullscreenButton.setAttribute("aria-pressed", active ? "true" : "false");
+  fullscreenButton.textContent = active ? "🗗 Windowed" : "⛶ Fullscreen";
+  fullscreenButton.title = active ? "Exit fullscreen" : "Enter fullscreen";
+}
+
+async function toggleFullscreen() {
+  if (!fullscreenButton) {
+    return;
+  }
+
+  if (isOverlayFullscreen()) {
+    try {
+      await document.exitFullscreen();
+    } catch (error) {
+      console.warn("Unable to exit fullscreen", error);
+    }
+    return;
+  }
+
+  try {
+    await overlayFrame.requestFullscreen();
+  } catch (error) {
+    console.warn("Fullscreen request was denied", error);
+  }
+}
 
 function renderGames() {
   const fragment = document.createDocumentFragment();
@@ -539,15 +659,22 @@ function openGame(game) {
   frame.src = game.url;
   overlay.hidden = false;
   overlay.dataset.activeGame = game.id;
+  setFullscreenButtonState(isOverlayFullscreen());
   requestAnimationFrame(() => {
     overlayFrame.focus({ preventScroll: true });
   });
 }
 
 function closeGame() {
+  if (isOverlayFullscreen()) {
+    document.exitFullscreen().catch((error) => {
+      console.warn("Unable to exit fullscreen", error);
+    });
+  }
   overlay.hidden = true;
   overlay.dataset.activeGame = "";
   frame.src = "";
+  setFullscreenButtonState(false);
   if (lastFocusElement && document.body.contains(lastFocusElement)) {
     lastFocusElement.focus({ preventScroll: true });
   } else {
@@ -575,11 +702,27 @@ grid.addEventListener("click", (event) => {
 closeButton.addEventListener("click", closeGame);
 overlayBackdrop.addEventListener("click", closeGame);
 
+fullscreenButton?.addEventListener("click", () => {
+  toggleFullscreen();
+});
+
 document.addEventListener("keydown", (event) => {
   if (event.key === "Escape" && overlay.hidden === false) {
+    if (isOverlayFullscreen()) {
+      document.exitFullscreen().catch(() => {
+        /* Ignore */
+      });
+      return;
+    }
     closeGame();
   }
 });
+
+document.addEventListener("fullscreenchange", () => {
+  setFullscreenButtonState(isOverlayFullscreen());
+});
+
+setFullscreenButtonState(false);
 
 export function registerGame(gameConfig) {
   const { id, name, description, url, thumbnail } = gameConfig;
