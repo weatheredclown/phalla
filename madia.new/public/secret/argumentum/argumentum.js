@@ -23,8 +23,20 @@ const pieceDefinitions = {
       ],
       [
         [0, 0, 0, 0],
-        [0, 0, 1, 1],
+        [1, 1, 1, 0],
+        [1, 0, 0, 0],
+        [0, 0, 0, 0]
+      ],
+      [
         [0, 1, 1, 0],
+        [0, 0, 1, 0],
+        [0, 0, 1, 0],
+        [0, 0, 0, 0]
+      ],
+      [
+        [0, 0, 0, 0],
+        [0, 0, 1, 0],
+        [1, 1, 1, 0],
         [0, 0, 0, 0]
       ]
     ]
@@ -35,6 +47,24 @@ const pieceDefinitions = {
       [
         [0, 0, 0, 0],
         [1, 1, 1, 0],
+        [0, 1, 0, 0],
+        [0, 0, 0, 0]
+      ],
+      [
+        [0, 1, 0, 0],
+        [1, 1, 0, 0],
+        [0, 1, 0, 0],
+        [0, 0, 0, 0]
+      ],
+      [
+        [0, 1, 0, 0],
+        [1, 1, 1, 0],
+        [0, 0, 0, 0],
+        [0, 0, 0, 0]
+      ],
+      [
+        [0, 1, 0, 0],
+        [0, 1, 1, 0],
         [0, 1, 0, 0],
         [0, 0, 0, 0]
       ]
@@ -87,6 +117,15 @@ const cancelTransformBtn = document.getElementById("cancel-transform");
 const transformToolbar = document.getElementById("transform-toolbar");
 const shiftBoardBtn = document.getElementById("shift-board");
 const routeToggleBtn = document.getElementById("route-toggle");
+const scoreDisplay = document.getElementById("scoreDisplay");
+const linesDisplay = document.getElementById("linesDisplay");
+const levelDisplay = document.getElementById("levelDisplay");
+const comboDisplay = document.getElementById("comboDisplay");
+const bridgesDisplay = document.getElementById("bridgesDisplay");
+const integrityMeter = document.getElementById("integrityMeter");
+const integrityValue = document.getElementById("integrityValue");
+const reactorMessage = document.getElementById("reactorMessage");
+const restartButton = document.getElementById("restartButton");
 
 let matchBoard = [];
 let matchNodes = [];
@@ -108,11 +147,23 @@ let availableBridges = 0;
 let routeMode = false;
 let routeSelection = [];
 let shiftOrientation = 0;
+let resolvingLock = false;
+let resolvingMatch = false;
+let score = 0;
+let linesClearedTotal = 0;
+let level = 1;
+let comboChain = 0;
+let reactorIntegrity = 100;
+let gameOver = false;
 
 const flowNodes = initializeFlowNodes();
 
 function createMatrix(rows, cols, value) {
   return Array.from({ length: rows }, () => Array.from({ length: cols }, () => value));
+}
+
+function wait(ms) {
+  return new Promise((resolve) => window.setTimeout(resolve, ms));
 }
 
 function initializeMatchBoard() {
@@ -131,7 +182,7 @@ function initializeMatchBoard() {
 
 function createRandomTile() {
   const base = rockTypes[Math.floor(Math.random() * rockTypes.length)];
-  return { ...base, empowered: false };
+  return { ...base, empowered: false, justSpawned: true };
 }
 
 function createsMatch(x, y) {
@@ -158,6 +209,10 @@ function renderMatchBoard() {
       if (tile.empowered) {
         tileEl.classList.add("rock-empowered");
       }
+      if (tile.justSpawned) {
+        tileEl.classList.add("tile-enter");
+        tile.justSpawned = false;
+      }
       tileEl.textContent = tile.label;
       tileEl.setAttribute("data-x", x);
       tileEl.setAttribute("data-y", y);
@@ -168,7 +223,122 @@ function renderMatchBoard() {
   });
 }
 
-function onTileClick(x, y) {
+function highlightStatus(element) {
+  if (!element) {
+    return;
+  }
+  element.classList.remove("status-pop");
+  void element.offsetWidth;
+  element.classList.add("status-pop");
+}
+
+function highlightMeter(element) {
+  if (!element) {
+    return;
+  }
+  element.classList.remove("meter-pulse");
+  void element.offsetWidth;
+  element.classList.add("meter-pulse");
+}
+
+function setReactorMessage(message, isDanger = false) {
+  if (!reactorMessage) {
+    return;
+  }
+  reactorMessage.textContent = message;
+  reactorMessage.classList.toggle("reactor-message--danger", isDanger);
+}
+
+function updateStatusDisplays() {
+  if (scoreDisplay) {
+    scoreDisplay.textContent = score.toLocaleString();
+  }
+  if (linesDisplay) {
+    linesDisplay.textContent = linesClearedTotal.toString();
+  }
+  if (levelDisplay) {
+    levelDisplay.textContent = level.toString();
+  }
+  if (comboDisplay) {
+    if (comboChain > 1) {
+      comboDisplay.textContent = `x${comboChain}`;
+      comboDisplay.classList.add("danger");
+    } else {
+      comboDisplay.textContent = "—";
+      comboDisplay.classList.remove("danger");
+    }
+  }
+  if (bridgesDisplay) {
+    bridgesDisplay.textContent = availableBridges.toString();
+  }
+  if (integrityMeter) {
+    integrityMeter.value = reactorIntegrity;
+    integrityMeter.classList.toggle("danger", reactorIntegrity <= 30);
+  }
+  if (integrityValue) {
+    integrityValue.textContent = `${Math.max(0, Math.round(reactorIntegrity))}%`;
+    integrityValue.classList.toggle("danger", reactorIntegrity <= 30);
+  }
+}
+
+function addScore(amount) {
+  if (!amount || gameOver) {
+    return;
+  }
+  score = Math.max(0, score + Math.round(amount));
+  updateStatusDisplays();
+  highlightStatus(scoreDisplay);
+}
+
+function reduceIntegrity(amount, message) {
+  if (amount <= 0 || gameOver) {
+    return;
+  }
+  reactorIntegrity = Math.max(0, reactorIntegrity - amount);
+  updateStatusDisplays();
+  highlightStatus(integrityValue);
+  highlightMeter(integrityMeter);
+  if (message) {
+    setReactorMessage(message, true);
+    logEvent(message);
+  } else if (reactorIntegrity <= 30) {
+    setReactorMessage("Reactor integrity critical", true);
+  }
+  if (reactorIntegrity === 0) {
+    triggerGameOver(message ?? "Reactor integrity collapsed.");
+  }
+}
+
+function boostIntegrity(amount) {
+  if (amount <= 0 || gameOver) {
+    return;
+  }
+  reactorIntegrity = Math.min(100, reactorIntegrity + amount);
+  updateStatusDisplays();
+  highlightStatus(integrityValue);
+  highlightMeter(integrityMeter);
+  if (!gameOver) {
+    setReactorMessage("Reactor stabilized", false);
+  }
+}
+
+function updateLevel() {
+  const targetLevel = Math.floor(linesClearedTotal / 5) + 1;
+  if (targetLevel !== level) {
+    level = targetLevel;
+    const levelDelay = Math.max(320, 900 - (level - 1) * 60);
+    dropDelay = Math.min(dropDelay, levelDelay);
+    startDropLoop();
+    logEvent(`Reactor intensity advanced to level ${level}.`);
+    highlightStatus(levelDisplay);
+  }
+  updateStatusDisplays();
+}
+
+async function onTileClick(x, y) {
+  if (gameOver || resolvingMatch) {
+    return;
+  }
   if (transformMode) {
     applyTransformation(x, y);
     return;
@@ -202,7 +372,12 @@ function onTileClick(x, y) {
     return;
   }
 
-  resolveMatches(matches);
+  resolvingMatch = true;
+  try {
+    await resolveMatches(matches);
+  } finally {
+    resolvingMatch = false;
+  }
   selectedTile = null;
 }
 
@@ -284,11 +459,21 @@ function findAllMatches() {
   return matches;
 }
 
-function resolveMatches(matches) {
+async function resolveMatches(matches) {
+  if (matches.length === 0) {
+    return;
+  }
+
+  const uniquePositions = [];
+  const seen = new Set();
   const matchSummary = new Map();
+
   matches.forEach(({ x, y, tile }) => {
     const key = `${x}-${y}`;
-    matchBoard[y][x] = null;
+    if (!seen.has(key)) {
+      uniquePositions.push({ x, y, tile });
+      seen.add(key);
+    }
     const data = matchSummary.get(tile.id) ?? { count: 0, empowered: 0, meter: tile.meter };
     data.count += 1;
     if (tile.empowered) {
@@ -297,15 +482,41 @@ function resolveMatches(matches) {
     matchSummary.set(tile.id, data);
   });
 
+  uniquePositions.forEach(({ x, y }) => {
+    const tileEl = getTileElement(x, y);
+    if (tileEl) {
+      tileEl.classList.add("match-highlight");
+    }
+  });
+
+  await wait(200);
+
+  uniquePositions.forEach(({ x, y }) => {
+    const tileEl = getTileElement(x, y);
+    if (tileEl) {
+      tileEl.classList.add("match-fade");
+    }
+    matchBoard[y][x] = null;
+  });
+
+  await wait(140);
+
   collapseColumns();
   refillColumns();
   renderMatchBoard();
 
+  let earnedScore = 0;
   matchSummary.forEach((data, id) => {
+    const meterType = rockTypes.find((rock) => rock.id === id).meter;
     logEvent(`Matched ${data.count} ${id} rocks${data.empowered ? " with empowered resonance" : ""}.`);
-    addResources(rockTypes.find((rock) => rock.id === id).meter, data.count * 8 + data.empowered * 12);
+    addResources(meterType, data.count * 8 + data.empowered * 12);
+    earnedScore += data.count * 35 + data.empowered * 50;
     enqueueTetramino(id, data.count, data.empowered);
   });
+
+  if (earnedScore > 0) {
+    addScore(earnedScore);
+  }
 }
 
 function collapseColumns() {
@@ -385,7 +596,11 @@ function getQueueColor(id) {
 }
 
 function spawnNextPiece() {
+  if (gameOver) {
+    return;
+  }
   if (pieceQueue.length === 0) {
+    updateQueueDisplay();
     return;
   }
   const next = pieceQueue.shift();
@@ -396,8 +611,15 @@ function spawnNextPiece() {
     rotation: next.rotation ?? 0
   };
   if (collides(activePiece, 0, 0)) {
-    logEvent("The reactor is overwhelmed. Network flow resets.");
+    activePiece = null;
+    comboChain = 0;
+    reduceIntegrity(30, "Reactor overload purges the chamber.");
     resetTetraminoBoard();
+    updateStatusDisplays();
+    if (!gameOver) {
+      spawnNextPiece();
+    }
+    return;
   }
   updateQueueDisplay();
   renderTetraminoBoard();
@@ -423,49 +645,99 @@ function collides(piece, offsetX, offsetY, rotationIndex = piece.rotation) {
   return false;
 }
 
-function placePiece() {
-  if (!activePiece) {
+async function placePiece() {
+  if (!activePiece || resolvingLock || gameOver) {
     return;
   }
-  const placedId = activePiece.id;
-  const matrix = pieceDefinitions[activePiece.id].rotations[activePiece.rotation];
-  for (let y = 0; y < matrix.length; y += 1) {
-    for (let x = 0; x < matrix[y].length; x += 1) {
-      if (!matrix[y][x]) {
-        continue;
-      }
-      const boardX = activePiece.x + x;
-      const boardY = activePiece.y + y;
-      if (boardY >= 0 && boardY < TETRA_HEIGHT) {
-        tetraBoard[boardY][boardX] = {
-          id: activePiece.id,
-          className: pieceDefinitions[activePiece.id].colorClass
-        };
+  resolvingLock = true;
+  try {
+    const placedId = activePiece.id;
+    const matrix = pieceDefinitions[activePiece.id].rotations[activePiece.rotation];
+    for (let y = 0; y < matrix.length; y += 1) {
+      for (let x = 0; x < matrix[y].length; x += 1) {
+        if (!matrix[y][x]) {
+          continue;
+        }
+        const boardX = activePiece.x + x;
+        const boardY = activePiece.y + y;
+        if (boardY >= 0 && boardY < TETRA_HEIGHT) {
+          tetraBoard[boardY][boardX] = {
+            id: activePiece.id,
+            className: pieceDefinitions[activePiece.id].colorClass
+          };
+        }
       }
     }
+    activePiece = null;
+    renderTetraminoBoard();
+
+    const rowsToClear = findCompleteRows();
+    if (rowsToClear.length > 0) {
+      comboChain += 1;
+      updateStatusDisplays();
+      if (comboChain > 1) {
+        highlightStatus(comboDisplay);
+      }
+      await animateLineClear(rowsToClear);
+      removeRows(rowsToClear);
+      linesClearedTotal += rowsToClear.length;
+      const lineScore = rowsToClear.length * 160 + Math.max(0, comboChain - 1) * 90;
+      addScore(lineScore);
+      boostIntegrity(rowsToClear.length * 6);
+      renderTetraminoBoard();
+      handleLineClear(rowsToClear.length, placedId);
+      updateStatusDisplays();
+      highlightStatus(linesDisplay);
+      updateLevel();
+    } else {
+      if (comboChain !== 0) {
+        comboChain = 0;
+        updateStatusDisplays();
+      }
+      setReactorMessage("Reactor strain rises from inert drop.", true);
+      reduceIntegrity(6);
+    }
+    updateStatusDisplays();
+  } finally {
+    resolvingLock = false;
   }
-  activePiece = null;
-  const cleared = clearLines();
-  if (cleared > 0) {
-    handleLineClear(cleared, placedId);
+
+  if (!gameOver) {
+    spawnNextPiece();
   }
-  spawnNextPiece();
 }
 
-function clearLines() {
-  let cleared = 0;
-  for (let y = TETRA_HEIGHT - 1; y >= 0; y -= 1) {
+function findCompleteRows() {
+  const rows = [];
+  for (let y = 0; y < TETRA_HEIGHT; y += 1) {
     if (tetraBoard[y].every((cell) => cell)) {
-      tetraBoard.splice(y, 1);
-      tetraBoard.unshift(Array.from({ length: TETRA_WIDTH }, () => null));
-      cleared += 1;
-      y += 1;
+      rows.push(y);
     }
   }
-  if (cleared > 0) {
-    renderTetraminoBoard();
+  return rows;
+}
+
+async function animateLineClear(rows) {
+  const cells = Array.from(tetraminoBoardEl.children);
+  rows.forEach((row) => {
+    for (let x = 0; x < TETRA_WIDTH; x += 1) {
+      const index = row * TETRA_WIDTH + x;
+      const cell = cells[index];
+      if (cell) {
+        cell.classList.add("line-clear");
+      }
+    }
+  });
+  await wait(220);
+}
+
+function removeRows(rows) {
+  const sorted = [...rows].sort((a, b) => a - b);
+  for (let i = sorted.length - 1; i >= 0; i -= 1) {
+    const row = sorted[i];
+    tetraBoard.splice(row, 1);
+    tetraBoard.unshift(Array.from({ length: TETRA_WIDTH }, () => null));
   }
-  return cleared;
 }
 
 function handleLineClear(count, id) {
@@ -492,8 +764,10 @@ function resetTetraminoBoard() {
   tetraBoard = createMatrix(TETRA_HEIGHT, TETRA_WIDTH, null);
   pieceQueue = [];
   activePiece = null;
+  comboChain = 0;
   renderTetraminoBoard();
   updateQueueDisplay();
+  updateStatusDisplays();
 }
 
 function renderTetraminoBoard() {
@@ -525,32 +799,42 @@ function renderTetraminoBoard() {
   }
 }
 
-function dropStep() {
+async function dropStep() {
+  if (gameOver || resolvingLock) {
+    return;
+  }
   if (!activePiece) {
     spawnNextPiece();
     return;
   }
   if (!collides(activePiece, 0, 1)) {
     activePiece.y += 1;
-  } else {
-    placePiece();
+    renderTetraminoBoard();
+    return;
   }
-  renderTetraminoBoard();
+  await placePiece();
 }
 
 function rotatePiece() {
-  if (!activePiece) {
+  if (!activePiece || resolvingLock || gameOver) {
     return;
   }
-  const nextRotation = (activePiece.rotation + 1) % pieceDefinitions[activePiece.id].rotations.length;
-  if (!collides(activePiece, 0, 0, nextRotation)) {
-    activePiece.rotation = nextRotation;
-    renderTetraminoBoard();
+  const definition = pieceDefinitions[activePiece.id];
+  const nextRotation = (activePiece.rotation + 1) % definition.rotations.length;
+  const kicks = [0, -1, 1, -2, 2];
+  for (let i = 0; i < kicks.length; i += 1) {
+    const offsetX = kicks[i];
+    if (!collides(activePiece, offsetX, 0, nextRotation)) {
+      activePiece.x += offsetX;
+      activePiece.rotation = nextRotation;
+      renderTetraminoBoard();
+      return;
+    }
   }
 }
 
 function movePiece(offset) {
-  if (!activePiece) {
+  if (!activePiece || resolvingLock || gameOver) {
     return;
   }
   if (!collides(activePiece, offset, 0)) {
@@ -560,7 +844,7 @@ function movePiece(offset) {
 }
 
 function softDrop() {
-  if (!activePiece) {
+  if (!activePiece || resolvingLock || gameOver) {
     return;
   }
   if (!collides(activePiece, 0, 1)) {
@@ -570,6 +854,9 @@ function softDrop() {
 }
 
 function applyTransformation(x, y) {
+  if (gameOver) {
+    return;
+  }
   const tile = matchBoard[y][x];
   if (tile.empowered) {
     logEvent("This rock already carries a charged state.");
@@ -590,7 +877,7 @@ function applyTransformation(x, y) {
 }
 
 function enterTransformMode() {
-  if (transformMode) {
+  if (transformMode || gameOver) {
     return;
   }
   if (resourceMeterState.earth < TRANSFORM_COST.earth || resourceMeterState.water < TRANSFORM_COST.water) {
@@ -611,6 +898,7 @@ function exitTransformMode() {
 function addResources(type, amount) {
   resourceMeterState[type] = Math.min(100, resourceMeterState[type] + amount);
   updateMeters();
+  highlightMeter(meters[type]);
   if (resourceMeterState.shift >= SHIFT_THRESHOLD) {
     shiftBoardBtn.disabled = false;
   }
@@ -637,6 +925,13 @@ function initializeFlowNodes() {
     nodes.push({ kind, bridged: false });
   }
   return nodes;
+}
+
+function resetFlowNodes() {
+  const fresh = initializeFlowNodes();
+  for (let i = 0; i < flowNodes.length; i += 1) {
+    flowNodes[i] = fresh[i];
+  }
 }
 
 function renderFlowGrid() {
@@ -666,7 +961,7 @@ function renderFlowGrid() {
 }
 
 function onFlowNodeClick(index) {
-  if (!routeMode) {
+  if (!routeMode || gameOver) {
     return;
   }
   const node = flowNodes[index];
@@ -689,25 +984,39 @@ function onFlowNodeClick(index) {
   logEvent("Installed a bridge segment into the flow trails.");
   renderFlowGrid();
   updateRouteButton();
+  updateStatusDisplays();
+  highlightStatus(bridgesDisplay);
   evaluateNetwork();
 }
 
 function extendFlowWithBridges(count, id) {
+  if (gameOver) {
+    return;
+  }
   logEvent(`Stored ${count} bridge segment${count > 1 ? "s" : ""} for the network.`);
   routeMode = true;
   availableBridges += count;
   updateRouteButton();
   renderFlowGrid();
   evaluateNetwork(id);
+  updateStatusDisplays();
+  highlightStatus(bridgesDisplay);
 }
 
 function updateRouteButton() {
+  if (!routeToggleBtn) {
+    return;
+  }
   routeToggleBtn.textContent = routeMode
     ? `Routing Active (${availableBridges})`
     : `Plan Routes (${availableBridges})`;
+  routeToggleBtn.disabled = gameOver;
 }
 
 function toggleRouteMode() {
+  if (gameOver) {
+    return;
+  }
   routeMode = !routeMode;
   if (!routeMode) {
     routeSelection = [];
@@ -717,6 +1026,9 @@ function toggleRouteMode() {
 }
 
 function evaluateNetwork(idHint) {
+  if (gameOver) {
+    return;
+  }
   const adjacency = (index) => {
     const row = Math.floor(index / 6);
     const col = index % 6;
@@ -775,10 +1087,16 @@ function completeCircuit(idHint) {
   logEvent("Completed a flow circuit. Energy surges through the lattice!");
   addResources(idHint ? mapPieceToMeter(idHint) : "earth", 20);
   addResources("fire", 10);
+  addScore(120);
+  boostIntegrity(10);
 }
 
 function logEvent(message) {
+  if (!eventLogEl) {
+    return;
+  }
   const entry = document.createElement("p");
+  entry.className = "log-entry";
   entry.textContent = message;
   eventLogEl.prepend(entry);
   while (eventLogEl.children.length > 8) {
@@ -786,24 +1104,38 @@ function logEvent(message) {
   }
 }
 
-function startDropLoop() {
+function stopDropLoop() {
   if (dropIntervalId) {
     window.clearInterval(dropIntervalId);
+    dropIntervalId = null;
   }
-  dropIntervalId = window.setInterval(dropStep, dropDelay);
+}
+
+function startDropLoop() {
+  if (gameOver) {
+    return;
+  }
+  stopDropLoop();
+  dropIntervalId = window.setInterval(() => {
+    dropStep();
+  }, dropDelay);
 }
 
 function applyShiftActuation() {
-  if (resourceMeterState.shift < SHIFT_THRESHOLD) {
+  if (gameOver || resolvingLock || resourceMeterState.shift < SHIFT_THRESHOLD) {
     return;
   }
   resourceMeterState.shift = 0;
   shiftOrientation = (shiftOrientation + 1) % 4;
-  dropDelay = Math.max(400, dropDelay - 80);
+  dropDelay = Math.max(280, dropDelay - 90);
   updateMeters();
   shiftBoardBtn.disabled = true;
   reorientNetwork();
   logEvent("Actuated shift realigned the reactor relative to the flow grid.");
+  setReactorMessage("Actuated shift accelerates the drop cadence.");
+  addScore(60);
+  highlightStatus(levelDisplay);
+  startDropLoop();
 }
 
 function reorientNetwork() {
@@ -821,41 +1153,125 @@ function reorientNetwork() {
   renderFlowGrid();
 }
 
-function onKeyDown(event) {
+async function onKeyDown(event) {
+  if (gameOver) {
+    return;
+  }
   switch (event.key) {
     case "ArrowLeft":
+      event.preventDefault();
       movePiece(-1);
       break;
     case "ArrowRight":
+      event.preventDefault();
       movePiece(1);
       break;
     case "ArrowDown":
+      event.preventDefault();
       softDrop();
       break;
     case "ArrowUp":
     case "x":
     case "X":
+      event.preventDefault();
       rotatePiece();
       break;
     case " ":
+      event.preventDefault();
+      if (!activePiece || resolvingLock) {
+        break;
+      }
       while (activePiece && !collides(activePiece, 0, 1)) {
         activePiece.y += 1;
       }
-      placePiece();
       renderTetraminoBoard();
+      await placePiece();
       break;
     default:
       break;
   }
 }
 
-chargeTransformBtn.addEventListener("click", enterTransformMode);
-cancelTransformBtn.addEventListener("click", exitTransformMode);
-shiftBoardBtn.addEventListener("click", applyShiftActuation);
-routeToggleBtn.addEventListener("click", toggleRouteMode);
+function triggerGameOver(reason) {
+  if (gameOver) {
+    return;
+  }
+  gameOver = true;
+  resolvingLock = false;
+  resolvingMatch = false;
+  stopDropLoop();
+  if (transformMode) {
+    exitTransformMode();
+  }
+  chargeTransformBtn.disabled = true;
+  shiftBoardBtn.disabled = true;
+  routeMode = false;
+  routeSelection = [];
+  updateRouteButton();
+  renderFlowGrid();
+  activePiece = null;
+  renderTetraminoBoard();
+  if (selectedTile) {
+    const tileEl = getTileElement(selectedTile.x, selectedTile.y);
+    if (tileEl) {
+      tileEl.classList.remove("selected");
+    }
+    selectedTile = null;
+  }
+  setReactorMessage(`Game Over — ${reason}`, true);
+  logEvent(`Run ended: ${reason}. Final score ${score.toLocaleString()}.`);
+  updateStatusDisplays();
+}
+
+function resetGameState() {
+  stopDropLoop();
+  gameOver = false;
+  resolvingLock = false;
+  resolvingMatch = false;
+  score = 0;
+  linesClearedTotal = 0;
+  level = 1;
+  comboChain = 0;
+  reactorIntegrity = 100;
+  dropDelay = 900;
+  availableBridges = 0;
+  routeMode = false;
+  routeSelection = [];
+  shiftOrientation = 0;
+  selectedTile = null;
+  transformMode = false;
+  resourceMeterState = { earth: 0, water: 0, fire: 0, shift: 0 };
+  updateMeters();
+  transformToolbar.hidden = true;
+  chargeTransformBtn.disabled = false;
+  shiftBoardBtn.disabled = true;
+  resetFlowNodes();
+  renderFlowGrid();
+  updateRouteButton();
+  eventLogEl.innerHTML = "";
+  setReactorMessage("Stabilized");
+  initializeMatchBoard();
+  resetTetraminoBoard();
+  updateStatusDisplays();
+  logEvent("Reactor run initialized. Forge matches to queue tetraminos.");
+  startDropLoop();
+}
+
+if (chargeTransformBtn) {
+  chargeTransformBtn.addEventListener("click", enterTransformMode);
+}
+if (cancelTransformBtn) {
+  cancelTransformBtn.addEventListener("click", exitTransformMode);
+}
+if (shiftBoardBtn) {
+  shiftBoardBtn.addEventListener("click", applyShiftActuation);
+}
+if (routeToggleBtn) {
+  routeToggleBtn.addEventListener("click", toggleRouteMode);
+}
+if (restartButton) {
+  restartButton.addEventListener("click", resetGameState);
+}
 window.addEventListener("keydown", onKeyDown);
 
-initializeMatchBoard();
-renderTetraminoBoard();
-renderFlowGrid();
-startDropLoop();
+resetGameState();
