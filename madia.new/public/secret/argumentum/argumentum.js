@@ -256,6 +256,7 @@ let scoreState = {
   maxCombo: 0
 };
 let alertTimeoutId = null;
+let integrityCollapsePending = false;
 const comboState = {
   streak: 0,
   multiplier: 1,
@@ -371,6 +372,21 @@ function updateAlertForIntegrity() {
   reactorAlertEl.className = `reactor-alert ${level}`;
 }
 
+function maybeHandlePendingIntegrityCollapse() {
+  if (!integrityCollapsePending) {
+    return;
+  }
+  if (scoreState.integrity > 0) {
+    integrityCollapsePending = false;
+    return;
+  }
+  if (activePiece || reactorBusy) {
+    return;
+  }
+  integrityCollapsePending = false;
+  triggerGameOver("Reactor integrity collapsed. Flow lattice dissolves.");
+}
+
 function awardScore(amount, anchor, { comboEligible = true } = {}) {
   if (gameOver || !amount) {
     return;
@@ -398,9 +414,8 @@ function damageIntegrity(amount, message) {
     const level = scoreState.integrity <= 25 ? "danger" : "warning";
     showAlert(message, level);
   }
-  if (scoreState.integrity <= 0) {
-    triggerGameOver("Reactor integrity collapsed. Flow lattice dissolves.");
-  }
+  integrityCollapsePending = scoreState.integrity <= 0;
+  maybeHandlePendingIntegrityCollapse();
 }
 
 function restoreIntegrity(amount, message) {
@@ -412,6 +427,10 @@ function restoreIntegrity(amount, message) {
   if (message) {
     showAlert(message, "info");
   }
+  if (scoreState.integrity > 0) {
+    integrityCollapsePending = false;
+  }
+  maybeHandlePendingIntegrityCollapse();
 }
 
 function applyIntegrityDrift() {
@@ -657,6 +676,7 @@ function startNewRun(isInitial = false) {
       ? "Reactor calibration online. Forge matches to begin the flow."
       : "Reactor rebooted. Forge matches to rebuild momentum."
   );
+  integrityCollapsePending = false;
   scoreState = {
     score: 0,
     lines: 0,
@@ -1183,6 +1203,7 @@ async function placePiece() {
     }
   } finally {
     reactorBusy = false;
+    maybeHandlePendingIntegrityCollapse();
     if (!gameOver) {
       spawnNextPiece();
       renderTetraminoBoard();
