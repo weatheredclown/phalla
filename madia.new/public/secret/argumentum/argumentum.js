@@ -7,6 +7,11 @@ const DROP_DELAY_BASE = 900;
 const DROP_DELAY_MIN = 400;
 const STRAIN_TICK_AMOUNT = 0.4;
 const ROTATION_KICKS = [0, -1, 1, -2, 2];
+const ISO_CELL_SIZE = 28;
+const PIXEL_LAYER_HEIGHT = 12;
+const PIXEL_FALL_SPEED = 0.6;
+const PIXEL_FALL_NUDGE = 1.1;
+const pixelColors = ["earth", "water", "fire", "shift"];
 
 const infusionMapping = {
   sedimentary: "geolocked",
@@ -139,6 +144,10 @@ const meters = {
 const matchBoardEl = document.getElementById("match-board");
 const pieceQueueEl = document.getElementById("piece-queue");
 const tetraminoBoardEl = document.getElementById("tetramino-board");
+const isometricStageEl = document.getElementById("isometric-stage");
+const isometricBoardEl = document.getElementById("tetramino-isometric");
+const pixelInstructionsEl = document.getElementById("pixel-instructions");
+const toggleIsometricBtn = document.getElementById("toggle-isometric");
 const flowGridEl = document.getElementById("flow-grid");
 const eventLogEl = document.getElementById("event-log");
 const bridgeInventoryEl = document.getElementById("bridge-inventory");
@@ -182,6 +191,10 @@ let bridgePreviewTimeout = null;
 let pendingInfusions = [];
 let shiftOrientation = 0;
 let planIdCounter = 0;
+let pieceIdCounter = 0;
+let isIsometricView = false;
+let fallingPixel = null;
+let pixelIntervalId = null;
 
 let flowNodes = initializeFlowNodes();
 let isResolvingMatches = false;
@@ -337,6 +350,7 @@ function triggerGameOver(message) {
   reactorBusy = false;
   isResolvingMatches = false;
   stopDropLoop();
+  stopPixelStream();
   showAlert(message, "danger", 0);
   if (restartButton) {
     restartButton.hidden = false;
@@ -355,11 +369,15 @@ function triggerGameOver(message) {
   matchBoardEl.classList.add("board-disabled");
   tetraminoBoardEl.classList.add("board-disabled");
   flowGridEl.classList.add("board-disabled");
+  if (pixelInstructionsEl) {
+    pixelInstructionsEl.textContent = "Reactor offline. Restart to resume pixel projection.";
+  }
   logEvent("Reactor shutdown engaged. Restart to attempt a new run.");
 }
 
 function startNewRun(isInitial = false) {
   stopDropLoop();
+  stopPixelStream();
   gameOver = false;
   reactorBusy = false;
   isResolvingMatches = false;
@@ -388,6 +406,8 @@ function startNewRun(isInitial = false) {
   routeSelection = [];
   pieceQueue = [];
   activePiece = null;
+  pieceIdCounter = 0;
+  fallingPixel = null;
   tetraBoard = createMatrix(TETRA_HEIGHT, TETRA_WIDTH, null);
   dropDelay = DROP_DELAY_BASE;
   shiftOrientation = 0;
@@ -418,6 +438,12 @@ function startNewRun(isInitial = false) {
     strain: 20
   };
   updateScoreboard();
+  applyIsometricVisibility();
+  if (isIsometricView) {
+    ensureFallingPixel();
+    renderIsometricBoard();
+    startPixelStream();
+  }
   if (!isInitial) {
     showAlert("Stability restored. Reconnect the lattice to climb again.", "info");
   } else {
@@ -884,6 +910,8 @@ async function placePiece() {
   const placedId = activePiece.id;
   const placedRotation = activePiece.rotation;
   const matrix = pieceDefinitions[activePiece.id].rotations[activePiece.rotation];
+  const pieceKey = ++pieceIdCounter;
+  const basePixelColor = mapPieceToMeter(activePiece.id);
   try {
     for (let y = 0; y < matrix.length; y += 1) {
       for (let x = 0; x < matrix[y].length; x += 1) {
@@ -895,7 +923,9 @@ async function placePiece() {
         if (boardY >= 0 && boardY < TETRA_HEIGHT) {
           tetraBoard[boardY][boardX] = {
             id: activePiece.id,
-            className: pieceDefinitions[activePiece.id].colorClass
+            className: pieceDefinitions[activePiece.id].colorClass,
+            pieceKey,
+            pixels: [{ color: basePixelColor }]
           };
         }
       }
@@ -977,6 +1007,12 @@ function resetTetraminoBoard() {
   activePiece = null;
   renderTetraminoBoard();
   updateQueueDisplay();
+  if (isIsometricView) {
+    fallingPixel = null;
+    renderIsometricBoard();
+  } else if (isometricBoardEl) {
+    isometricBoardEl.innerHTML = "";
+  }
 }
 
 function renderTetraminoBoard() {
@@ -1010,6 +1046,324 @@ function renderTetraminoBoard() {
       }
       tetraminoBoardEl.append(cell);
     }
+  }
+  if (isIsometricView) {
+    if (fallingPixel) {
+      updateFallingPixelTarget();
+    }
+    renderIsometricBoard();
+  } else if (isometricBoardEl) {
+    isometricBoardEl.innerHTML = "";
+  }
+}
+
+function applyIsometricVisibility() {
+  if (tetraminoBoardEl) {
+    tetraminoBoardEl.hidden = isIsometricView;
+  }
+  if (isometricStageEl) {
+    isometricStageEl.hidden = !isIsometricView;
+    isometricStageEl.classList.toggle("active", isIsometricView);
+  }
+  if (toggleIsometricBtn) {
+    toggleIsometricBtn.textContent = isIsometricView ? "Return to 2D" : "Isometric View";
+  }
+}
+
+function renderIsometricBoard() {
+  if (!isometricBoardEl) {
+    return;
+  }
+  isometricBoardEl.innerHTML = "";
+  if (!isIsometricView) {
+    return;
+  }
+  const width = TETRA_WIDTH * ISO_CELL_SIZE;
+  const height = TETRA_HEIGHT * ISO_CELL_SIZE;
+  isometricBoardEl.style.width = `${width}px`;
+  isometricBoardEl.style.height = `${height}px`;
+  for (let y = 0; y < TETRA_HEIGHT; y += 1) {
+    for (let x = 0; x < TETRA_WIDTH; x += 1) {
+      const cellEl = document.createElement("div");
+      cellEl.className = "iso-cell";
+      cellEl.style.transform = `translate3d(${x * ISO_CELL_SIZE}px, ${y * ISO_CELL_SIZE}px, 0)`;
+      const base = document.createElement("div");
+      base.className = "iso-base";
+      const value = tetraBoard[y][x];
+      if (value) {
+        base.classList.add("iso-base-filled");
+      } else {
+        base.classList.add("iso-base-empty");
+      }
+      cellEl.append(base);
+      if (value && Array.isArray(value.pixels)) {
+        const stackEl = document.createElement("div");
+        stackEl.className = "iso-stack";
+        value.pixels.forEach((pixel, index) => {
+          const cube = document.createElement("div");
+          cube.className = `iso-cube pixel-${pixel.color ?? "earth"}`;
+          cube.style.setProperty("--layer", index);
+          stackEl.append(cube);
+        });
+        cellEl.append(stackEl);
+      }
+      isometricBoardEl.append(cellEl);
+    }
+  }
+  if (fallingPixel) {
+    const pixelEl = document.createElement("div");
+    pixelEl.className = `falling-pixel pixel-${fallingPixel.color}`;
+    const targetRow = Math.min(fallingPixel.targetRow ?? TETRA_HEIGHT, TETRA_HEIGHT - 1);
+    const clampedHeight = Math.max(fallingPixel.height ?? 0, 0);
+    pixelEl.style.transform = `translate3d(${fallingPixel.column * ISO_CELL_SIZE}px, ${targetRow * ISO_CELL_SIZE}px, ${clampedHeight}px)`;
+    isometricBoardEl.append(pixelEl);
+  }
+}
+
+function getOccupiedColumns() {
+  const columns = [];
+  for (let x = 0; x < TETRA_WIDTH; x += 1) {
+    for (let y = 0; y < TETRA_HEIGHT; y += 1) {
+      if (tetraBoard[y][x]) {
+        columns.push(x);
+        break;
+      }
+    }
+  }
+  return columns;
+}
+
+function getTopOccupiedRow(column) {
+  for (let y = 0; y < TETRA_HEIGHT; y += 1) {
+    if (tetraBoard[y][column]) {
+      return y;
+    }
+  }
+  return null;
+}
+
+function startPixelStream() {
+  stopPixelStream();
+  if (!isIsometricView) {
+    return;
+  }
+  pixelIntervalId = window.setInterval(updateFallingPixel, 120);
+}
+
+function stopPixelStream() {
+  if (pixelIntervalId) {
+    window.clearInterval(pixelIntervalId);
+    pixelIntervalId = null;
+  }
+}
+
+function ensureFallingPixel() {
+  if (!isIsometricView || gameOver) {
+    return;
+  }
+  if (fallingPixel) {
+    updateFallingPixelTarget();
+    return;
+  }
+  const columns = getOccupiedColumns();
+  if (columns.length === 0) {
+    if (pixelInstructionsEl) {
+      pixelInstructionsEl.textContent = "Forge tetraminos to project an anchor for pixels.";
+    }
+    return;
+  }
+  if (pixelInstructionsEl) {
+    pixelInstructionsEl.textContent =
+      "Guide the falling pixel with \u2190 \u2192, press \u2193 to nudge, and space to fast-drop.";
+  }
+  const column = columns[Math.floor(Math.random() * columns.length)];
+  fallingPixel = {
+    column,
+    color: pixelColors[Math.floor(Math.random() * pixelColors.length)],
+    height: (TETRA_HEIGHT + 6) * PIXEL_LAYER_HEIGHT
+  };
+  updateFallingPixelTarget();
+}
+
+function updateFallingPixelTarget() {
+  if (!fallingPixel) {
+    return;
+  }
+  const topRow = getTopOccupiedRow(fallingPixel.column);
+  fallingPixel.targetRow = topRow === null ? TETRA_HEIGHT : topRow;
+}
+
+function updateFallingPixel() {
+  if (!isIsometricView || gameOver) {
+    return;
+  }
+  if (!fallingPixel) {
+    ensureFallingPixel();
+    renderIsometricBoard();
+    return;
+  }
+  fallingPixel.height = Math.max(0, (fallingPixel.height ?? 0) - PIXEL_LAYER_HEIGHT * PIXEL_FALL_SPEED);
+  const targetRow = fallingPixel.targetRow ?? TETRA_HEIGHT;
+  if (targetRow >= TETRA_HEIGHT) {
+    if (fallingPixel.height <= 0) {
+      logEvent("The pixel dispersed without a tetramino anchor.");
+      fallingPixel = null;
+      ensureFallingPixel();
+    }
+    renderIsometricBoard();
+    return;
+  }
+  const cell = tetraBoard[targetRow][fallingPixel.column];
+  const stackHeight = cell && Array.isArray(cell.pixels) ? cell.pixels.length : 0;
+  const landingHeight = stackHeight * PIXEL_LAYER_HEIGHT;
+  if (fallingPixel.height <= landingHeight) {
+    attachPixelToColumn(fallingPixel.column, fallingPixel.color, targetRow);
+    fallingPixel = null;
+    ensureFallingPixel();
+    renderTetraminoBoard();
+    return;
+  }
+  renderIsometricBoard();
+}
+
+function attachPixelToColumn(column, color, targetRow = null) {
+  if (targetRow === null) {
+    targetRow = getTopOccupiedRow(column);
+  }
+  if (targetRow === null || targetRow >= TETRA_HEIGHT) {
+    return;
+  }
+  const cell = tetraBoard[targetRow][column];
+  if (!cell) {
+    return;
+  }
+  if (!Array.isArray(cell.pixels)) {
+    cell.pixels = [];
+  }
+  cell.pixels.push({ color });
+  checkPieceLayers(cell.pieceKey);
+}
+
+function collectPieceCells(pieceKey) {
+  const cells = [];
+  for (let y = 0; y < TETRA_HEIGHT; y += 1) {
+    for (let x = 0; x < TETRA_WIDTH; x += 1) {
+      const cell = tetraBoard[y][x];
+      if (cell && cell.pieceKey === pieceKey) {
+        cells.push({ x, y, cell });
+      }
+    }
+  }
+  return cells;
+}
+
+function checkPieceLayers(pieceKey) {
+  if (!pieceKey && pieceKey !== 0) {
+    return;
+  }
+  const cells = collectPieceCells(pieceKey);
+  if (cells.length === 0) {
+    return;
+  }
+  const clearedColors = [];
+  let layerIndex = 0;
+  while (true) {
+    const reference = cells[0].cell.pixels[layerIndex];
+    if (!reference) {
+      break;
+    }
+    const targetColor = reference.color;
+    const matches = cells.every(
+      ({ cell }) => cell.pixels[layerIndex] && cell.pixels[layerIndex].color === targetColor
+    );
+    if (!matches) {
+      layerIndex += 1;
+      continue;
+    }
+    cells.forEach(({ cell }) => {
+      cell.pixels.splice(layerIndex, 1);
+    });
+    clearedColors.push(targetColor);
+  }
+  if (clearedColors.length > 0) {
+    const colorNames = clearedColors
+      .map((color) => color.charAt(0).toUpperCase() + color.slice(1))
+      .join(", ");
+    logEvent(
+      `Aligned pixel layer${clearedColors.length > 1 ? "s" : ""} (${colorNames}) dissolved from the tetramino.`
+    );
+    awardScore(clearedColors.length * 80, tetraminoBoardEl);
+  }
+  const hasPixelsRemaining = cells.some(({ cell }) => cell.pixels.length > 0);
+  if (!hasPixelsRemaining) {
+    cells.forEach(({ x, y }) => {
+      tetraBoard[y][x] = null;
+    });
+    logEvent("A tetramino shattered after exhausting its pixel layers.");
+  }
+}
+
+function dropPixelImmediately() {
+  if (!fallingPixel) {
+    return;
+  }
+  const targetRow = getTopOccupiedRow(fallingPixel.column);
+  if (targetRow === null) {
+    logEvent("The pixel dissipated without a tetramino anchor.");
+    fallingPixel = null;
+    ensureFallingPixel();
+    renderIsometricBoard();
+    return;
+  }
+  attachPixelToColumn(fallingPixel.column, fallingPixel.color, targetRow);
+  fallingPixel = null;
+  ensureFallingPixel();
+  renderTetraminoBoard();
+}
+
+function handleIsometricInput(event) {
+  if (!isIsometricView || !fallingPixel) {
+    return false;
+  }
+  let handled = false;
+  switch (event.key) {
+    case "ArrowLeft":
+      fallingPixel.column = Math.max(0, fallingPixel.column - 1);
+      handled = true;
+      break;
+    case "ArrowRight":
+      fallingPixel.column = Math.min(TETRA_WIDTH - 1, fallingPixel.column + 1);
+      handled = true;
+      break;
+    case "ArrowDown":
+      fallingPixel.height = Math.max(0, fallingPixel.height - PIXEL_LAYER_HEIGHT * PIXEL_FALL_NUDGE);
+      handled = true;
+      break;
+    case " ":
+      dropPixelImmediately();
+      handled = true;
+      break;
+    default:
+      break;
+  }
+  if (handled) {
+    updateFallingPixelTarget();
+    renderIsometricBoard();
+  }
+  return handled;
+}
+
+function toggleIsometricView() {
+  isIsometricView = !isIsometricView;
+  applyIsometricVisibility();
+  if (isIsometricView) {
+    ensureFallingPixel();
+    renderIsometricBoard();
+    startPixelStream();
+  } else {
+    stopPixelStream();
+    fallingPixel = null;
+    renderIsometricBoard();
   }
 }
 
@@ -1631,6 +1985,10 @@ function onKeyDown(event) {
   if (gameOver) {
     return;
   }
+  if (isIsometricView && handleIsometricInput(event)) {
+    event.preventDefault();
+    return;
+  }
   switch (event.key) {
     case "ArrowLeft":
       movePiece(-1);
@@ -1668,6 +2026,9 @@ chargeTransformBtn.addEventListener("click", enterTransformMode);
 cancelTransformBtn.addEventListener("click", exitTransformMode);
 shiftBoardBtn.addEventListener("click", applyShiftActuation);
 routeToggleBtn.addEventListener("click", toggleRouteMode);
+if (toggleIsometricBtn) {
+  toggleIsometricBtn.addEventListener("click", toggleIsometricView);
+}
 if (restartButton) {
   restartButton.addEventListener("click", () => startNewRun(false));
 }
