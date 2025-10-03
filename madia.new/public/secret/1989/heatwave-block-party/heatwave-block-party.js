@@ -2,7 +2,12 @@ import { initHighScoreBanner } from "../arcade-scores.js";
 import { getScoreConfig } from "../score-config.js";
 import { mountParticleField } from "../particles.js";
 
-mountParticleField();
+const particleSystem = mountParticleField({
+  effects: {
+    palette: ["#f97316", "#38bdf8", "#facc15", "#fb7185"],
+    ambientDensity: 0.6,
+  },
+});
 
 const scoreConfig = getScoreConfig("heatwave-block-party");
 const highScore = initHighScoreBanner({
@@ -468,6 +473,13 @@ function logEvent(message, variant = "info") {
   entry.className = `log-entry ${variant}`;
   entry.textContent = message;
   logEntries.prepend(entry);
+  if (variant === "success") {
+    particleSystem.emitBurst(1.3);
+  } else if (variant === "warning") {
+    particleSystem.emitSparkle(0.8);
+  } else if (variant === "danger") {
+    particleSystem.emitSparkle(1.0);
+  }
   while (logEntries.children.length > 12) {
     logEntries.removeChild(logEntries.lastElementChild);
   }

@@ -2,7 +2,12 @@ import { initHighScoreBanner } from "../arcade-scores.js";
 import { getScoreConfig } from "../score-config.js";
 import { mountParticleField } from "../particles.js";
 
-mountParticleField();
+const particleSystem = mountParticleField({
+  effects: {
+    palette: ["#38bdf8", "#facc15", "#f472b6", "#a855f7"],
+    ambientDensity: 0.55,
+  },
+});
 
 const scoreConfig = getScoreConfig("second-star-flight");
 const highScore = initHighScoreBanner({
@@ -457,6 +462,13 @@ function logEvent(message, variant = "info") {
     entry.classList.add(variant);
   }
   eventLog.prepend(entry);
+  if (variant === "success") {
+    particleSystem.emitBurst(1.3);
+  } else if (variant === "warning") {
+    particleSystem.emitSparkle(0.8);
+  } else if (variant === "danger") {
+    particleSystem.emitSparkle(1.0);
+  }
   while (eventLog.children.length > 12) {
     eventLog.removeChild(eventLog.lastElementChild);
   }

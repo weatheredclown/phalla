@@ -2,7 +2,12 @@ import { initHighScoreBanner } from "../arcade-scores.js";
 import { getScoreConfig } from "../score-config.js";
 import { mountParticleField } from "../particles.js";
 
-mountParticleField();
+const particleSystem = mountParticleField({
+  effects: {
+    palette: ["#38bdf8", "#facc15", "#fb7185", "#34d399"],
+    ambientDensity: 0.55,
+  },
+});
 
 const scoreConfig = getScoreConfig("vendetta-convoy");
 const highScore = initHighScoreBanner({
@@ -710,6 +715,13 @@ function logEvent(message, tone = "info") {
   state.logs.unshift({ message, tone });
   if (state.logs.length > MAX_LOG_ENTRIES) {
     state.logs.length = MAX_LOG_ENTRIES;
+  }
+  if (tone === "success") {
+    particleSystem.emitBurst(1.4);
+  } else if (tone === "danger") {
+    particleSystem.emitSparkle(1.0);
+  } else if (tone === "warning") {
+    particleSystem.emitSparkle(0.8);
   }
   renderLog();
 }

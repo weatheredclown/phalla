@@ -2,7 +2,12 @@ import { initHighScoreBanner } from "../arcade-scores.js";
 import { getScoreConfig } from "../score-config.js";
 import { mountParticleField } from "../particles.js";
 
-mountParticleField();
+const particleSystem = mountParticleField({
+  effects: {
+    palette: ["#38bdf8", "#facc15", "#fb7185", "#34d399"],
+    ambientDensity: 0.55,
+  },
+});
 
 const scoreConfig = getScoreConfig("speed-zone");
 const highScore = initHighScoreBanner({
@@ -435,18 +440,21 @@ function resolveRoute() {
   if (hazardTriggered) {
     const penalty = face.penalty || 6;
     const ended = adjustHeat(penalty);
+    particleSystem.emitSparkle(0.9);
     logEvent(`⚠️ ${face.hazardLabel} clamps down at ${finalName}. Heat +${penalty}.`);
     if (ended) {
       return;
     }
   } else {
     adjustHeat(-1);
+    particleSystem.emitBurst(1.0);
     logEvent(`✅ Clean run into ${finalName}. Heat -1.`);
   }
 
   const finalNodeData = nodesById.get(finalNode);
   if (finalNodeData?.type === "rest") {
     adjustHeat(-5);
+    particleSystem.emitBurst(1.1);
     logEvent(`🛠️ Crew cools off at ${finalNodeData.name}. Heat -5.`);
   }
 
@@ -456,12 +464,14 @@ function resolveRoute() {
     checkpointIndex += 1;
     highScore.submit(checkpointIndex);
     adjustHeat(-4);
+    particleSystem.emitBurst(1.3);
     logEvent(`🏁 Cleared ${clearedName}. Heat -4.`);
   }
 
   updateCheckpointReadout();
 
   if (checkpointIndex >= checkpoints.length) {
+    particleSystem.emitBurst(1.6);
     logEvent("🎉 All checkpoints cleared. Neon Pier throws a midnight fireworks show!");
     endRun(true);
     return;
@@ -478,6 +488,7 @@ function endRun(success) {
     diceReadout.textContent = "Run complete. The crew celebrates at Neon Pier.";
   } else {
     diceReadout.textContent = "Heat maxed out. Federal sting ends the run.";
+    particleSystem.emitSparkle(1.0);
     logEvent("🚨 The Heat maxed out. Cross-country sting shuts down the convoy.");
   }
 }
@@ -492,6 +503,7 @@ function triggerBypass() {
   if (checkpointIndex < checkpoints.length) {
     const skipped = nodesById.get(checkpoints[checkpointIndex]).name;
     checkpointIndex += 1;
+    particleSystem.emitBurst(1.25);
     highScore.submit(checkpointIndex);
     logEvent(`🪄 Bypass actuation burns ${skipped}. Next checkpoint auto-cleared.`);
     updateCheckpointReadout();
@@ -500,6 +512,7 @@ function triggerBypass() {
     clearPlanning();
     highlightHazards(null);
     currentRoll = null;
+    particleSystem.emitBurst(1.5);
     logEvent("🎉 Bypass rockets the crew straight into Neon Pier. Run complete.");
     endRun(true);
     return;

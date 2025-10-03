@@ -2,7 +2,12 @@ import { initHighScoreBanner } from "../arcade-scores.js";
 import { getScoreConfig } from "../score-config.js";
 import { mountParticleField } from "../particles.js";
 
-mountParticleField();
+const particleSystem = mountParticleField({
+  effects: {
+    palette: ["#38bdf8", "#facc15", "#fb7185", "#34d399"],
+    ambientDensity: 0.5,
+  },
+});
 
 const scoreConfig = getScoreConfig("kodiak-covenant");
 const highScore = initHighScoreBanner({
@@ -278,7 +283,7 @@ function renderState() {
 
 function renderEvents(events) {
   eventList.innerHTML = "";
-  events.forEach((event) => {
+  events.forEach((event, index) => {
     const item = document.createElement("li");
     item.className = "event-entry";
     item.textContent = event.text;
@@ -286,6 +291,15 @@ function renderEvents(events) {
       item.dataset.tone = event.tone;
     }
     eventList.appendChild(item);
+    if (index === events.length - 1) {
+      if (event.tone === "success") {
+        particleSystem.emitBurst(1.4);
+      } else if (event.tone === "danger") {
+        particleSystem.emitSparkle(0.9);
+      } else if (event.tone) {
+        particleSystem.emitSparkle(0.6);
+      }
+    }
   });
 }
 

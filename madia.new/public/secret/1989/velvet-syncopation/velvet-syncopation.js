@@ -2,7 +2,12 @@ import { initHighScoreBanner } from "../arcade-scores.js";
 import { getScoreConfig } from "../score-config.js";
 import { mountParticleField } from "../particles.js";
 
-mountParticleField();
+const particleSystem = mountParticleField({
+  effects: {
+    palette: ["#38bdf8", "#f472b6", "#facc15", "#a855f7"],
+    ambientDensity: 0.6,
+  },
+});
 
 const scoreConfig = getScoreConfig("velvet-syncopation");
 const highScore = initHighScoreBanner({
@@ -527,8 +532,10 @@ function logEvent(message, type = "neutral") {
   item.textContent = message;
   if (type === "positive") {
     item.classList.add("is-positive");
+    particleSystem.emitBurst(1.2);
   } else if (type === "warning") {
     item.classList.add("is-warning");
+    particleSystem.emitSparkle(0.8);
   }
   eventList.prepend(item);
   while (eventList.children.length > 8) {

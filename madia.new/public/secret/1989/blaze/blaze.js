@@ -2,7 +2,12 @@ import { initHighScoreBanner } from "../arcade-scores.js";
 import { getScoreConfig } from "../score-config.js";
 import { mountParticleField } from "../particles.js";
 
-mountParticleField();
+const particleSystem = mountParticleField({
+  effects: {
+    palette: ["#f97316", "#facc15", "#38bdf8", "#fda4af"],
+    ambientDensity: 0.55,
+  },
+});
 
 const scoreConfig = getScoreConfig("blaze");
 const highScore = initHighScoreBanner({
@@ -460,6 +465,7 @@ function advanceFlow() {
       highScore.submit(signedBills);
       politicalCapital += BILL_REWARD;
       logEvent(`Bill signed cleanly. Political Capital +${BILL_REWARD} (now ${politicalCapital}).`);
+      particleSystem.emitSparkle(1.1);
       updateCapitalMeter();
       if (gameOver) {
         return;
@@ -613,6 +619,7 @@ function triggerWin() {
   gameOver = true;
   setStatus("Two clean bills signed. The chamber erupts in relief.");
   logEvent("Victory! The paper trail held under pressure.");
+  particleSystem.emitBurst(1.5);
 }
 
 function setActiveMode(mode) {

@@ -2,7 +2,12 @@ import { initHighScoreBanner } from "../arcade-scores.js";
 import { getScoreConfig } from "../score-config.js";
 import { mountParticleField } from "../particles.js";
 
-mountParticleField();
+const particleSystem = mountParticleField({
+  effects: {
+    palette: ["#f97316", "#38bdf8", "#facc15", "#fb7185"],
+    ambientDensity: 0.6,
+  },
+});
 
 const scoreConfig = getScoreConfig("amore-express");
 const highScore = initHighScoreBanner({
@@ -418,6 +423,7 @@ function finalizeRoute() {
   highScore.submit(deliveredCount);
   updateDeliveredCount();
   logEvent(`Delivered ${order.pizza} to ${housesById.get(order.houseId)?.name ?? "a client"}.`);
+  particleSystem.emitBurst(1.2);
   updateStatus("Delivery locked in. Queue up the next order.");
 
   activeOrders = activeOrders.filter((item) => item.id !== order.id);
@@ -463,6 +469,7 @@ function endShift(success, message) {
     logEvent(message);
   } else {
     logEvent("Shift cleared with every order delivered.");
+    particleSystem.emitBurst(1.6);
   }
 }
 

@@ -2,7 +2,12 @@ import { initHighScoreBanner } from "../arcade-scores.js";
 import { getScoreConfig } from "../score-config.js";
 import { mountParticleField } from "../particles.js";
 
-mountParticleField();
+const particleSystem = mountParticleField({
+  effects: {
+    palette: ["#38bdf8", "#c084fc", "#facc15", "#f97316"],
+    ambientDensity: 0.55,
+  },
+});
 
 const scoreConfig = getScoreConfig("culdesac-curiosity");
 const highScore = initHighScoreBanner({
@@ -395,6 +400,7 @@ function checkVictory() {
     paranoiaTimer = null;
     setStatus("Mystery solved. Deliver the evidence before the Klopeks notice.");
     logEvent("Curiosity meter filled—victory!");
+    particleSystem.emitBurst(1.6);
   }
 }
 
@@ -418,6 +424,7 @@ function resolveMatchesLoop(initialMatches) {
       totalCleared += clearedPositions.length;
       setStatus(`Rumor cascade x${chain}! ${clearedPositions.length} neighbors convinced.`);
       logEvent(`Cleared ${clearedPositions.length} tiles in chain ${chain}.`);
+      particleSystem.emitSparkle(0.8 + chain * 0.25);
       collapseBoard();
       renderBoard();
       setTimeout(() => {

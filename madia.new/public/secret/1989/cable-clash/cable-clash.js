@@ -2,7 +2,12 @@ import { initHighScoreBanner } from "../arcade-scores.js";
 import { getScoreConfig } from "../score-config.js";
 import { mountParticleField } from "../particles.js";
 
-mountParticleField();
+const particleSystem = mountParticleField({
+  effects: {
+    palette: ["#38bdf8", "#f472b6", "#facc15", "#f97316"],
+    ambientDensity: 0.55,
+  },
+});
 
 const scoreConfig = getScoreConfig("cable-clash");
 const highScore = initHighScoreBanner({
@@ -459,11 +464,13 @@ function onCircuitClosed() {
   circuitClosed = true;
   setStatus("Circuit complete! The main-event slam erupts and stuns nearby rivals.");
   logEvent("The main-event slam fires—broadcast restored!");
+  particleSystem.emitBurst(1.4);
   highScore.submit(turnCounter);
   rivals.forEach((rival) => {
     if (isAdjacent(rival.position, GOAL)) {
       rival.stunned = true;
       logEvent(`${rival.name} is stunned by the surge!`);
+      particleSystem.emitSparkle(0.9);
     }
   });
   cableNetwork.forEach((segment, tileKey) => {

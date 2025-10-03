@@ -2,7 +2,12 @@ import { initHighScoreBanner } from "../arcade-scores.js";
 import { getScoreConfig } from "../score-config.js";
 import { mountParticleField } from "../particles.js";
 
-mountParticleField();
+const particleSystem = mountParticleField({
+  effects: {
+    palette: ["#38bdf8", "#f97316", "#facc15", "#fda4af"],
+    ambientDensity: 0.6,
+  },
+});
 
 const scoreConfig = getScoreConfig("cooler-chaos");
 const highScore = initHighScoreBanner({
@@ -322,6 +327,7 @@ function handleEjection(exitCell) {
   }
   state.lastEjectTime = now;
   addLog(`Troublemaker launched through ${formatTile(exitCell.row, exitCell.col)}.`);
+  particleSystem.emitSparkle(0.9 + state.comboCount * 0.1);
   if (state.comboCount >= 3) {
     triggerBeNice(exitCell);
     state.comboCount = 0;
@@ -359,6 +365,7 @@ function triggerBeNice(anchorCell) {
       anchorElement.removeAttribute("data-highlight");
     }, 600);
   }
+  particleSystem.emitBurst(1.4);
 
   if (cleared > 0) {
     addLog(`Be Nice bonus clears ${cleared} shard${cleared === 1 ? "" : "s"} near ${formatTile(anchorCell.row, anchorCell.col)}.`);

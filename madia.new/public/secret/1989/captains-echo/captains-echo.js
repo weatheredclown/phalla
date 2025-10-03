@@ -2,7 +2,12 @@ import { initHighScoreBanner } from "../arcade-scores.js";
 import { getScoreConfig } from "../score-config.js";
 import { mountParticleField } from "../particles.js";
 
-mountParticleField();
+const particleSystem = mountParticleField({
+  effects: {
+    palette: ["#38bdf8", "#f472b6", "#facc15", "#fb7185"],
+    ambientDensity: 0.5,
+  },
+});
 
 const scoreConfig = getScoreConfig("captains-echo");
 const highScore = initHighScoreBanner({
@@ -394,6 +399,7 @@ function evaluatePlan() {
     targetCallout.textContent = `Success! Score ${score}—the hall erupts in applause.`;
     targetCallout.classList.add("success");
     logEvent(`Score ${score}. The salute holds.`);
+    particleSystem.emitBurst(1.3);
   } else {
     const delta = TARGET_SCORE - score;
     targetCallout.textContent = `Score ${score}. Need ${delta} more to lock the salute.`;
