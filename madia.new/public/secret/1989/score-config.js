@@ -116,6 +116,17 @@ export const scoreConfigs = {
     format: ({ value }) =>
       value === 1 ? "1 trap" : `${value ?? 0} traps`,
   },
+  "personal-ad-trap": {
+    label: "Case Score",
+    empty: "No case solved yet.",
+    format: ({ value, meta }) => {
+      const days = Number(meta?.daysRemaining);
+      const wrong = Number(meta?.wrongAccusations ?? 0);
+      const daysLabel = Number.isFinite(days) ? `${days}d left` : "time unknown";
+      const wrongLabel = wrong > 0 ? `${wrong} miss${wrong === 1 ? "" : "es"}` : "clean run";
+      return `Score ${value ?? 0} · ${daysLabel} · ${wrongLabel}`;
+    },
+  },
   "nose-for-trouble": {
     label: "Intercept Streak",
     empty: "No intercepts logged yet.",
