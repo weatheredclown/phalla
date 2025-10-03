@@ -1,11 +1,10 @@
 import { mountParticleField } from "../particles.js";
-import { initParticleSystem } from "../particle-effects.js";
 
-mountParticleField();
-
-const particleSystem = initParticleSystem({
-  palette: ["#38bdf8", "#34d399", "#facc15", "#f97316"],
-  ambientDensity: 0.5,
+const particleSystem = mountParticleField({
+  effects: {
+    palette: ["#38bdf8", "#34d399", "#facc15", "#f97316"],
+    ambientDensity: 0.5,
+  },
 });
 
 const TURN_COUNT = 6;

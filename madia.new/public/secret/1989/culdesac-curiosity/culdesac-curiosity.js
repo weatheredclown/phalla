@@ -1,11 +1,10 @@
 import { mountParticleField } from "../particles.js";
-import { initParticleSystem } from "../particle-effects.js";
 
-mountParticleField();
-
-const particleSystem = initParticleSystem({
-  palette: ["#38bdf8", "#c084fc", "#facc15", "#f97316"],
-  ambientDensity: 0.55,
+const particleSystem = mountParticleField({
+  effects: {
+    palette: ["#38bdf8", "#c084fc", "#facc15", "#f97316"],
+    ambientDensity: 0.55,
+  },
 });
 
 const boardElement = document.getElementById("gossip-grid");

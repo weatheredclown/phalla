@@ -1,11 +1,10 @@
 import { mountParticleField } from "../particles.js";
-import { initParticleSystem } from "../particle-effects.js";
 
-mountParticleField();
-
-const particleSystem = initParticleSystem({
-  palette: ["#38bdf8", "#f472b6", "#facc15", "#f97316"],
-  ambientDensity: 0.55,
+const particleSystem = mountParticleField({
+  effects: {
+    palette: ["#38bdf8", "#f472b6", "#facc15", "#f97316"],
+    ambientDensity: 0.55,
+  },
 });
 
 const boardElement = document.getElementById("board");

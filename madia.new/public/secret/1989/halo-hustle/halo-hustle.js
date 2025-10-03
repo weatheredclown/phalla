@@ -1,11 +1,10 @@
 import { mountParticleField } from "../particles.js";
-import { initParticleSystem } from "../particle-effects.js";
 
-mountParticleField();
-
-const particleSystem = initParticleSystem({
-  palette: ["#38bdf8", "#facc15", "#a855f7", "#34d399"],
-  ambientDensity: 0.55,
+const particleSystem = mountParticleField({
+  effects: {
+    palette: ["#38bdf8", "#facc15", "#a855f7", "#34d399"],
+    ambientDensity: 0.55,
+  },
 });
 
 const MAX_TIME = 80;
