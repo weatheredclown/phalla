@@ -742,6 +742,96 @@ const fullscreenButton = document.getElementById("fullscreen-toggle");
 const gameLookup = new Map(games.map((game) => [game.id, game]));
 let lastFocusElement = null;
 
+const PIXELATE_SAMPLE_SCALE = 0.24;
+
+function extractSvgDimensions(svgMarkup) {
+  const viewBoxMatch = svgMarkup.match(/viewBox\s*=\s*"([^"]+)"/i);
+  if (!viewBoxMatch) {
+    return { width: 160, height: 120 };
+  }
+  const [, viewBoxValue] = viewBoxMatch;
+  const parts = viewBoxValue.trim().split(/[\s,]+/);
+  if (parts.length !== 4) {
+    return { width: 160, height: 120 };
+  }
+  const width = Number.parseFloat(parts[2]);
+  const height = Number.parseFloat(parts[3]);
+  if (!Number.isFinite(width) || !Number.isFinite(height) || width <= 0 || height <= 0) {
+    return { width: 160, height: 120 };
+  }
+  return { width, height };
+}
+
+function createPixelatedThumbnail(svgMarkup) {
+  const { width, height } = extractSvgDimensions(svgMarkup);
+  const blob = new Blob([svgMarkup], { type: "image/svg+xml" });
+  const url = URL.createObjectURL(blob);
+
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.decoding = "async";
+    img.onload = () => {
+      URL.revokeObjectURL(url);
+      const baseWidth = width || img.naturalWidth || 160;
+      const baseHeight = height || img.naturalHeight || 120;
+      const sampleWidth = Math.max(1, Math.round(baseWidth * PIXELATE_SAMPLE_SCALE));
+      const sampleHeight = Math.max(1, Math.round(baseHeight * PIXELATE_SAMPLE_SCALE));
+      const sampleCanvas = document.createElement("canvas");
+      sampleCanvas.width = sampleWidth;
+      sampleCanvas.height = sampleHeight;
+      const sampleContext = sampleCanvas.getContext("2d");
+      if (!sampleContext) {
+        reject(new Error("Unable to acquire 2D context for pixelation"));
+        return;
+      }
+      sampleContext.imageSmoothingEnabled = false;
+      sampleContext.drawImage(img, 0, 0, sampleWidth, sampleHeight);
+
+      const displayCanvas = document.createElement("canvas");
+      displayCanvas.width = baseWidth;
+      displayCanvas.height = baseHeight;
+      const displayContext = displayCanvas.getContext("2d");
+      if (!displayContext) {
+        reject(new Error("Unable to acquire 2D context for display canvas"));
+        return;
+      }
+      displayContext.imageSmoothingEnabled = false;
+      displayContext.drawImage(sampleCanvas, 0, 0, baseWidth, baseHeight);
+      displayCanvas.classList.add("pixelated-logo");
+      resolve(displayCanvas);
+    };
+    img.onerror = () => {
+      URL.revokeObjectURL(url);
+      reject(new Error("Failed to rasterize SVG thumbnail"));
+    };
+    img.src = url;
+  });
+}
+
+function applyPixelatedThumbnail(container, svgMarkup) {
+  if (!container) {
+    return;
+  }
+  if (!svgMarkup) {
+    container.innerHTML = "";
+    return;
+  }
+
+  container.innerHTML = "";
+  createPixelatedThumbnail(svgMarkup)
+    .then((canvas) => {
+      container.appendChild(canvas);
+    })
+    .catch((error) => {
+      console.warn("Unable to pixelate thumbnail", error);
+      container.innerHTML = svgMarkup;
+      const fallbackSvg = container.querySelector("svg");
+      if (fallbackSvg) {
+        fallbackSvg.classList.add("pixelated-fallback");
+      }
+    });
+}
+
 function createGameCard(game) {
   const card = template.content.cloneNode(true);
   const tile = card.querySelector(".game-card");
@@ -750,7 +840,7 @@ function createGameCard(game) {
   tile.setAttribute("role", "button");
   tile.setAttribute("aria-label", `Play ${game.name}`);
   const thumb = card.querySelector(".game-thumb");
-  thumb.innerHTML = game.thumbnail;
+  applyPixelatedThumbnail(thumb, game.thumbnail);
   card.querySelector(".game-title").textContent = game.name;
   card.querySelector(".game-meta").textContent = game.description;
   const playButton = card.querySelector(".play-button");
