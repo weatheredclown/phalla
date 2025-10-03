@@ -194,6 +194,16 @@ export const scoreConfigs = {
     empty: "No harmony runs logged yet.",
     format: ({ value }) => `Harmony ${value ?? 0}`,
   },
+  // Level 14
+  "the-final-barrier": {
+    label: "Exploration Score",
+    empty: "No barrier runs logged yet.",
+    format: ({ value, meta }) => {
+      const accuracy = Number.isFinite(meta?.accuracy) ? `${Math.round(meta.accuracy)}% accuracy` : "Accuracy unknown";
+      const shields = Number.isFinite(meta?.shields) ? `${Math.round(meta.shields)}% shields` : "Shields unknown";
+      return `${value ?? 0} pts · ${accuracy} · ${shields}`;
+    },
+  }, // Level 14
   "tailing-the-trash": {
     label: "Evidence Logged",
     empty: "No stakeouts logged yet.",
