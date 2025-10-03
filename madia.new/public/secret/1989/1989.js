@@ -1,3 +1,6 @@
+import { getHighScore, onHighScoreChange } from "./arcade-scores.js";
+import { getScoreConfig } from "./score-config.js";
+
 /**
  * Register launchable cabinets here. You can also import { registerGame }
  * elsewhere and call it at runtime for dynamic catalogs.
@@ -741,6 +744,37 @@ const fullscreenButton = document.getElementById("fullscreen-toggle");
 
 const gameLookup = new Map(games.map((game) => [game.id, game]));
 let lastFocusElement = null;
+const scoreSlots = new Map();
+const scorePulseTimers = new Map();
+
+function renderScore(gameId, entry = getHighScore(gameId)) {
+  const slot = scoreSlots.get(gameId);
+  if (!slot) {
+    return;
+  }
+  const { element, config } = slot;
+  if (entry) {
+    element.textContent = config.format(entry);
+    element.dataset.empty = "false";
+  } else {
+    element.textContent = config.empty;
+    element.dataset.empty = "true";
+  }
+}
+
+function pulseScore(gameId) {
+  const slot = scoreSlots.get(gameId);
+  if (!slot) {
+    return;
+  }
+  const { element } = slot;
+  window.clearTimeout(scorePulseTimers.get(gameId));
+  element.classList.add("is-score-updated");
+  const timer = window.setTimeout(() => {
+    element.classList.remove("is-score-updated");
+  }, 900);
+  scorePulseTimers.set(gameId, timer);
+}
 
 function isOverlayFullscreen() {
   return document.fullscreenElement === overlayFrame;
@@ -794,6 +828,12 @@ function renderGames() {
     thumb.innerHTML = game.thumbnail;
     card.querySelector(".game-title").textContent = game.name;
     card.querySelector(".game-meta").textContent = game.description;
+    const scoreElement = card.querySelector("[data-high-score]");
+    if (scoreElement) {
+      const config = getScoreConfig(game.id);
+      scoreSlots.set(game.id, { element: scoreElement, config });
+      renderScore(game.id);
+    }
     card.querySelector(".play-button").dataset.gameId = game.id;
     fragment.appendChild(card);
   });
@@ -831,6 +871,14 @@ function closeGame() {
 }
 
 renderGames();
+
+onHighScoreChange(({ gameId, entry }) => {
+  if (!gameId) {
+    return;
+  }
+  renderScore(gameId, entry);
+  pulseScore(gameId);
+});
 
 grid.addEventListener("click", (event) => {
   const button = event.target.closest(".play-button");

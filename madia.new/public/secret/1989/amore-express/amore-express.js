@@ -1,6 +1,16 @@
+import { initHighScoreBanner } from "../arcade-scores.js";
+import { getScoreConfig } from "../score-config.js";
 import { mountParticleField } from "../particles.js";
 
 mountParticleField();
+
+const scoreConfig = getScoreConfig("amore-express");
+const highScore = initHighScoreBanner({
+  gameId: "amore-express",
+  label: scoreConfig.label,
+  format: scoreConfig.format,
+  emptyText: scoreConfig.empty,
+});
 
 const boardSize = 6;
 const shop = { row: 2, col: 0, label: "Hub", name: "Amore Slices dispatch" };
@@ -405,6 +415,7 @@ function finalizeRoute() {
   });
 
   deliveredCount += 1;
+  highScore.submit(deliveredCount);
   updateDeliveredCount();
   logEvent(`Delivered ${order.pizza} to ${housesById.get(order.houseId)?.name ?? "a client"}.`);
   updateStatus("Delivery locked in. Queue up the next order.");

@@ -1,6 +1,16 @@
+import { initHighScoreBanner } from "../arcade-scores.js";
+import { getScoreConfig } from "../score-config.js";
 import { mountParticleField } from "../particles.js";
 
 mountParticleField();
+
+const scoreConfig = getScoreConfig("cable-clash");
+const highScore = initHighScoreBanner({
+  gameId: "cable-clash",
+  label: scoreConfig.label,
+  format: scoreConfig.format,
+  emptyText: scoreConfig.empty,
+});
 
 const boardElement = document.getElementById("board");
 const statusBar = document.getElementById("status-bar");
@@ -449,6 +459,7 @@ function onCircuitClosed() {
   circuitClosed = true;
   setStatus("Circuit complete! The main-event slam erupts and stuns nearby rivals.");
   logEvent("The main-event slam fires—broadcast restored!");
+  highScore.submit(turnCounter);
   rivals.forEach((rival) => {
     if (isAdjacent(rival.position, GOAL)) {
       rival.stunned = true;

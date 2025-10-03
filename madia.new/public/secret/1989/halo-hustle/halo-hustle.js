@@ -1,6 +1,16 @@
+import { initHighScoreBanner } from "../arcade-scores.js";
+import { getScoreConfig } from "../score-config.js";
 import { mountParticleField } from "../particles.js";
 
 mountParticleField();
+
+const scoreConfig = getScoreConfig("halo-hustle");
+const highScore = initHighScoreBanner({
+  gameId: "halo-hustle",
+  label: scoreConfig.label,
+  format: scoreConfig.format,
+  emptyText: scoreConfig.empty,
+});
 
 const MAX_TIME = 80;
 const STARTING_TIME = 60;
@@ -149,6 +159,7 @@ function depositChips() {
   const restored = pendingChips * CHIP_TIME_VALUE;
   timeSand = Math.min(MAX_TIME, timeSand + restored);
   lifeChips += pendingChips;
+  highScore.submit(lifeChips);
   logEvent(`Deposited ${pendingChips} Life Chip${pendingChips === 1 ? "" : "s"}. Restored ${restored} seconds.`);
   pendingChips = 0;
   updateTime();

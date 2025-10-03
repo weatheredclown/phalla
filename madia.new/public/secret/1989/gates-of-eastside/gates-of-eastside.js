@@ -1,6 +1,16 @@
+import { initHighScoreBanner } from "../arcade-scores.js";
+import { getScoreConfig } from "../score-config.js";
 import { mountParticleField } from "../particles.js";
 
 mountParticleField();
+
+const scoreConfig = getScoreConfig("gates-of-eastside");
+const highScore = initHighScoreBanner({
+  gameId: "gates-of-eastside",
+  label: scoreConfig.label,
+  format: scoreConfig.format,
+  emptyText: scoreConfig.empty,
+});
 
 const ROWS = 5;
 const COLS = 6;
@@ -285,6 +295,7 @@ function deliverStudyFlow(row) {
   const spend = Math.min(mbstProgress, DELIVERY_COST);
   mbstProgress = Math.max(0, mbstProgress - spend);
   testScore = Math.min(TEST_SCORE_TARGET, testScore + spend);
+  highScore.submit(Math.round(testScore));
   updateMeters();
   updateStatus(`Lane ${row + 1} cashed in ${spend} MBST for scores.`, "success");
   logEvent(`Lane ${row + 1} converted ${spend} MBST into test score progress.`);
