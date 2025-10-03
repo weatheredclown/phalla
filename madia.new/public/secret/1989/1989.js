@@ -2214,6 +2214,87 @@ const games = [
       </svg>
     `,
   }, // Level 7
+  // Level 15
+  {
+    id: "bat-signal-scramble",
+    name: "The Bat-Signal Scramble",
+    description:
+      "Rip through Gotham's streets then vault the cathedral skyline to reach the Bat-Signal before the clock expires.",
+    url: "./bat-signal-scramble/index.html",
+    thumbnail: `
+      <svg
+        viewBox="0 0 160 120"
+        xmlns="http://www.w3.org/2000/svg"
+        role="img"
+        aria-label="The Bat-Signal Scramble preview"
+      >
+        <defs>
+          <linearGradient id="batBackdrop" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="rgba(10,18,36,0.95)" />
+            <stop offset="100%" stop-color="rgba(2,6,18,0.95)" />
+          </linearGradient>
+          <linearGradient id="batRoad" x1="0" y1="0" x2="1" y2="0">
+            <stop offset="0%" stop-color="rgba(76,132,255,0.4)" />
+            <stop offset="100%" stop-color="rgba(108,76,255,0.55)" />
+          </linearGradient>
+          <radialGradient id="batSignal" cx="0.75" cy="0.1" r="0.6">
+            <stop offset="0%" stop-color="rgba(240,183,63,0.75)" />
+            <stop offset="100%" stop-color="rgba(240,183,63,0)" />
+          </radialGradient>
+        </defs>
+        <rect x="8" y="10" width="144" height="100" rx="20" fill="rgba(4,7,18,0.95)" stroke="rgba(99,102,241,0.4)" />
+        <rect x="18" y="20" width="124" height="80" rx="16" fill="url(#batBackdrop)" stroke="rgba(99,102,241,0.3)" />
+        <g fill="rgba(24,37,64,0.95)" stroke="rgba(148,163,184,0.35)" stroke-width="1.2">
+          ${Array.from({ length: 5 }, (_, i) => `<rect x="${26 + i * 18}" y="${32 + ((i % 2) * 6)}" width="14" height="48" rx="4" />`).join("")}
+        </g>
+        <path
+          d="M26 78 Q80 58 134 82"
+          fill="none"
+          stroke="rgba(76,132,255,0.4)"
+          stroke-width="6"
+          stroke-linecap="round"
+        />
+        <path
+          d="M26 90 Q80 66 134 92"
+          fill="none"
+          stroke="rgba(15,23,42,0.9)"
+          stroke-width="10"
+          stroke-linecap="round"
+        />
+        <rect x="52" y="70" width="48" height="18" rx="9" fill="rgba(8,12,26,0.95)" stroke="rgba(76,132,255,0.6)" />
+        <rect x="46" y="78" width="60" height="10" rx="5" fill="url(#batRoad)" opacity="0.7" />
+        <g>
+          <rect x="58" y="74" width="22" height="10" rx="4" fill="rgba(15,23,42,0.95)" stroke="rgba(76,132,255,0.6)" />
+          <rect x="82" y="74" width="22" height="10" rx="4" fill="rgba(15,23,42,0.95)" stroke="rgba(76,132,255,0.6)" />
+          <circle cx="64" cy="86" r="4" fill="#4c84ff" stroke="rgba(248,250,252,0.4)" />
+          <circle cx="96" cy="86" r="4" fill="#6c4cff" stroke="rgba(248,250,252,0.4)" />
+        </g>
+        <g>
+          <path
+            d="M90 54 L120 34"
+            stroke="rgba(108,76,255,0.6)"
+            stroke-width="4"
+            stroke-linecap="round"
+          />
+          <circle cx="120" cy="34" r="18" fill="url(#batSignal)" />
+          <path
+            d="M112 28 L128 40"
+            stroke="rgba(240,183,63,0.7)"
+            stroke-width="3"
+            stroke-linecap="round"
+          />
+        </g>
+        <path
+          d="M74 46 Q88 32 108 30"
+          fill="none"
+          stroke="rgba(249,115,22,0.55)"
+          stroke-width="3"
+          stroke-linecap="round"
+        />
+        <circle cx="72" cy="46" r="5" fill="#f0b73f" stroke="rgba(248,250,252,0.6)" />
+      </svg>
+    `,
+  }, // Level 15
   // Level 16
   {
     id: "wind-beneath-my-wings",
