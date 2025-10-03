@@ -43,6 +43,16 @@ export const scoreConfigs = {
       return `${value ?? 0} pts · ${contexts} ${contextLabel}`;
     },
   },
+  "diner-debate": {
+    label: "Conviction Score",
+    empty: "No performances recorded yet.",
+    format: ({ value, meta }) => {
+      const accuracy = Number.isFinite(meta?.accuracy) ? Math.round(meta.accuracy) : null;
+      const combo = Number(meta?.combo ?? 0);
+      const accuracyText = accuracy !== null ? `${accuracy}% accuracy` : "0% accuracy";
+      return `${value ?? 0} pts · ${accuracyText} · combo ${combo}`;
+    },
+  },
   "wardline-breakout": {
     label: "Final Sanity",
     empty: "No breakout simulated yet.",
@@ -101,17 +111,69 @@ export const scoreConfigs = {
       return `${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}.${String(millis).padStart(3, "0")}`;
     },
   },
+  "k-mart-countdown": {
+    label: "Accuracy Score",
+    empty: "No counts recorded yet.",
+    format: ({ value, meta }) => {
+      const bestMultiplier = Number(meta?.bestMultiplier ?? meta?.multiplier);
+      if (Number.isFinite(bestMultiplier) && bestMultiplier > 0) {
+        return `${value ?? 0} pts · ×${bestMultiplier.toFixed(1)} best`;
+      }
+      return `${value ?? 0} pts`;
+    },
+  },
+  "flapjack-flip-out": {
+    label: "Stack Height",
+    empty: "No stacks flipped yet.",
+    format: ({ value }) => `${value ?? 0} cm`,
+  },
   "kodiak-covenant": {
     label: "Traps Cleared",
     empty: "No traps cleared yet.",
     format: ({ value }) =>
       value === 1 ? "1 trap" : `${value ?? 0} traps`,
   },
+  "personal-ad-trap": {
+    label: "Case Score",
+    empty: "No case solved yet.",
+    format: ({ value, meta }) => {
+      const days = Number(meta?.daysRemaining);
+      const wrong = Number(meta?.wrongAccusations ?? 0);
+      const daysLabel = Number.isFinite(days) ? `${days}d left` : "time unknown";
+      const wrongLabel = wrong > 0 ? `${wrong} miss${wrong === 1 ? "" : "es"}` : "clean run";
+      return `Score ${value ?? 0} · ${daysLabel} · ${wrongLabel}`;
+    },
+  },
   "nose-for-trouble": {
     label: "Intercept Streak",
     empty: "No intercepts logged yet.",
     format: ({ value }) =>
       value === 1 ? "1 intercept" : `${value ?? 0} intercepts`,
+  },
+  "rollercoaster-of-life": {
+    label: "Family Harmony",
+    empty: "No harmony runs logged yet.",
+    format: ({ value }) => `Harmony ${value ?? 0}`,
+  }
+  "tailing-the-trash": {
+    label: "Evidence Logged",
+    empty: "No stakeouts logged yet.",
+    format: ({ value, meta }) => {
+      const suspicion = Number(meta?.suspicion);
+      if (Number.isFinite(suspicion)) {
+        return `${value ?? 0} logs · ${suspicion}% peak`;
+      }
+      return `${value ?? 0} logs`;
+    }
+  },
+  "restless-acre-rise": {
+    label: "Altitude",
+    empty: "No ascents logged yet.",
+    format: ({ value, meta }) => {
+      const effigies = Number(meta?.effigies ?? 0);
+      const effigyLabel = effigies === 1 ? "effigy" : "effigies";
+      return `${value ?? 0} ft · ${effigies} ${effigyLabel}`;
+    },
   },
   "boombox-serenade": {
     label: "Peak Flow",
@@ -139,6 +201,14 @@ export const scoreConfigs = {
       return `${value ?? 0} tempo`;
     },
   },
+  "twenty-five-thousand-bulbs": {
+    label: "Total Wattage",
+    empty: "No wattage recorded yet.",
+    format: ({ value, meta }) => {
+      const status = meta?.success ? "Full glow" : "Brownout";
+      return `${value ?? 0} watts · ${status}`;
+    },
+  },
   "velvet-syncopation": {
     label: "Harmony Peak",
     empty: "No harmony recorded yet.",
@@ -150,6 +220,28 @@ export const scoreConfigs = {
     format: ({ value, meta }) => {
       const total = Number(meta?.total) || 8;
       return `${value ?? 0} / ${total}`;
+    },
+  },
+  "voice-box-swap": {
+    label: "Sync Score",
+    empty: "No sync logged yet.",
+    format: ({ value, meta }) => {
+      const combo = Number(meta?.longestCombo ?? 0);
+      const risky = Number(meta?.bestRisky ?? 0);
+      const comboLabel = combo === 1 ? "1 combo" : `${combo} combo streak`;
+      const riskyLabel = risky > 0 ? ` · Risky +${risky}` : "";
+      return `${value ?? 0} pts · ${comboLabel}${riskyLabel}`;
+    },
+  },
+  "whispers-garden": {
+    label: "Field Completion",
+    empty: "No whispers answered yet.",
+    format: ({ value, meta }) => {
+      const focus = Number(meta?.focusBursts ?? 0);
+      const bonus = Number(meta?.bonuses ?? 0);
+      const focusLabel = focus === 1 ? "focus" : "focuses";
+      const bonusLabel = bonus === 1 ? "bonus" : "bonuses";
+      return `${value ?? 0}% · ${focus} ${focusLabel} · ${bonus} ${bonusLabel}`;
     },
   },
 };
