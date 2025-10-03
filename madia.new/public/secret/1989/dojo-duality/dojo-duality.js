@@ -1,5 +1,6 @@
 import { initHighScoreBanner } from "../arcade-scores.js";
 import { getScoreConfig } from "../score-config.js";
+import { autoEnhanceFeedback } from "../feedback.js";
 
 const scoreConfig = getScoreConfig("dojo-duality");
 const highScore = initHighScoreBanner({
@@ -694,3 +695,5 @@ function trackBalanceWindow() {
 function clamp(value, min, max) {
   return Math.min(max, Math.max(min, value));
 }
+
+autoEnhanceFeedback();

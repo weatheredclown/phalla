@@ -1,3 +1,5 @@
+import { autoEnhanceFeedback } from "../feedback.js";
+
 const boardWidth = 12;
 const boardHeight = 20;
 const dropInterval = 820;
@@ -754,3 +756,5 @@ function addEvent(message) {
 function clearEvents() {
   eventList.innerHTML = "";
 }
+
+autoEnhanceFeedback();
