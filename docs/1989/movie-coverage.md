@@ -2,6 +2,7 @@
 
 This reference tracks how the 1989 arcade cabinets map to their source films and how far the ladder has progressed up the 1989 domestic box office chart.
 
+The Disorient Express now stations Level 22 with a See No Evil, Hear No Evil homage, finally pairing the ladder’s split-sense gimmick with the film that inspired it while the remaining gaps continue to collapse toward the top of the chart.
 Wild Thing Wind-Up now rockets into Level 11 with a Major League-inspired closer duel, pushing the ladder deeper into the top 25 while earlier updates below document the run-up.
 Wind Beneath My Wings now elevates Level 16, transforming *Beaches* into a spotlight rhythm showcase that bridges the ladder’s middle stretch between the family dramedies and the Top 15 crowd-pleasers.
 
@@ -45,6 +46,7 @@ Three Fugitives now anchors Level 32, covering the next-highest new release stil
 | 26 | Hoverboard Pursuit | *Back to the Future Part II* | #8 |
 | 25 | Rollercoaster of Life | *Parenthood* | #9 |
 | 23 | Tailing the Trash | *Turner & Hooch* | #12 |
+| 22 | The Disorient Express | *See No Evil, Hear No Evil* | #25 |
 | 18 | Restless Acre Rise | *Pet Sematary* | #17 |
 | 16 | Wind Beneath My Wings | *Beaches* | #19 |
 | 20 | Twenty-Five Thousand Bulbs | *National Lampoon's Christmas Vacation* | #15 |
@@ -96,6 +98,7 @@ Remaining:
 | **14** | Star Trek V: The Final Frontier | #21 | The Final Barrier | A flying/shooting level piloting the Enterprise through a chaotic and disorienting energy field to reach a mythical planet. |
 | **13** | The Little Mermaid | #22 | Under the Sea Scramble | A hidden object or collection game in a colorful undersea environment, gathering "human gadgets." |
 | **12** | Steel Magnolias | #23 | Truvy's Salon Style | A rapid-fire styling/makeover game where you have to meet multiple clients' specific, complex hairstyle and makeup requests. |
+| **11** | Major League | #24 | Wild Thing Wind-Up | A timing/precision baseball pitching game focusing on a dramatically out-of-control, but fast, fastball. |
 | **10** | See No Evil, Hear No Evil | #25 | The Disorient Express | A cooperative or split-screen minigame where one player uses only visual cues and the other only audio cues to solve a simple puzzle. |
 | **9** | Black Rain | #26 | Osaka Motorcycle Dash | A high-speed chase level through the neon-lit streets of Osaka, avoiding gangs and following a key witness. |
 | **8** | Working Girl | #27 | Merger Madness | A quick-typing or paperwork sorting challenge in a high-rise office environment to prepare for a major business meeting. |

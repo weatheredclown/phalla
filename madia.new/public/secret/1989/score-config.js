@@ -183,6 +183,29 @@ export const scoreConfigs = {
       return `${value ?? 0} logs`;
     },
   },
+  "disorient-express": {
+    label: "Cooperation Time",
+    empty: "No co-op runs logged yet.",
+    format: ({ value, meta }) => {
+      const reportedMs = Number.isFinite(meta?.finalTimeMs)
+        ? Number(meta.finalTimeMs)
+        : Number.isFinite(value)
+          ? Math.max(0, 300000 - Number(value))
+          : null;
+      if (!Number.isFinite(reportedMs)) {
+        return `${value ?? 0}`;
+      }
+      const minutes = Math.floor(reportedMs / 60000);
+      const seconds = Math.floor((reportedMs % 60000) / 1000);
+      const millis = Math.floor(reportedMs % 1000);
+      const mistakes = Number(meta?.miscommunications ?? 0);
+      const rushCount = Number(meta?.rushCount ?? 0);
+      const misLabel = mistakes === 1 ? "1 miscommunication" : `${mistakes} miscommunications`;
+      const rushLabel = rushCount > 0 ? ` · Rush ×${rushCount}` : "";
+      return `${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}.${String(millis).padStart(3, "0")}` +
+        ` · ${misLabel}${rushLabel}`;
+    },
+  },
   "restless-acre-rise": {
     label: "Altitude",
     empty: "No ascents logged yet.",

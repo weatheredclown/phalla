@@ -1064,6 +1064,60 @@ const games = [
       </svg>
     `,
   },
+  { // Level 22
+    id: "disorient-express",
+    name: "The Disorient Express",
+    description: "Split the senses, track the ringing cabin phone, and balance rush orders against costly miscommunications.",
+    url: "./disorient-express/index.html",
+    thumbnail: `
+      <svg viewBox="0 0 160 120" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="The Disorient Express preview">
+        <defs>
+          <linearGradient id="cabinGlow" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0%" stop-color="rgba(34,211,238,0.75)" />
+            <stop offset="100%" stop-color="rgba(168,85,247,0.7)" />
+          </linearGradient>
+          <linearGradient id="floorLines" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="rgba(15,23,42,0.92)" />
+            <stop offset="100%" stop-color="rgba(6,10,24,0.92)" />
+          </linearGradient>
+          <linearGradient id="rushArc" x1="0" y1="0" x2="1" y2="0">
+            <stop offset="0%" stop-color="rgba(34,211,238,0.6)" />
+            <stop offset="100%" stop-color="rgba(250,204,21,0.6)" />
+          </linearGradient>
+        </defs>
+        <rect x="8" y="8" width="144" height="104" rx="18" fill="rgba(6,10,24,0.94)" stroke="rgba(148,163,184,0.35)" />
+        <rect x="18" y="18" width="124" height="84" rx="16" fill="url(#floorLines)" stroke="rgba(148,163,184,0.28)" />
+        <g stroke="rgba(56,189,248,0.25)" stroke-width="1">
+          ${Array.from({ length: 4 }, (_, i) => `<line x1="${34 + i * 22}" y1="26" x2="${34 + i * 22}" y2="94" />`).join("")}
+        </g>
+        <g>
+          <rect x="30" y="32" width="44" height="56" rx="10" fill="rgba(15,23,42,0.9)" stroke="rgba(56,189,248,0.45)" />
+          <g stroke="rgba(34,211,238,0.5)" stroke-width="1.4" stroke-dasharray="4 6">
+            <rect x="36" y="42" width="32" height="32" rx="8" fill="rgba(15,23,42,0.85)" />
+            <line x1="36" y1="58" x2="68" y2="58" />
+            <line x1="52" y1="42" x2="52" y2="74" />
+          </g>
+          <circle cx="38" cy="90" r="4" fill="rgba(250,204,21,0.8)" stroke="rgba(255,255,255,0.6)" />
+          <circle cx="66" cy="46" r="3.5" fill="rgba(244,114,182,0.7)" stroke="rgba(255,255,255,0.45)" />
+        </g>
+        <g>
+          <rect x="88" y="30" width="44" height="60" rx="12" fill="rgba(9,13,28,0.92)" stroke="rgba(168,85,247,0.45)" />
+          <circle cx="110" cy="60" r="18" fill="rgba(15,23,42,0.92)" stroke="rgba(168,85,247,0.55)" stroke-width="2" />
+          <path d="M94 60 A16 16 0 0 1 126 60" fill="none" stroke="url(#rushArc)" stroke-width="3" stroke-linecap="round" />
+          <path d="M110 44 L110 76" stroke="rgba(34,211,238,0.35)" stroke-width="2" stroke-dasharray="3 5" />
+          <path d="M98 60 L122 60" stroke="rgba(34,211,238,0.35)" stroke-width="2" stroke-dasharray="3 5" />
+          <circle cx="110" cy="60" r="8" fill="rgba(34,211,238,0.75)" stroke="rgba(255,255,255,0.6)" />
+          <path d="M102 88 C110 94 120 94 128 88" stroke="rgba(168,85,247,0.45)" stroke-width="3" stroke-linecap="round" />
+        </g>
+        <g>
+          <rect x="22" y="22" width="116" height="12" rx="6" fill="rgba(15,23,42,0.88)" stroke="rgba(148,163,184,0.25)" />
+          <rect x="28" y="24" width="36" height="8" rx="4" fill="rgba(34,211,238,0.6)" />
+          <rect x="70" y="24" width="20" height="8" rx="4" fill="rgba(250,204,21,0.6)" />
+          <rect x="96" y="24" width="36" height="8" rx="4" fill="rgba(168,85,247,0.6)" />
+        </g>
+      </svg>
+    `,
+  }, // Level 22
   {
     id: "vendetta-convoy",
     name: "Vendetta Convoy",
