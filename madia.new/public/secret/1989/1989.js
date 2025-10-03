@@ -205,6 +205,68 @@ const games = [
     `,
   },
   {
+    id: "hoverboard-pursuit",
+    name: "Hoverboard Pursuit",
+    description: "Dodge neon traffic, skim the suburbs, and outpace Griff for a flawless Hill Valley time trial.",
+    url: "./hoverboard-pursuit/index.html",
+    thumbnail: `
+      <svg viewBox="0 0 160 120" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Hoverboard Pursuit preview">
+        <defs>
+          <linearGradient id="hpSky" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="rgba(56,189,248,0.45)" />
+            <stop offset="100%" stop-color="rgba(15,23,42,0.95)" />
+          </linearGradient>
+          <linearGradient id="hpTrack" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="rgba(15,23,42,0.6)" />
+            <stop offset="100%" stop-color="rgba(8,11,26,0.95)" />
+          </linearGradient>
+          <linearGradient id="hpBoost" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0%" stop-color="#c084fc" />
+            <stop offset="100%" stop-color="#38bdf8" />
+          </linearGradient>
+        </defs>
+        <rect x="8" y="10" width="144" height="100" rx="18" fill="url(#hpSky)" stroke="rgba(148,163,184,0.35)" />
+        <g transform="translate(24 20)">
+          <path
+            d="M18 88 L56 20 C64 10 96 10 104 20 L132 88"
+            fill="url(#hpTrack)"
+            stroke="rgba(148,163,184,0.45)"
+            stroke-width="2"
+            stroke-linejoin="round"
+          />
+          <path
+            d="M32 88 L62 26 C66 22 94 22 98 26 L128 88"
+            fill="none"
+            stroke="rgba(56,189,248,0.35)"
+            stroke-width="4"
+            stroke-linecap="round"
+            stroke-dasharray="6 12"
+          />
+          <path
+            d="M46 88 L72 34 C76 30 84 30 88 34 L114 88"
+            fill="none"
+            stroke="rgba(236,72,153,0.45)"
+            stroke-width="3"
+            stroke-linecap="round"
+            stroke-dasharray="4 10"
+          />
+          <g transform="translate(74 58)">
+            <ellipse cx="0" cy="28" rx="16" ry="6" fill="rgba(168,85,247,0.32)" />
+            <rect x="-14" y="12" width="28" height="10" rx="5" fill="url(#hpBoost)" stroke="rgba(248,250,252,0.7)" />
+            <circle cx="-6" cy="7" r="4" fill="#facc15" stroke="rgba(248,250,252,0.7)" />
+            <circle cx="6" cy="7" r="4" fill="#38bdf8" stroke="rgba(248,250,252,0.7)" />
+            <path d="M-8 4 L8 4" stroke="rgba(248,250,252,0.6)" stroke-width="2" stroke-linecap="round" />
+          </g>
+          <g transform="translate(44 32)">
+            <rect x="-10" y="18" width="20" height="14" rx="6" fill="rgba(239,68,68,0.75)" />
+            <rect x="30" y="6" width="18" height="12" rx="5" fill="rgba(56,189,248,0.65)" />
+            <rect x="54" y="32" width="14" height="10" rx="4" fill="rgba(250,204,21,0.75)" />
+          </g>
+        </g>
+      </svg>
+    `,
+  },
+  {
     id: "rollercoaster-of-life",
     name: "Rollercoaster of Life",
     description: "Race through parenting crises, weigh safe answers against wild gambles, and keep Family Harmony glowing.",
