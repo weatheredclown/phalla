@@ -34,6 +34,15 @@ export const scoreConfigs = {
     format: ({ value }) =>
       value === 1 ? "1 token" : `${value ?? 0} tokens`,
   },
+  "dialtone-honor-roll": {
+    label: "Study Points",
+    empty: "No study points recorded yet.",
+    format: ({ value, meta }) => {
+      const contexts = Number(meta?.contexts ?? 0);
+      const contextLabel = contexts === 1 ? "context" : "contexts";
+      return `${value ?? 0} pts · ${contexts} ${contextLabel}`;
+    },
+  },
   "wardline-breakout": {
     label: "Final Sanity",
     empty: "No breakout simulated yet.",

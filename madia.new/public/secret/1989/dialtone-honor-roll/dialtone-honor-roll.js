@@ -1,9 +1,28 @@
+import { initHighScoreBanner } from "../arcade-scores.js";
+import { getScoreConfig } from "../score-config.js";
+import { mountParticleField } from "../particles.js";
 import { autoEnhanceFeedback } from "../feedback.js";
 
 const boardWidth = 12;
 const boardHeight = 20;
 const dropInterval = 820;
 const panicLimit = 5;
+const CONTEXT_GOAL = 6;
+
+const particleSystem = mountParticleField({
+  effects: {
+    palette: ["#60a5fa", "#facc15", "#34d399", "#a855f7"],
+    ambientDensity: 0.35,
+  },
+});
+
+const scoreConfig = getScoreConfig("dialtone-honor-roll");
+const highScore = initHighScoreBanner({
+  gameId: "dialtone-honor-roll",
+  label: scoreConfig.label,
+  format: scoreConfig.format,
+  emptyText: scoreConfig.empty,
+});
 
 const entryCell = { x: 5, y: 0 };
 
@@ -192,6 +211,7 @@ let segmentPieces = new Map();
 let activePath = [];
 let currentPath = [];
 let buildingPath = false;
+let highlightHistory = [];
 
 const boardElement = document.getElementById("time-grid");
 const startButton = document.getElementById("start-run");
@@ -209,6 +229,14 @@ const panicMeter = document.getElementById("panic-meter");
 const nextPieceLabel = document.getElementById("next-piece-label");
 const contextList = document.getElementById("context-list");
 const eventList = document.getElementById("event-list");
+const summaryPanel = document.getElementById("run-summary");
+const summaryStatus = document.getElementById("run-summary-status");
+const summaryScore = document.getElementById("summary-score");
+const summaryContexts = document.getElementById("summary-contexts");
+const summaryPanic = document.getElementById("summary-panic");
+const summaryHighlights = document.getElementById("summary-highlights");
+const summaryNote = document.getElementById("summary-note");
+const replayButton = document.getElementById("replay-run");
 
 initBoard();
 renderBoard();
@@ -217,7 +245,8 @@ updateStatus();
 
 startButton.addEventListener("click", () => {
   if (isRunning) {
-    stopRun();
+    stopRun("Run aborted.", { status: "aborted", cause: "manual" });
+    return;
   }
   startRun();
 });
@@ -268,6 +297,14 @@ clearRouteButton.addEventListener("click", () => {
   routeStatusLabel.textContent = "Phone booth route cleared.";
 });
 
+replayButton.addEventListener("click", () => {
+  if (isRunning) {
+    return;
+  }
+  startRun();
+  startButton.focus();
+});
+
 boardElement.addEventListener("click", (event) => {
   const target = event.target.closest(".time-cell");
   if (!target) return;
@@ -285,25 +322,32 @@ boardElement.addEventListener("click", (event) => {
 
 function startRun() {
   resetState();
+  hideRunSummary();
   isRunning = true;
   startButton.textContent = "Abort Time Stream";
-  statusBanner.textContent = "Time stream live. Plot a route and prep for arrivals.";
+  statusBanner.textContent = `Time stream live. Secure ${CONTEXT_GOAL} contexts to ace the presentation.`;
   startRouteButton.disabled = false;
   dropTimer = window.setInterval(() => gameTick(), dropInterval);
   spawnPiece();
   updateRouteControls();
+  particleSystem.emitSparkle(0.7);
 }
 
-function stopRun(message = "Run aborted.") {
+function stopRun(message = "Run aborted.", options = {}) {
+  const { status = "aborted", cause = "manual" } = options;
   isRunning = false;
-  window.clearInterval(dropTimer);
-  dropTimer = null;
+  if (dropTimer) {
+    window.clearInterval(dropTimer);
+    dropTimer = null;
+  }
   startButton.textContent = "Launch Time Stream";
   statusBanner.textContent = message;
   startRouteButton.disabled = true;
   undoRouteButton.disabled = true;
   commitRouteButton.disabled = true;
   clearRouteButton.disabled = activePath.length === 0;
+  updateRouteControls();
+  presentRunSummary({ status, message, cause });
 }
 
 function resetState() {
@@ -328,6 +372,7 @@ function resetState() {
   activePath = [];
   currentPath = [];
   buildingPath = false;
+  highlightHistory = [];
   renderBoard();
   renderContexts();
   renderPath();
@@ -353,7 +398,7 @@ function gameTick() {
 
 function spawnPiece() {
   if (panic >= panicLimit) {
-    stopRun("Timeline collapse. Try again.");
+    stopRun("Timeline collapse. Try again.", { status: "failure", cause: "panic" });
     return;
   }
   if (nextQueue.length < 3) {
@@ -369,7 +414,7 @@ function spawnPiece() {
   };
   nextPieceLabel.textContent = nextQueue[0] ? nextQueue[0].name : "—";
   if (!isValidPosition(activePiece, activePiece.x, activePiece.y + 1)) {
-    stopRun("Pieces jammed at entry. Presentation postponed.");
+    stopRun("Pieces jammed at entry. Presentation postponed.", { status: "failure", cause: "entry-jam" });
     return;
   }
   renderBoard();
@@ -463,7 +508,7 @@ function lockPiece() {
     };
   });
   if (pieceClipped) {
-    stopRun("Stream overflowed before delivery. Try again.");
+    stopRun("Stream overflowed before delivery. Try again.", { status: "failure", cause: "overflow" });
     return;
   }
   const segmentId = resolveSegmentForPiece(cells);
@@ -497,7 +542,7 @@ function lockPiece() {
     addEvent(`${activePiece.name} drifted off target! Panic rising.`);
     if (panic >= panicLimit) {
       updateStatus();
-      stopRun("Panic meter maxed. Oral report doomed.");
+      stopRun("Panic meter maxed. Oral report doomed.", { status: "failure", cause: "panic" });
       return;
     }
   }
@@ -547,7 +592,23 @@ function evaluateContexts() {
   contextsCleared += 1;
   score += activeContext.reward;
   addEvent(`${activeContext.title} cleared for ${activeContext.reward} study points!`);
+  const segment = segments.find((entry) => entry.id === activeContext.segment);
+  highlightHistory.unshift({
+    id: activeContext.id,
+    title: activeContext.title,
+    reward: activeContext.reward,
+    segment: segment ? segment.name : "Timeline Junction",
+  });
+  highlightHistory = highlightHistory.slice(0, 6);
   renderContexts();
+  updateStatus();
+  particleSystem.emitBurst(0.9 + Math.min(contextsCleared / CONTEXT_GOAL, 1) * 0.35);
+  const remaining = Math.max(0, CONTEXT_GOAL - contextsCleared);
+  if (contextsCleared >= CONTEXT_GOAL) {
+    stopRun("Presentation secured. Wyld Stallyns pass with honors!", { status: "success", cause: "goal" });
+    return;
+  }
+  statusBanner.textContent = `${activeContext.title} locked. ${remaining} context${remaining === 1 ? "" : "s"} to go.`;
 }
 
 function removePieceById(pieceId) {
@@ -676,7 +737,7 @@ function renderContexts() {
 
 function updateStatus() {
   scoreLabel.textContent = score;
-  contextLabel.textContent = contextsCleared;
+  contextLabel.textContent = `${contextsCleared} / ${CONTEXT_GOAL}`;
   panicLabel.textContent = `${panic} / ${panicLimit}`;
   panicMeter.setAttribute("aria-valuenow", panic.toString());
   panicFill.style.width = `${(panic / panicLimit) * 100}%`;
@@ -755,6 +816,93 @@ function addEvent(message) {
 
 function clearEvents() {
   eventList.innerHTML = "";
+}
+
+function presentRunSummary({ status, message, cause }) {
+  const recordMeta = { contexts: contextsCleared, panic, cause };
+  const result = highScore.submit(score, recordMeta);
+  const hasSummaryElements =
+    summaryPanel &&
+    summaryStatus &&
+    summaryScore &&
+    summaryContexts &&
+    summaryPanic &&
+    summaryNote &&
+    summaryHighlights;
+  if (!hasSummaryElements) {
+    if (result.updated) {
+      particleSystem.emitBurst(1.4);
+    }
+    return;
+  }
+  summaryStatus.textContent = message;
+  summaryScore.textContent = `${score} pts`;
+  summaryContexts.textContent = `${contextsCleared} / ${CONTEXT_GOAL}`;
+  summaryPanic.textContent = `${panic} / ${panicLimit}`;
+  renderSummaryHighlights();
+  summaryPanel.hidden = false;
+  const note = resolveSummaryNote(status, cause, result.updated);
+  summaryNote.textContent = note;
+  if (result.updated) {
+    particleSystem.emitBurst(1.6);
+  } else if (status === "success") {
+    particleSystem.emitSparkle(1.15);
+  } else if (status === "failure") {
+    particleSystem.emitSparkle(0.75);
+  }
+}
+
+function hideRunSummary() {
+  if (summaryPanel) {
+    summaryPanel.hidden = true;
+  }
+}
+
+function renderSummaryHighlights() {
+  if (!summaryHighlights) {
+    return;
+  }
+  summaryHighlights.innerHTML = "";
+  if (highlightHistory.length === 0) {
+    const item = document.createElement("li");
+    item.classList.add("is-empty");
+    item.textContent = "No contexts cleared this run.";
+    summaryHighlights.append(item);
+    return;
+  }
+  highlightHistory.slice(0, 3).forEach((entry) => {
+    const item = document.createElement("li");
+    const title = document.createElement("span");
+    title.textContent = entry.title;
+    const reward = document.createElement("span");
+    reward.textContent = `+${entry.reward} pts`;
+    const segment = document.createElement("small");
+    segment.textContent = entry.segment;
+    item.append(title, reward, segment);
+    summaryHighlights.append(item);
+  });
+}
+
+function resolveSummaryNote(status, cause, isRecord) {
+  if (isRecord) {
+    return "New timeline record! San Dimas High salutes your study spree.";
+  }
+  if (status === "success") {
+    return "Presentation locked. Queue up another historical rescue when ready.";
+  }
+  if (status === "failure") {
+    if (cause === "panic") {
+      return "Panic meter blew. Clear stray drops faster to calm the crowd.";
+    }
+    if (cause === "entry-jam") {
+      return "Entry jammed. Sketch the booth trail earlier to avoid gridlock.";
+    }
+    if (cause === "overflow") {
+      return "Overflow triggered. Route anchors to an era bay before they stack.";
+    }
+    return "Timeline destabilized. Adjust the route and try again.";
+  }
+  return "Timeline paused. Replay when the Wyld Stallyns are ready.";
 }
 
 autoEnhanceFeedback();
