@@ -43,6 +43,16 @@ export const scoreConfigs = {
       return `${value ?? 0} pts · ${contexts} ${contextLabel}`;
     },
   },
+  "diner-debate": {
+    label: "Conviction Score",
+    empty: "No performances recorded yet.",
+    format: ({ value, meta }) => {
+      const accuracy = Number.isFinite(meta?.accuracy) ? Math.round(meta.accuracy) : null;
+      const combo = Number(meta?.combo ?? 0);
+      const accuracyText = accuracy !== null ? `${accuracy}% accuracy` : "0% accuracy";
+      return `${value ?? 0} pts · ${accuracyText} · combo ${combo}`;
+    },
+  },
   "wardline-breakout": {
     label: "Final Sanity",
     empty: "No breakout simulated yet.",
