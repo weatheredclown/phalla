@@ -367,6 +367,62 @@ const games = [
       </svg>
     `,
   },
+  // Level 6
+  {
+    id: "frank-drebins-follies",
+    name: "Frank Drebin's Follies",
+    description:
+      "Sprint through slapstick desk duty. Time every prompt, choose when to intervene, and weaponize the collateral damage.",
+    url: "./frank-drebins-follies/index.html",
+    thumbnail: `
+      <svg viewBox="0 0 160 120" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Frank Drebin's Follies preview">
+        <defs>
+          <linearGradient id="folliesBg" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0%" stop-color="rgba(15,23,42,0.95)" />
+            <stop offset="100%" stop-color="rgba(30,41,59,0.9)" />
+          </linearGradient>
+          <linearGradient id="folliesBurst" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0%" stop-color="#38bdf8" />
+            <stop offset="100%" stop-color="#f472b6" />
+          </linearGradient>
+          <linearGradient id="folliesTape" x1="0" y1="0" x2="1" y2="0">
+            <stop offset="0%" stop-color="#facc15" />
+            <stop offset="100%" stop-color="#fb923c" />
+          </linearGradient>
+        </defs>
+        <rect x="10" y="10" width="140" height="100" rx="20" fill="url(#folliesBg)" stroke="rgba(148,163,184,0.4)" />
+        <g transform="translate(18 18)">
+          <rect x="0" y="0" width="124" height="84" rx="18" fill="rgba(6,11,22,0.7)" stroke="rgba(148,163,184,0.35)" />
+          <g transform="translate(10 12)">
+            <rect x="0" y="36" width="56" height="32" rx="10" fill="rgba(15,23,42,0.9)" stroke="rgba(148,163,184,0.4)" />
+            <rect x="64" y="0" width="40" height="20" rx="8" fill="rgba(56,189,248,0.65)" />
+            <rect x="66" y="22" width="36" height="18" rx="8" fill="rgba(244,114,182,0.75)" />
+            <rect x="64" y="44" width="44" height="20" rx="10" fill="rgba(15,23,42,0.85)" stroke="rgba(148,163,184,0.3)" />
+            <text x="86" y="14" text-anchor="middle" font-size="9" fill="#0f172a" font-family="'Press Start 2P', monospace">CHAOS</text>
+            <text x="86" y="58" text-anchor="middle" font-size="10" fill="#38bdf8" font-family="'Press Start 2P', monospace">9999</text>
+          </g>
+          <g transform="translate(14 14)">
+            <rect x="0" y="0" width="42" height="62" rx="16" fill="rgba(37,99,235,0.42)" stroke="rgba(148,163,184,0.35)" />
+            <path d="M12 14 L30 14" stroke="rgba(248,250,252,0.7)" stroke-width="3" stroke-linecap="round" />
+            <path d="M10 28 C20 22 28 34 34 28" stroke="rgba(244,114,182,0.7)" stroke-width="3" stroke-linecap="round" />
+            <circle cx="21" cy="44" r="10" fill="rgba(248,250,252,0.88)" stroke="rgba(148,163,184,0.4)" />
+            <circle cx="21" cy="44" r="4" fill="#1e293b" />
+          </g>
+          <g transform="translate(4 4)">
+            <path d="M8 68 L108 22" stroke="url(#folliesTape)" stroke-width="6" stroke-linecap="round" stroke-dasharray="10 6" />
+            <path d="M18 78 L118 32" stroke="url(#folliesTape)" stroke-width="6" stroke-linecap="round" stroke-dasharray="10 6" />
+          </g>
+          <g transform="translate(26 18)">
+            <circle cx="70" cy="28" r="16" fill="rgba(15,23,42,0.85)" stroke="rgba(148,163,184,0.4)" />
+            <circle cx="70" cy="28" r="12" fill="url(#folliesBurst)" opacity="0.75" />
+            <path d="M62 20 L78 36" stroke="rgba(248,250,252,0.8)" stroke-width="2" stroke-linecap="round" />
+            <path d="M78 20 L62 36" stroke="rgba(248,250,252,0.8)" stroke-width="2" stroke-linecap="round" />
+            <circle cx="70" cy="28" r="4" fill="#facc15" />
+          </g>
+        </g>
+      </svg>
+    `,
+  }, // Level 6
   {
     id: "cable-clash",
     name: "The Cable Clash",

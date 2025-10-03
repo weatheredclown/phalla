@@ -127,6 +127,25 @@ export const scoreConfigs = {
     empty: "No stacks flipped yet.",
     format: ({ value }) => `${value ?? 0} cm`,
   },
+  "frank-drebins-follies": {
+    label: "Chaos Rating",
+    empty: "No chaos logged yet.",
+    format: ({ value, meta }) => {
+      const chaos = value ?? 0;
+      const damageValue = Number.isFinite(meta?.propertyDamage) ? Number(meta.propertyDamage) : null;
+      const highlightCount = Number(meta?.highlights ?? meta?.highlightCount ?? 0);
+      const highlightLabel = highlightCount === 1 ? "highlight" : "highlights";
+      if (damageValue && damageValue > 0) {
+        const formatter = new Intl.NumberFormat("en-US", {
+          style: "currency",
+          currency: "USD",
+          maximumFractionDigits: 0,
+        });
+        return `${chaos} chaos · ${formatter.format(damageValue)} damage · ${highlightCount} ${highlightLabel}`;
+      }
+      return `${chaos} chaos · ${highlightCount} ${highlightLabel}`;
+    },
+  },
   "kodiak-covenant": {
     label: "Traps Cleared",
     empty: "No traps cleared yet.",

@@ -2,7 +2,7 @@
 
 This reference tracks how the 1989 arcade cabinets map to their source films and how far the ladder has progressed up the 1989 domestic box office chart.
 
-River of Slime Escape now shocks Level 27 with Ghostbusters II’s river chase while Three Fugitives continues anchoring Level 32, and the ladder keeps backfilling the remaining Top 50 slots.
+Frank Drebin's Follies now detonates Level 6 with a rapid-reaction tribute to *The Naked Gun: From the Files of Police Squad!*, weaving slapstick decision pressure into the home stretch of the ladder. River of Slime Escape still shocks Level 27 with Ghostbusters II’s river chase while Three Fugitives continues anchoring Level 32, and the remaining rungs keep backfilling the Top 50 slots.
 Three Fugitives now anchors Level 32 while Hoverboard Pursuit secures Level 26, covering another Top 10 release as the ladder continues to backfill the remaining hits.
 Rollercoaster of Life now anchors Level 25, pushing the ladder deeper into the top 25 while earlier levels keep filling in the remaining Top 50 slots.
 Three Fugitives now anchors Level 32, covering the next-highest new release still on the chart while the rest of the ladder continues to backfill the remaining Top 50 slots. Tailing the Trash joins the catalog at Level 23 to secure the Turner & Hooch slot and escalate the stakeout mechanics.
@@ -48,6 +48,7 @@ Three Fugitives now anchors Level 32, covering the next-highest new release stil
 | 28 | Voice Box Swap | *Look Who's Talking* | #6 |
 | 24 | The Diner Debate | *When Harry Met Sally...* | #11 |
 | 29 | Flapjack Flip-Out | *Uncle Buck* | #13 |
+| 6 | Frank Drebin's Follies | *The Naked Gun: From the Files of Police Squad!* | #49 |
 
 Remaining:
 ## Remaining Targets to Reach #1
@@ -97,7 +98,6 @@ Remaining:
 | **9** | Black Rain | #26 | Osaka Motorcycle Dash | A high-speed chase level through the neon-lit streets of Osaka, avoiding gangs and following a key witness. |
 | **8** | Working Girl | #27 | Merger Madness | A quick-typing or paperwork sorting challenge in a high-rise office environment to prepare for a major business meeting. |
 | **7** | Tango & Cash | #48 | Framed Breakout | A prison break level focused on quick puzzle solving and avoiding guards while wearing ridiculous "action hero" disguises. |
-| **6** | The Naked Gun: From the Files of Police Squad! | #49 | Frank Drebin's Follies | A quick-reaction game requiring you to perform perfectly normal tasks while hilariously and accidentally causing massive collateral damage. |
 | **5** | A Nightmare on Elm Street 5: The Dream Child | #50 | Freddy's Dream Maze | A horror-themed maze or escape room game where the environment is constantly changing based on your character's deepest fears. |
 | **4** | Batman | #1 | The Bat-Signal Scramble | A fast-paced driving/grappling sequence across Gotham City rooftops to answer the Bat-Signal before the Joker strikes. |
 | **3** | Indiana Jones and the Last Crusade | #2 | The Grail Trial | A trio of physical and mental challenge puzzles based on the three final tests to prove worthiness for the Holy Grail. |
