@@ -84,6 +84,23 @@ export const scoreConfigs = {
     format: ({ value }) =>
       value === 1 ? "1 cooled" : `${value ?? 0} cooled`,
   },
+  "hoverboard-pursuit": {
+    label: "Best Time",
+    empty: "No runs recorded yet.",
+    format: ({ value, meta }) => {
+      if (meta?.display) {
+        return meta.display;
+      }
+      const timeMs = Number.isFinite(meta?.finalTimeMs)
+        ? Number(meta.finalTimeMs)
+        : 1000000 - Number(value ?? 0);
+      const safeTime = Math.max(0, Math.round(timeMs));
+      const minutes = Math.floor(safeTime / 60000);
+      const seconds = Math.floor((safeTime % 60000) / 1000);
+      const millis = safeTime % 1000;
+      return `${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}.${String(millis).padStart(3, "0")}`;
+    },
+  },
   "kodiak-covenant": {
     label: "Traps Cleared",
     empty: "No traps cleared yet.",
