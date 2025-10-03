@@ -227,6 +227,21 @@ export const scoreConfigs = {
     label: "Family Harmony",
     empty: "No harmony runs logged yet.",
     format: ({ value }) => `Harmony ${value ?? 0}`,
+  }, // rollercoaster
+  "truvys-salon-style": {
+    label: "Tip Jar",
+    empty: "No tips counted yet.",
+    format: ({ value, meta }) => {
+      const perfects = Number(meta?.perfects ?? 0);
+      const storms = Number(meta?.storms ?? 0);
+      const served = Number(meta?.clients ?? meta?.served ?? 0);
+      if (served > 0) {
+        const perfectLabel = perfects === 1 ? "1 perfect" : `${perfects} perfects`;
+        const stormLabel = storms === 1 ? "1 storm-out" : `${storms} storm-outs`;
+        return `$${value ?? 0} · ${served} clients · ${perfectLabel} · ${stormLabel}`;
+      }
+      return `$${value ?? 0}`;
+    },
   },
   // Level 14
   "the-final-barrier": {

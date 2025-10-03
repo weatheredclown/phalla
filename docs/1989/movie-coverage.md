@@ -3,6 +3,7 @@
 This reference tracks how the 1989 arcade cabinets map to their source films and how far the ladder has progressed up the 1989 domestic box office chart.
 Freddy's Dream Maze now seals Level 5 with an Elm Street sanity sprint while the ladder keeps stitching in the remaining Top 50 nightmares.
 
+Truvy's Salon Style now anchors Level 12 with a pastel blitz through *Steel Magnolias*, bringing the ladder deeper into the top-25 box office while the remaining rungs keep filling the unreleased Top 50 slots.
 Frank Drebin's Follies now detonates Level 6 with a rapid-reaction tribute to *The Naked Gun: From the Files of Police Squad!*, weaving slapstick decision pressure into the home stretch of the ladder. River of Slime Escape still shocks Level 27 with Ghostbusters II’s river chase while Three Fugitives continues anchoring Level 32, and the remaining rungs keep backfilling the Top 50 slots.
 Under the Sea Scramble now glitters at Level 13, turning Ariel's curiosity into a timed hidden-object sprint that punishes sloppy clicks while rewarding precise treasure hunts.
 The Final Barrier now electrifies Level 14 with a neon on-rails gauntlet through Star Trek V’s Great Barrier, layering power-diversion gambles atop the arcade’s late-game ladder while earlier cabinets continue filling the remaining Top 50 slots.
@@ -53,6 +54,7 @@ Merger Madness now occupies Level 22, translating *Working Girl*'s corporate scr
 | 27 | River of Slime Escape | *Ghostbusters II* | #7 |
 | 26 | Hoverboard Pursuit | *Back to the Future Part II* | #8 |
 | 25 | Rollercoaster of Life | *Parenthood* | #9 |
+| 24 | The Diner Debate | *When Harry Met Sally...* | #11 |
 | 9 | Osaka Motorcycle Dash | *Black Rain* | #26 |
 | 23 | Tailing the Trash | *Turner & Hooch* | #12 |
 | 22 | Merger Madness | *Working Girl* | #27 |
@@ -63,6 +65,8 @@ Merger Madness now occupies Level 22, translating *Working Girl*'s corporate scr
 | 20 | Twenty-Five Thousand Bulbs | *National Lampoon's Christmas Vacation* | #15 |
 | 29 | The K-Mart Countdown | *Rain Man* | #5 |
 | 28 | Voice Box Swap | *Look Who's Talking* | #6 |
+| 29 | Flapjack Flip-Out | *Uncle Buck* | #13 |
+| 12 | Truvy's Salon Style | *Steel Magnolias* | #22 |
 | 24 | The Diner Debate | *When Harry Met Sally...* | #11 |
 | 11 | Wild Thing Wind-Up | *Major League* | #24 |
 | 29 | Flapjack Flip-Out | *Uncle Buck* | #13 |
@@ -112,7 +116,6 @@ Remaining:
 | **15** | The Abyss | #20 | Deepcore Descent | A pressure/balance management game, keeping a deep-sea submersible stable and intact under crushing pressure. |
 | **14** | Star Trek V: The Final Frontier | #21 | The Final Barrier | A flying/shooting level piloting the Enterprise through a chaotic and disorienting energy field to reach a mythical planet. |
 | **13** | The Little Mermaid | #22 | Under the Sea Scramble | A hidden object or collection game in a colorful undersea environment, gathering "human gadgets." |
-| **12** | Steel Magnolias | #23 | Truvy's Salon Style | A rapid-fire styling/makeover game where you have to meet multiple clients' specific, complex hairstyle and makeup requests. |
 | **11** | Major League | #24 | Wild Thing Wind-Up | A timing/precision baseball pitching game focusing on a dramatically out-of-control, but fast, fastball. |
 | **10** | See No Evil, Hear No Evil | #25 | The Disorient Express | A cooperative or split-screen minigame where one player uses only visual cues and the other only audio cues to solve a simple puzzle. |
 | **9** | Black Rain | #26 | Osaka Motorcycle Dash | A high-speed chase level through the neon-lit streets of Osaka, avoiding gangs and following a key witness. |
