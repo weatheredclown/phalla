@@ -39,6 +39,11 @@ export const scoreConfigs = {
     empty: "No breakout simulated yet.",
     format: ({ value }) => `Sanity ${value ?? 0} / 3`,
   },
+  "dojo-duality": {
+    label: "Focus Score",
+    empty: "No focus logged yet.",
+    format: ({ value }) => `Focus ${value ?? 0}`,
+  },
   "gates-of-eastside": {
     label: "Test Score",
     empty: "No study sessions yet.",
@@ -61,6 +66,12 @@ export const scoreConfigs = {
     empty: "No traps cleared yet.",
     format: ({ value }) =>
       value === 1 ? "1 trap" : `${value ?? 0} traps`,
+  },
+  "nose-for-trouble": {
+    label: "Intercept Streak",
+    empty: "No intercepts logged yet.",
+    format: ({ value }) =>
+      value === 1 ? "1 intercept" : `${value ?? 0} intercepts`,
   },
   "boombox-serenade": {
     label: "Peak Flow",

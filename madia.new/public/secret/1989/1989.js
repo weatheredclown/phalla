@@ -50,6 +50,46 @@ const games = [
     `,
   },
   {
+    id: "dojo-duality",
+    name: "Dojo Duality",
+    description: "Balance Miyagi-Do focus against Cobra Kai pressure while keeping the fear meter at bay.",
+    url: "./dojo-duality/index.html",
+    thumbnail: `
+      <svg viewBox="0 0 160 120" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Dojo Duality preview">
+        <defs>
+          <linearGradient id="dojoSky" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="rgba(15,23,42,0.95)" />
+            <stop offset="100%" stop-color="rgba(8,12,28,0.92)" />
+          </linearGradient>
+          <linearGradient id="focusGlow" x1="0" y1="0" x2="1" y2="0">
+            <stop offset="0%" stop-color="#ef4444" />
+            <stop offset="50%" stop-color="#38bdf8" />
+            <stop offset="100%" stop-color="#fbbf24" />
+          </linearGradient>
+        </defs>
+        <rect x="10" y="12" width="140" height="96" rx="20" fill="url(#dojoSky)" stroke="rgba(148,163,184,0.35)" />
+        <g transform="translate(36 26)">
+          <circle cx="44" cy="34" r="32" fill="rgba(251,191,36,0.2)" stroke="rgba(251,191,36,0.6)" stroke-width="3" />
+          <circle cx="44" cy="34" r="22" fill="rgba(251,191,36,0.08)" stroke="rgba(249,115,22,0.45)" stroke-width="2" />
+          <path d="M24 36 C44 12 64 12 84 36" fill="none" stroke="rgba(249,115,22,0.6)" stroke-width="3" stroke-linecap="round" />
+          <path d="M28 44 C44 64 60 64 76 44" fill="none" stroke="rgba(55,65,81,0.45)" stroke-width="2" stroke-linecap="round" />
+          <text x="44" y="40" text-anchor="middle" font-size="16" fill="#fbbf24" font-family="'Press Start 2P', monospace">心</text>
+        </g>
+        <g transform="translate(32 82)">
+          <rect x="0" y="0" width="96" height="12" rx="6" fill="rgba(15,23,42,0.85)" stroke="rgba(148,163,184,0.35)" />
+          <rect x="8" y="2" width="80" height="8" rx="4" fill="rgba(15,23,42,0.7)" stroke="rgba(148,163,184,0.25)" />
+          <rect x="8" y="2" width="48" height="8" rx="4" fill="url(#focusGlow)" />
+          <circle cx="48" cy="6" r="6" fill="rgba(248,250,252,0.85)" stroke="rgba(148,163,184,0.3)" stroke-width="1.5" />
+        </g>
+        <g transform="translate(112 32)">
+          <rect x="0" y="0" width="22" height="48" rx="10" fill="rgba(15,23,42,0.7)" stroke="rgba(148,163,184,0.35)" />
+          <rect x="6" y="10" width="10" height="20" rx="4" fill="rgba(239,68,68,0.8)" />
+          <rect x="6" y="32" width="10" height="10" rx="4" fill="rgba(56,189,248,0.75)" />
+        </g>
+      </svg>
+    `,
+  },
+  {
     id: "heatwave-block-party",
     name: "Heatwave Block Party",
     description: "Route cooling fans to vent grievances before the block boils over.",
@@ -405,6 +445,45 @@ const games = [
     `,
   },
   {
+    id: "dialtone-honor-roll",
+    name: "Dialtone Honor Roll",
+    description: "Warp fixed-shape figures into the correct era bays via a plotted phone booth trail.",
+    url: "./dialtone-honor-roll/index.html",
+    thumbnail: `
+      <svg viewBox="0 0 160 120" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Dialtone Honor Roll preview">
+        <defs>
+          <linearGradient id="dialtoneSky" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0%" stop-color="#38bdf8" />
+            <stop offset="100%" stop-color="#7b5bff" />
+          </linearGradient>
+          <linearGradient id="dialtoneTrail" x1="0" y1="0" x2="1" y2="0">
+            <stop offset="0%" stop-color="#facc15" />
+            <stop offset="100%" stop-color="#22c55e" />
+          </linearGradient>
+        </defs>
+        <rect x="8" y="8" width="144" height="104" rx="18" fill="rgba(8,12,28,0.92)" stroke="rgba(148,163,184,0.35)" />
+        <rect x="22" y="20" width="116" height="80" rx="16" fill="rgba(10,16,36,0.9)" stroke="url(#dialtoneSky)" />
+        <g stroke="rgba(56,189,248,0.25)" stroke-width="1">
+          ${Array.from({ length: 3 }, (_, i) => `<line x1="${38 + i * 36}" y1="24" x2="${38 + i * 36}" y2="96" />`).join("")}
+          ${Array.from({ length: 3 }, (_, i) => `<line x1="32" y1="${48 + i * 16}" x2="132" y2="${48 + i * 16}" />`).join("")}
+        </g>
+        <g transform="translate(36 28)">
+          <rect x="0" y="0" width="28" height="56" rx="8" fill="rgba(234,179,8,0.75)" stroke="rgba(251,191,36,0.9)" />
+          <rect x="38" y="10" width="28" height="56" rx="8" fill="rgba(139,92,246,0.7)" stroke="rgba(167,139,250,0.9)" />
+          <rect x="76" y="4" width="28" height="56" rx="8" fill="rgba(59,130,246,0.75)" stroke="rgba(147,197,253,0.9)" />
+        </g>
+        <g transform="translate(30 20)">
+          <rect x="44" y="0" width="24" height="48" rx="6" fill="rgba(15,23,42,0.95)" stroke="rgba(226,232,240,0.35)" />
+          <rect x="48" y="6" width="16" height="24" rx="4" fill="rgba(8,145,178,0.7)" />
+          <rect x="48" y="34" width="16" height="8" rx="3" fill="rgba(226,232,240,0.6)" />
+        </g>
+        <path d="M40 30 Q64 16 88 26 T132 42" fill="none" stroke="url(#dialtoneTrail)" stroke-width="6" stroke-linecap="round" stroke-dasharray="6 8" />
+        <circle cx="40" cy="30" r="6" fill="#facc15" stroke="rgba(17,24,39,0.8)" stroke-width="2" />
+        <circle cx="132" cy="42" r="7" fill="#22c55e" stroke="rgba(17,24,39,0.8)" stroke-width="2" />
+      </svg>
+    `,
+  },
+  {
     id: "boombox-serenade",
     name: "Boombox Serenade",
     description: "Sync emotional frequencies before the silence fractures the conversation.",
@@ -576,6 +655,53 @@ const games = [
         <g stroke="rgba(148,163,184,0.35)" stroke-width="2" stroke-dasharray="4 6" stroke-linecap="round">
           <line x1="46" y1="52" x2="58" y2="40" />
           <line x1="82" y1="64" x2="94" y2="52" />
+        </g>
+      </svg>
+    `,
+  },
+  {
+    id: "nose-for-trouble",
+    name: "Nose for Trouble",
+    description: "Route Jerry’s scent trail past explosive tunnels before the frustration spike drags him off course.",
+    url: "./nose-for-trouble/index.html",
+    thumbnail: `
+      <svg viewBox="0 0 160 120" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Nose for Trouble preview">
+        <defs>
+          <linearGradient id="k9Backdrop" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0%" stop-color="rgba(15,23,42,0.92)" />
+            <stop offset="100%" stop-color="rgba(15,23,42,0.76)" />
+          </linearGradient>
+          <linearGradient id="trailStroke" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0%" stop-color="#38bdf8" />
+            <stop offset="100%" stop-color="#34d399" />
+          </linearGradient>
+        </defs>
+        <rect x="8" y="10" width="144" height="100" rx="18" fill="url(#k9Backdrop)" stroke="rgba(56,189,248,0.35)" />
+        <rect x="26" y="24" width="108" height="72" rx="16" fill="rgba(9,14,32,0.9)" stroke="rgba(148,163,184,0.3)" />
+        <g stroke="rgba(71,85,105,0.4)" stroke-width="1">
+          ${Array.from({ length: 6 }, (_, i) => `<line x1="${40 + i * 16}" y1="28" x2="${40 + i * 16}" y2="92" />`).join("")}
+          ${Array.from({ length: 4 }, (_, i) => `<line x1="30" y1="${40 + i * 14}" x2="130" y2="${40 + i * 14}" />`).join("")}
+        </g>
+        <path d="M38 88 L58 72 Q74 60 94 68 T122 56" fill="none" stroke="url(#trailStroke)" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" />
+        <g>
+          <circle cx="42" cy="84" r="10" fill="rgba(59,130,246,0.85)" stroke="rgba(148,163,184,0.5)" stroke-width="2" />
+          <path d="M38 82 Q42 78 46 82" fill="none" stroke="rgba(241,245,249,0.85)" stroke-width="2" stroke-linecap="round" />
+          <circle cx="120" cy="56" r="7" fill="rgba(34,197,94,0.85)" stroke="rgba(148,163,184,0.45)" stroke-width="1.5" />
+          <rect x="116" y="52" width="8" height="8" rx="2" fill="rgba(14,165,233,0.4)" stroke="rgba(148,163,184,0.3)" />
+        </g>
+        <g>
+          <rect x="54" y="48" width="12" height="12" rx="3" fill="rgba(15,23,42,0.8)" stroke="rgba(94,234,212,0.55)" />
+          <rect x="70" y="38" width="12" height="12" rx="3" fill="rgba(15,23,42,0.8)" stroke="rgba(94,234,212,0.55)" />
+          <rect x="88" y="62" width="12" height="12" rx="3" fill="rgba(15,23,42,0.8)" stroke="rgba(94,234,212,0.55)" />
+        </g>
+        <g transform="translate(30 26)">
+          <rect x="0" y="0" width="32" height="10" rx="5" fill="rgba(14,165,233,0.2)" stroke="rgba(56,189,248,0.45)" />
+          <rect x="0" y="0" width="22" height="10" rx="5" fill="rgba(56,189,248,0.75)" />
+        </g>
+        <g transform="translate(108 80)">
+          <rect x="0" y="0" width="32" height="18" rx="6" fill="rgba(30,41,59,0.85)" stroke="rgba(148,163,184,0.35)" />
+          <path d="M6 9 L26 9" stroke="rgba(250,204,21,0.65)" stroke-width="3" stroke-linecap="round" />
+          <circle cx="16" cy="9" r="4" fill="rgba(250,204,21,0.85)" stroke="rgba(248,250,252,0.6)" stroke-width="1" />
         </g>
       </svg>
     `,
