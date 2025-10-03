@@ -581,6 +581,53 @@ const games = [
     `,
   },
   {
+    id: "nose-for-trouble",
+    name: "Nose for Trouble",
+    description: "Route Jerry’s scent trail past explosive tunnels before the frustration spike drags him off course.",
+    url: "./nose-for-trouble/index.html",
+    thumbnail: `
+      <svg viewBox="0 0 160 120" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Nose for Trouble preview">
+        <defs>
+          <linearGradient id="k9Backdrop" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0%" stop-color="rgba(15,23,42,0.92)" />
+            <stop offset="100%" stop-color="rgba(15,23,42,0.76)" />
+          </linearGradient>
+          <linearGradient id="trailStroke" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0%" stop-color="#38bdf8" />
+            <stop offset="100%" stop-color="#34d399" />
+          </linearGradient>
+        </defs>
+        <rect x="8" y="10" width="144" height="100" rx="18" fill="url(#k9Backdrop)" stroke="rgba(56,189,248,0.35)" />
+        <rect x="26" y="24" width="108" height="72" rx="16" fill="rgba(9,14,32,0.9)" stroke="rgba(148,163,184,0.3)" />
+        <g stroke="rgba(71,85,105,0.4)" stroke-width="1">
+          ${Array.from({ length: 6 }, (_, i) => `<line x1="${40 + i * 16}" y1="28" x2="${40 + i * 16}" y2="92" />`).join("")}
+          ${Array.from({ length: 4 }, (_, i) => `<line x1="30" y1="${40 + i * 14}" x2="130" y2="${40 + i * 14}" />`).join("")}
+        </g>
+        <path d="M38 88 L58 72 Q74 60 94 68 T122 56" fill="none" stroke="url(#trailStroke)" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" />
+        <g>
+          <circle cx="42" cy="84" r="10" fill="rgba(59,130,246,0.85)" stroke="rgba(148,163,184,0.5)" stroke-width="2" />
+          <path d="M38 82 Q42 78 46 82" fill="none" stroke="rgba(241,245,249,0.85)" stroke-width="2" stroke-linecap="round" />
+          <circle cx="120" cy="56" r="7" fill="rgba(34,197,94,0.85)" stroke="rgba(148,163,184,0.45)" stroke-width="1.5" />
+          <rect x="116" y="52" width="8" height="8" rx="2" fill="rgba(14,165,233,0.4)" stroke="rgba(148,163,184,0.3)" />
+        </g>
+        <g>
+          <rect x="54" y="48" width="12" height="12" rx="3" fill="rgba(15,23,42,0.8)" stroke="rgba(94,234,212,0.55)" />
+          <rect x="70" y="38" width="12" height="12" rx="3" fill="rgba(15,23,42,0.8)" stroke="rgba(94,234,212,0.55)" />
+          <rect x="88" y="62" width="12" height="12" rx="3" fill="rgba(15,23,42,0.8)" stroke="rgba(94,234,212,0.55)" />
+        </g>
+        <g transform="translate(30 26)">
+          <rect x="0" y="0" width="32" height="10" rx="5" fill="rgba(14,165,233,0.2)" stroke="rgba(56,189,248,0.45)" />
+          <rect x="0" y="0" width="22" height="10" rx="5" fill="rgba(56,189,248,0.75)" />
+        </g>
+        <g transform="translate(108 80)">
+          <rect x="0" y="0" width="32" height="18" rx="6" fill="rgba(30,41,59,0.85)" stroke="rgba(148,163,184,0.35)" />
+          <path d="M6 9 L26 9" stroke="rgba(250,204,21,0.65)" stroke-width="3" stroke-linecap="round" />
+          <circle cx="16" cy="9" r="4" fill="rgba(250,204,21,0.85)" stroke="rgba(248,250,252,0.6)" stroke-width="1" />
+        </g>
+      </svg>
+    `,
+  },
+  {
     id: "captains-echo",
     name: "Captain's Echo",
     description: "Stage the four-beat desk salute before the dean snuffs the Carpe Diem spark.",
