@@ -2,6 +2,8 @@ import { initHighScoreBanner } from "../arcade-scores.js";
 import { getScoreConfig } from "../score-config.js";
 import { mountParticleField } from "../particles.js";
 
+import { autoEnhanceFeedback } from "../feedback.js";
+
 const particleSystem = mountParticleField({
   effects: {
     palette: ["#38bdf8", "#c084fc", "#facc15", "#f97316"],
@@ -678,3 +680,5 @@ failureResetButton.addEventListener("click", resetGame);
 resetButton.addEventListener("click", resetGame);
 
 resetGame();
+
+autoEnhanceFeedback();
