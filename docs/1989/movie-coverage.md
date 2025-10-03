@@ -2,7 +2,7 @@
 
 This reference tracks how the 1989 arcade cabinets map to their source films and how far the ladder has progressed up the 1989 domestic box office chart.
 
-Three Fugitives now anchors Level 32, covering the next-highest new release still on the chart while the rest of the ladder continues to backfill the remaining Top 50 slots.
+Whisper's Garden now occupies Level 21, translating *Field of Dreams* into a meditative midnight build while the rest of the ladder continues to backfill the remaining Top 50 slots.
 
 ## Covered Films
 
@@ -48,7 +48,7 @@ Remaining:
 | **39** | Dead Poets Society | #10 | Captain's Echo | A word puzzle or poetry generation mini-game, challenging you to inspire a class with evocative language. |
 | **38** | The Bear | #38 | Kodiak Covenant | A survival/exploration game focused on a young bear cub finding its way in the wilderness. |
 | **37** | Lean on Me | #37 | Gates of Eastside | A rhythm/coordination game focused on maintaining order in a chaotic school environment. |
-| **336** | Licence to Kill | #36 | Vendetta Convoy | A high-octane vehicular combat or chase sequence. |
+| **36** | Licence to Kill | #36 | Vendetta Convoy | A high-octane vehicular combat or chase sequence. |
 | **35** | The 'Burbs | #34 | Cul-de-sac Curiosity | A neighborhood watch/investigation mini-game, using surveillance and logic to find clues about suspicious neighbors. |
 | **34** | The Karate Kid Part III | #33 | Dojo Duality | A martial arts combat level focusing on advanced blocking and counter-attack timing. |
 | **33** | Bill & Ted's Excellent Adventure | #32 | Dialtone Honor Roll | A trivia game requiring you to quickly place historical figures into the correct year using a time-travel phone booth. |
@@ -63,7 +63,6 @@ Remaining:
 | **24** | When Harry Met Sally... | #11 | The Diner Debate | A reaction game where you have to perfectly time a very convincing vocal display in a crowded diner (like a rhythm or memory sequence). |
 | **23** | Turner & Hooch | #12 | Tailing the Trash | A stealth/clean-up mission where you follow a key item (or suspect) without leaving any messy dog-related evidence behind. |
 | **22** | Uncle Buck | #13 | Flapjack Flip-Out | A physics/timing game where you try to stack giant, burned pancakes without them collapsing. |
-| **21** | Field of Dreams | #14 | Whisper's Garden | A meditative game where you follow subtle auditory cues ("If you build it...") to find and plant crops on a field before time runs out. |
 | **20** | National Lampoon's Christmas Vacation | #15 | Twenty-Five Thousand Bulbs | An electrical circuit puzzle where you must connect all the wires in the neighborhood to light up the house. |
 | **19** | Sea of Love | #16 | The Personal Ad Trap | A deductive game where you cross-reference different clues and profiles to find a killer who connects through newspaper personal ads. |
 | **18** | Pet Sematary | #17 | The Creepy Climb | A platforming/climbing game where you ascend a spooky burial ground path while avoiding reanimated obstacles. |
