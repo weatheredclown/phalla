@@ -809,6 +809,65 @@ const games = [
       </svg>
     `,
   },
+  // Level 15
+  {
+    id: "grail-trial",
+    name: "The Grail Trial",
+    description:
+      "Step through the Breath, Word, and Path of God: memorize the sacred letters, kneel beneath the blades, and race across the invisible bridge before time erodes your worthiness.",
+    url: "./grail-trial/index.html",
+    thumbnail: `
+      <svg viewBox="0 0 160 120" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="The Grail Trial preview">
+        <defs>
+          <linearGradient id="grailSky" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0%" stop-color="rgba(15,23,42,0.95)" />
+            <stop offset="100%" stop-color="rgba(8,11,24,0.92)" />
+          </linearGradient>
+          <linearGradient id="grailGlow" x1="0" y1="0" x2="1" y2="0">
+            <stop offset="0%" stop-color="#facc15" />
+            <stop offset="100%" stop-color="#38bdf8" />
+          </linearGradient>
+          <radialGradient id="grailDust" cx="50%" cy="45%" r="60%">
+            <stop offset="0%" stop-color="rgba(248,250,252,0.8)" />
+            <stop offset="100%" stop-color="rgba(248,250,252,0)" />
+          </radialGradient>
+        </defs>
+        <rect x="8" y="10" width="144" height="100" rx="18" fill="url(#grailSky)" stroke="rgba(148,163,184,0.35)" />
+        <g transform="translate(18 24)">
+          <rect x="0" y="0" width="46" height="72" rx="12" fill="rgba(15,23,42,0.8)" stroke="rgba(148,163,184,0.32)" />
+          ${['I','X','Q','M','S','E','T','R','H','L','O','D','N','V','A','G'].map((letter, index) => {
+            const x = (index % 4) * 11 + 6;
+            const y = Math.floor(index / 4) * 16 + 14;
+            const highlight = [0,5,8,10,13,14].includes(index) ? 'rgba(250,204,21,0.35)' : 'rgba(30,41,59,0.65)';
+            const stroke = [0,5,8,10,13,14].includes(index) ? 'rgba(250,204,21,0.6)' : 'rgba(148,163,184,0.2)';
+            return `<rect x="${x - 5}" y="${y - 10}" width="10" height="12" rx="3" fill="${highlight}" stroke="${stroke}" />` +
+              `<text x="${x}" y="${y}" text-anchor="middle" font-size="6" fill="rgba(248,250,252,0.85)" font-family="'Press Start 2P', monospace">${letter}</text>`;
+          }).join('')}
+        </g>
+        <g transform="translate(72 24)">
+          <rect x="0" y="12" width="32" height="48" rx="10" fill="rgba(15,23,42,0.78)" stroke="rgba(148,163,184,0.28)" />
+          <path d="M0 24 L32 24" stroke="rgba(248,250,252,0.18)" stroke-width="2" stroke-dasharray="4 4" />
+          <path d="M4 28 L28 40" stroke="#f97316" stroke-width="4" stroke-linecap="round" />
+          <path d="M4 40 L28 28" stroke="#38bdf8" stroke-width="4" stroke-linecap="round" />
+          <rect x="10" y="46" width="12" height="16" rx="6" fill="rgba(250,204,21,0.65)" stroke="rgba(148,163,184,0.4)" />
+          <rect x="8" y="58" width="16" height="10" rx="4" fill="rgba(59,130,246,0.55)" />
+        </g>
+        <g transform="translate(110 20)">
+          <rect x="0" y="0" width="32" height="80" rx="12" fill="rgba(15,23,42,0.82)" stroke="rgba(148,163,184,0.3)" />
+          <path d="M16 10 L16 70" stroke="rgba(56,189,248,0.4)" stroke-width="2" stroke-dasharray="6 6" />
+          <g fill="rgba(248,250,252,0.75)" opacity="0.85">
+            <circle cx="16" cy="18" r="4" />
+            <circle cx="16" cy="36" r="4" />
+            <circle cx="16" cy="54" r="4" />
+          </g>
+          <rect x="10" y="32" width="12" height="12" rx="4" fill="rgba(250,204,21,0.5)" stroke="rgba(250,204,21,0.7)" />
+          <path d="M10 64 L22 74" stroke="rgba(248,250,252,0.4)" stroke-width="3" stroke-linecap="round" />
+        </g>
+        <circle cx="120" cy="56" r="20" fill="url(#grailDust)" opacity="0.4" />
+        <path d="M18 100 L142 100" stroke="url(#grailGlow)" stroke-width="6" stroke-linecap="round" opacity="0.55" />
+      </svg>
+    `,
+  }, // Level 15
   // Level 14
   {
     id: "the-final-barrier",

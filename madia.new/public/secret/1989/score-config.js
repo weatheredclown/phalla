@@ -419,6 +419,23 @@ export const scoreConfigs = {
     },
   }, // wild things
   // Level 16
+  // Level 15
+  "grail-trial": {
+    label: "Worthiness Score",
+    empty: "No worthiness recorded yet.",
+    format: ({ value, meta }) => {
+      const totalMs = Number.isFinite(meta?.totalTimeMs)
+        ? Number(meta.totalTimeMs)
+        : Number(meta?.totalTime ?? 0);
+      const totalSeconds = Math.max(0, totalMs) / 1000;
+      const failures = Number(meta?.failures ?? 0);
+      const dustRemaining = Number(meta?.dustRemaining ?? 0);
+      const timeLabel = `${totalSeconds.toFixed(2)}s`;
+      const failureLabel = failures === 1 ? "1 failure" : `${failures} failures`;
+      const dustLabel = dustRemaining === 1 ? "1 dust" : `${dustRemaining} dust`;
+      return `${value ?? 0} pts · ${timeLabel} · ${failureLabel} · ${dustLabel}`;
+    },
+  }, // Level 15
   "wind-beneath-my-wings": {
     label: "Applause Score",
     empty: "No applause recorded yet.",
