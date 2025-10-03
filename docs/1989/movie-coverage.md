@@ -2,6 +2,7 @@
 
 This reference tracks how the 1989 arcade cabinets map to their source films and how far the ladder has progressed up the 1989 domestic box office chart.
 
+The Disorient Express now stations Level 22 with a See No Evil, Hear No Evil homage, finally pairing the ladder’s split-sense gimmick with the film that inspired it while the remaining gaps continue to collapse toward the top of the chart.
 River of Slime Escape now shocks Level 27 with Ghostbusters II’s river chase while Three Fugitives continues anchoring Level 32, and the ladder keeps backfilling the remaining Top 50 slots.
 Three Fugitives now anchors Level 32 while Hoverboard Pursuit secures Level 26, covering another Top 10 release as the ladder continues to backfill the remaining hits.
 Rollercoaster of Life now anchors Level 25, pushing the ladder deeper into the top 25 while earlier levels keep filling in the remaining Top 50 slots.
@@ -42,6 +43,7 @@ Three Fugitives now anchors Level 32, covering the next-highest new release stil
 | 26 | Hoverboard Pursuit | *Back to the Future Part II* | #8 |
 | 25 | Rollercoaster of Life | *Parenthood* | #9 |
 | 23 | Tailing the Trash | *Turner & Hooch* | #12 |
+| 22 | The Disorient Express | *See No Evil, Hear No Evil* | #25 |
 | 18 | Restless Acre Rise | *Pet Sematary* | #17 |
 | 20 | Twenty-Five Thousand Bulbs | *National Lampoon's Christmas Vacation* | #15 |
 | 29 | The K-Mart Countdown | *Rain Man* | #5 |
@@ -93,7 +95,6 @@ Remaining:
 | **13** | The Little Mermaid | #22 | Under the Sea Scramble | A hidden object or collection game in a colorful undersea environment, gathering "human gadgets." |
 | **12** | Steel Magnolias | #23 | Truvy's Salon Style | A rapid-fire styling/makeover game where you have to meet multiple clients' specific, complex hairstyle and makeup requests. |
 | **11** | Major League | #24 | Wild Thing Wind-Up | A timing/precision baseball pitching game focusing on a dramatically out-of-control, but fast, fastball. |
-| **10** | See No Evil, Hear No Evil | #25 | The Disorient Express | A cooperative or split-screen minigame where one player uses only visual cues and the other only audio cues to solve a simple puzzle. |
 | **9** | Black Rain | #26 | Osaka Motorcycle Dash | A high-speed chase level through the neon-lit streets of Osaka, avoiding gangs and following a key witness. |
 | **8** | Working Girl | #27 | Merger Madness | A quick-typing or paperwork sorting challenge in a high-rise office environment to prepare for a major business meeting. |
 | **7** | Tango & Cash | #48 | Framed Breakout | A prison break level focused on quick puzzle solving and avoiding guards while wearing ridiculous "action hero" disguises. |
