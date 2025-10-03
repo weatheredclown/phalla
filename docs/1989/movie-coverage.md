@@ -3,6 +3,9 @@
 This reference tracks how the 1989 arcade cabinets map to their source films and how far the ladder has progressed up the 1989 domestic box office chart.
 
 Three Fugitives still anchors Level 32 while Twenty-Five Thousand Bulbs now energizes Level 20, covering the next major holiday tentpole as the ladder continues to backfill the remaining Top 50 slots.
+Three Fugitives now anchors Level 32, covering the next-highest new release still on the chart, while Voice Box Swap pulls Level 28 into the top-ten chase. The remaining rungs continue to backfill the unreleased Top 50 slots.
+Whisper's Garden now occupies Level 21, translating *Field of Dreams* into a meditative midnight build while the rest of the ladder continues to backfill the remaining Top 50 slots.
+Three Fugitives now anchors Level 32, covering the next-highest new release still on the chart while the rest of the ladder continues to backfill the remaining Top 50 slots. The Diner Debate locks in Level 24 with a booth-shaking homage to *When Harry Met Sally...*.
 
 ## Covered Films
 
@@ -30,6 +33,10 @@ Three Fugitives still anchors Level 32 while Twenty-Five Thousand Bulbs now ener
 | 31 | Nose for Trouble | *K-9* | #30 |
 | 30 | Gilded Partition | *The War of the Roses* | #12 |
 | 20 | Twenty-Five Thousand Bulbs | *National Lampoon's Christmas Vacation* | #15 |
+| 29 | The K-Mart Countdown | *Rain Man* | #5 |
+| 28 | Voice Box Swap | *Look Who's Talking* | #6 |
+| 24 | The Diner Debate | *When Harry Met Sally...* | #11 |
+| 29 | Flapjack Flip-Out | *Uncle Buck* | #13 |
 
 Remaining:
 ## Remaining Targets to Reach #1
@@ -49,19 +56,18 @@ Remaining:
 | **39** | Dead Poets Society | #10 | Captain's Echo | A word puzzle or poetry generation mini-game, challenging you to inspire a class with evocative language. |
 | **38** | The Bear | #38 | Kodiak Covenant | A survival/exploration game focused on a young bear cub finding its way in the wilderness. |
 | **37** | Lean on Me | #37 | Gates of Eastside | A rhythm/coordination game focused on maintaining order in a chaotic school environment. |
-| **336** | Licence to Kill | #36 | Vendetta Convoy | A high-octane vehicular combat or chase sequence. |
+| **36** | Licence to Kill | #36 | Vendetta Convoy | A high-octane vehicular combat or chase sequence. |
 | **35** | The 'Burbs | #34 | Cul-de-sac Curiosity | A neighborhood watch/investigation mini-game, using surveillance and logic to find clues about suspicious neighbors. |
 | **34** | The Karate Kid Part III | #33 | Dojo Duality | A martial arts combat level focusing on advanced blocking and counter-attack timing. |
 | **33** | Bill & Ted's Excellent Adventure | #32 | Dialtone Honor Roll | A trivia game requiring you to quickly place historical figures into the correct year using a time-travel phone booth. |
 | **32** | Three Fugitives | #31 | Three Fugitives | A timed escort mission, navigating a crowded area while protecting a young child. |
 | **31** | K-9 | #30 | Nose for Trouble | A scent-tracking and item retrieval game as a police dog. |
 | **30** | The War of the Roses | #29 | Gilded Partition | A destruction/physics game where you try to sabotage a mansion without getting caught by your spouse. |
-| **29** | Rain Man | #5 | The K-Mart Countdown | A memory/timing game where you have to correctly count a pile of matchsticks dropped on the floor as quickly as possible. |
 | **28** | Look Who's Talking | #6 | Voice Box Swap | A puzzle game where you match a baby's actions to the inner monologue voiceover's text or visual cue. |
+| **29** | Rain Man | #5 | The K-Mart Countdown | A memory/timing game where you have to correctly count a pile of matchsticks dropped on the floor as quickly as possible. |
 | **27** | Ghostbusters II | #7 | River of Slime Escape | A frantic action level where you navigate a maze while avoiding a rising, negative pink slime that reacts to bad vibes. |
 | **26** | Back to the Future Part II | #8 | Hoverboard Pursuit | A time-trial race level using a hoverboard to navigate future (2015) traffic and obstacles. |
 | **25** | Parenthood | #9 | Rollercoaster of Life | A fast-paced decision-making game, quickly choosing the 'right' or 'wrong' answer to various parental/family dilemmas. |
-| **24** | When Harry Met Sally... | #11 | The Diner Debate | A reaction game where you have to perfectly time a very convincing vocal display in a crowded diner (like a rhythm or memory sequence). |
 | **23** | Turner & Hooch | #12 | Tailing the Trash | A stealth/clean-up mission where you follow a key item (or suspect) without leaving any messy dog-related evidence behind. |
 | **22** | Uncle Buck | #13 | Flapjack Flip-Out | A physics/timing game where you try to stack giant, burned pancakes without them collapsing. |
 | **21** | Field of Dreams | #14 | Whisper's Garden | A meditative game where you follow subtle auditory cues ("If you build it...") to find and plant crops on a field before time runs out. |
