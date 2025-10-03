@@ -3,7 +3,7 @@ import { getScoreConfig } from "../score-config.js";
 import { mountParticleField } from "../particles.js";
 import { autoEnhanceFeedback } from "../feedback.js";
 
-const GAME_ID = "rollercoaster-of-life";
+const GAME_ID = "family-flux";
 const INITIAL_HARMONY = 520;
 const PATIENCE_FLOOR_PERCENT = 0;
 const HARMONY_DECAY_ON_TIMEOUT = -140;

@@ -322,37 +322,37 @@ const games = [
     `,
   }, // Level 9
   {
-    id: "rollercoaster-of-life",
-    name: "Rollercoaster of Life",
+    id: "family-flux",
+    name: "Family Flux",
     description: "Race through parenting crises, weigh safe answers against wild gambles, and keep Family Harmony glowing.",
-    url: "./rollercoaster-of-life/index.html",
+    url: "./family-flux/index.html",
     thumbnail: `
-      <svg viewBox="0 0 160 120" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Rollercoaster of Life preview">
+      <svg viewBox="0 0 160 120" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Family Flux preview">
         <defs>
-          <linearGradient id="rolBg" x1="0" y1="0" x2="1" y2="1">
+          <linearGradient id="fluxBg" x1="0" y1="0" x2="1" y2="1">
             <stop offset="0%" stop-color="#fbbf24" />
             <stop offset="100%" stop-color="#f472b6" />
           </linearGradient>
-          <linearGradient id="rolPanel" x1="0" y1="0" x2="1" y2="1">
+          <linearGradient id="fluxPanel" x1="0" y1="0" x2="1" y2="1">
             <stop offset="0%" stop-color="rgba(15,23,42,0.92)" />
             <stop offset="100%" stop-color="rgba(30,64,175,0.82)" />
           </linearGradient>
-          <linearGradient id="rolTimer" x1="0" y1="0" x2="1" y2="0">
+          <linearGradient id="fluxTimer" x1="0" y1="0" x2="1" y2="0">
             <stop offset="0%" stop-color="#22c55e" />
             <stop offset="100%" stop-color="#f97316" />
           </linearGradient>
         </defs>
         <rect x="6" y="6" width="148" height="108" rx="20" fill="rgba(15,23,42,0.92)" stroke="rgba(148,163,184,0.35)" />
-        <rect x="14" y="14" width="132" height="92" rx="16" fill="url(#rolBg)" opacity="0.25" />
+        <rect x="14" y="14" width="132" height="92" rx="16" fill="url(#fluxBg)" opacity="0.25" />
         <g transform="translate(24 24)">
           <rect x="0" y="0" width="112" height="24" rx="12" fill="rgba(15,23,42,0.85)" stroke="rgba(148,163,184,0.35)" />
           <rect x="6" y="6" width="62" height="12" rx="6" fill="rgba(248,250,252,0.92)" />
-          <rect x="72" y="6" width="34" height="12" rx="6" fill="url(#rolTimer)" />
+          <rect x="72" y="6" width="34" height="12" rx="6" fill="url(#fluxTimer)" />
           <text x="24" y="15" font-family="'Press Start 2P', monospace" font-size="6" fill="#0ea5e9">Harmony</text>
           <text x="97" y="15" font-family="'Press Start 2P', monospace" font-size="6" fill="#f8fafc" text-anchor="end">540</text>
         </g>
         <g transform="translate(24 52)">
-          <rect x="0" y="0" width="48" height="48" rx="12" fill="url(#rolPanel)" stroke="rgba(148,163,184,0.35)" />
+          <rect x="0" y="0" width="48" height="48" rx="12" fill="url(#fluxPanel)" stroke="rgba(148,163,184,0.35)" />
           <path d="M8 38 C18 26 30 18 40 10" fill="none" stroke="#facc15" stroke-width="4" stroke-linecap="round" />
           <circle cx="20" cy="26" r="5" fill="#38bdf8" />
           <circle cx="32" cy="18" r="4" fill="#f97316" />
