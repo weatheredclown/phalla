@@ -615,6 +615,56 @@ const games = [
     `,
   },
   {
+    id: "diner-debate",
+    name: "The Diner Debate",
+    description: "Time every cue, shatter the doubts, and choose the perfect moment for the neon climax.",
+    url: "./diner-debate/index.html",
+    thumbnail: `
+      <svg viewBox="0 0 160 120" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="The Diner Debate preview">
+        <defs>
+          <linearGradient id="dinerBackdrop" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0%" stop-color="#1e293b" />
+            <stop offset="100%" stop-color="#0f172a" />
+          </linearGradient>
+          <linearGradient id="boothGlow" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="rgba(244,114,182,0.65)" />
+            <stop offset="100%" stop-color="rgba(56,189,248,0.45)" />
+          </linearGradient>
+          <linearGradient id="timelineSweep" x1="0" y1="0" x2="1" y2="0">
+            <stop offset="0%" stop-color="#38bdf8" />
+            <stop offset="50%" stop-color="#facc15" />
+            <stop offset="100%" stop-color="#f472b6" />
+          </linearGradient>
+        </defs>
+        <rect x="8" y="10" width="144" height="100" rx="18" fill="rgba(8,11,22,0.94)" stroke="rgba(148,163,184,0.35)" />
+        <rect x="16" y="18" width="128" height="84" rx="16" fill="url(#dinerBackdrop)" stroke="rgba(148,163,184,0.28)" />
+        <g>
+          <rect x="24" y="32" width="44" height="52" rx="16" fill="rgba(244,114,182,0.3)" stroke="rgba(244,114,182,0.55)" />
+          <rect x="92" y="32" width="44" height="52" rx="16" fill="rgba(56,189,248,0.28)" stroke="rgba(56,189,248,0.5)" />
+        </g>
+        <rect x="50" y="56" width="60" height="26" rx="12" fill="rgba(15,23,42,0.9)" stroke="rgba(148,163,184,0.45)" />
+        <rect x="62" y="44" width="36" height="12" rx="6" fill="url(#boothGlow)" stroke="rgba(248,250,252,0.35)" />
+        <g>
+          <rect x="24" y="84" width="112" height="18" rx="9" fill="rgba(15,23,42,0.9)" stroke="rgba(56,189,248,0.4)" />
+          <rect x="28" y="88" width="104" height="10" rx="5" fill="rgba(15,23,42,0.9)" stroke="rgba(56,189,248,0.4)" />
+          <rect x="30" y="90" width="100" height="6" rx="3" fill="rgba(15,23,42,0.9)" stroke="rgba(148,163,184,0.3)" />
+          <rect x="30" y="90" width="70" height="6" rx="3" fill="rgba(59,130,246,0.35)" />
+          <line x1="80" y1="86" x2="80" y2="104" stroke="url(#timelineSweep)" stroke-width="4" stroke-linecap="round" />
+          <circle cx="108" cy="93" r="8" fill="rgba(244,114,182,0.85)" stroke="rgba(248,250,252,0.5)" />
+          <circle cx="52" cy="93" r="8" fill="rgba(56,189,248,0.85)" stroke="rgba(248,250,252,0.45)" />
+          <circle cx="80" cy="93" r="9" fill="rgba(250,204,21,0.88)" stroke="rgba(248,250,252,0.6)" />
+        </g>
+        <g>
+          <path d="M34 28 C46 20 68 18 80 24" fill="none" stroke="rgba(244,114,182,0.55)" stroke-width="3" stroke-linecap="round" />
+          <path d="M80 24 C92 18 114 22 126 30" fill="none" stroke="rgba(56,189,248,0.5)" stroke-width="3" stroke-linecap="round" />
+          <circle cx="44" cy="28" r="5" fill="#facc15" stroke="rgba(248,250,252,0.6)" stroke-width="1.2" />
+          <circle cx="80" cy="24" r="5" fill="#38bdf8" stroke="rgba(248,250,252,0.6)" stroke-width="1.2" />
+          <circle cx="118" cy="30" r="5" fill="#f472b6" stroke="rgba(248,250,252,0.6)" stroke-width="1.2" />
+        </g>
+      </svg>
+    `,
+  },
+  {
     id: "speed-zone",
     name: "Speed Zone",
     description: "Chart a cannonball sprint past sirens, tolls, and neon checkpoints.",
