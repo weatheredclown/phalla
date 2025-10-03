@@ -64,6 +64,11 @@ export const scoreConfigs = {
     format: ({ value }) =>
       value === 1 ? "1 chip" : `${value ?? 0} chips`,
   },
+  "half-inch-heroes": {
+    label: "Distance Secured",
+    empty: "No backyard runs logged yet.",
+    format: ({ value }) => `${value ?? 0} span`,
+  },
   "heatwave-block-party": {
     label: "Grievances Cooled",
     empty: "No grievances cooled yet.",
