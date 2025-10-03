@@ -282,8 +282,21 @@ export const scoreConfigs = {
       const comboLabel = combo === 1 ? "1 combo" : `${combo} combo streak`;
       const riskyLabel = risky > 0 ? ` · Risky +${risky}` : "";
       return `${value ?? 0} pts · ${comboLabel}${riskyLabel}`;
+    }, // sync score
+  }, // Previous level
+  // Level 22
+  "merger-madness": {
+    label: "Efficiency Rating",
+    empty: "No desk shifts logged yet.",
+    format: ({ value, meta }) => {
+      const accuracy = Number.isFinite(meta?.accuracy)
+        ? `${meta.accuracy}% accuracy`
+        : "0% accuracy";
+      const docs = Number(meta?.documents ?? 0);
+      const docLabel = docs === 1 ? "doc" : "docs";
+      return `${value ?? 0} pts · ${accuracy} · ${docs} ${docLabel}`;
     },
-  },
+  }, // Level 22
   "wild-thing-wind-up": {
     label: "Strikeouts",
     empty: "No strikeouts recorded yet.",
@@ -297,7 +310,7 @@ export const scoreConfigs = {
       const wildLabel = wild === 1 ? "1 Wild Thing" : `${wild} Wild Things`;
       return `${value ?? 0} Ks · ${innings} IP · ${runsLabel} · ${wildLabel}`;
     },
-  },
+  }, // wild things
   // Level 16
   "wind-beneath-my-wings": {
     label: "Applause Score",

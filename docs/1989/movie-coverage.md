@@ -18,6 +18,8 @@ Three Fugitives now anchors Level 32, covering the next-highest new release stil
 Whisper's Garden now occupies Level 21, translating *Field of Dreams* into a meditative midnight build while the rest of the ladder continues to backfill the remaining Top 50 slots.
 Three Fugitives now anchors Level 32, covering the next-highest new release still on the chart while the rest of the ladder continues to backfill the remaining Top 50 slots. The Diner Debate locks in Level 24 with a booth-shaking homage to *When Harry Met Sally...*.
 
+Merger Madness now occupies Level 22, translating *Working Girl*'s corporate scramble into a rapid-fire desk gauntlet between the stakeout circuit and the whispering cornfield.
+
 ## Covered Films
 
 | Level | Game | Film Inspiration | Actual 1989 Domestic Gross Rank* |
@@ -48,6 +50,7 @@ Three Fugitives now anchors Level 32, covering the next-highest new release stil
 | 25 | Rollercoaster of Life | *Parenthood* | #9 |
 | 9 | Osaka Motorcycle Dash | *Black Rain* | #26 |
 | 23 | Tailing the Trash | *Turner & Hooch* | #12 |
+| 22 | Merger Madness | *Working Girl* | #27 |
 | 22 | The Disorient Express | *See No Evil, Hear No Evil* | #25 |
 | 18 | Restless Acre Rise | *Pet Sematary* | #17 |
 | 16 | Wind Beneath My Wings | *Beaches* | #19 |
@@ -102,6 +105,7 @@ Remaining:
 | **12** | Steel Magnolias | #23 | Truvy's Salon Style | A rapid-fire styling/makeover game where you have to meet multiple clients' specific, complex hairstyle and makeup requests. |
 | **11** | Major League | #24 | Wild Thing Wind-Up | A timing/precision baseball pitching game focusing on a dramatically out-of-control, but fast, fastball. |
 | **10** | See No Evil, Hear No Evil | #25 | The Disorient Express | A cooperative or split-screen minigame where one player uses only visual cues and the other only audio cues to solve a simple puzzle. |
+| **9** | Black Rain | #26 | Osaka Motorcycle Dash | A high-speed chase level through the neon-lit streets of Osaka, avoiding gangs and following a key witness. |
 | **8** | Working Girl | #27 | Merger Madness | A quick-typing or paperwork sorting challenge in a high-rise office environment to prepare for a major business meeting. |
 | **7** | Tango & Cash | #48 | Framed Breakout | A prison break level focused on quick puzzle solving and avoiding guards while wearing ridiculous "action hero" disguises. |
 | **6** | The Naked Gun: From the Files of Police Squad! | #49 | Frank Drebin's Follies | A quick-reaction game requiring you to perform perfectly normal tasks while hilariously and accidentally causing massive collateral damage. |
