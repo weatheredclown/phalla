@@ -87,6 +87,40 @@ const games = [
     `,
   },
   {
+    id: "k-mart-countdown",
+    name: "The K-Mart Countdown",
+    description: "Memorize the spilled matchstick pile and slam your final count before the multiplier fizzles.",
+    url: "./k-mart-countdown/index.html",
+    thumbnail: `
+      <svg viewBox="0 0 160 120" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="The K-Mart Countdown preview">
+        <defs>
+          <linearGradient id="countdownBg" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="rgba(8,12,28,0.95)" />
+            <stop offset="100%" stop-color="rgba(5,9,20,0.9)" />
+          </linearGradient>
+          <linearGradient id="displayGlow" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0%" stop-color="#38bdf8" />
+            <stop offset="100%" stop-color="#facc15" />
+          </linearGradient>
+        </defs>
+        <rect x="10" y="12" width="140" height="96" rx="20" fill="url(#countdownBg)" stroke="rgba(148,163,184,0.38)" />
+        <rect x="24" y="20" width="112" height="30" rx="10" fill="rgba(10,19,42,0.85)" stroke="rgba(56,189,248,0.6)" />
+        <text x="36" y="40" font-size="10" fill="rgba(148,163,184,0.75)" font-family="'Share Tech Mono', monospace">COUNT</text>
+        <text x="116" y="40" text-anchor="end" font-size="20" fill="#38bdf8" font-family="'Segment7Standard', 'Share Tech Mono', monospace">054</text>
+        <rect x="26" y="58" width="108" height="40" rx="16" fill="rgba(12,18,35,0.95)" stroke="rgba(148,163,184,0.35)" />
+        <g stroke-width="5" stroke-linecap="round">
+          <line x1="54" y1="78" x2="90" y2="96" stroke="#facc15" />
+          <line x1="64" y1="88" x2="104" y2="70" stroke="#f97316" />
+          <line x1="76" y1="74" x2="118" y2="92" stroke="#38bdf8" />
+          <line x1="44" y1="90" x2="80" y2="72" stroke="#f472b6" />
+          <line x1="38" y1="74" x2="70" y2="94" stroke="#34d399" />
+        </g>
+        <circle cx="118" cy="70" r="6" fill="#facc15" stroke="rgba(248,250,252,0.65)" stroke-width="2" />
+        <circle cx="42" cy="96" r="5" fill="#f472b6" stroke="rgba(248,250,252,0.5)" stroke-width="2" />
+      </svg>
+    `,
+  },
+  {
     id: "dojo-duality",
     name: "Dojo Duality",
     description: "Balance Miyagi-Do focus against Cobra Kai pressure while keeping the fear meter at bay.",
@@ -220,6 +254,53 @@ const games = [
           <path d="M24 8 L36 4" stroke="#38bdf8" stroke-width="3" stroke-linecap="round" />
           <circle cx="12" cy="16" r="4" fill="#22d3ee" />
           <circle cx="32" cy="8" r="4" fill="#facc15" />
+        </g>
+      </svg>
+    `,
+  },
+  {
+    id: "flapjack-flip-out",
+    name: "Flapjack Flip-Out",
+    description: "Juggle Uncle Buck's oversized flapjacks and gamble on nudges to keep the stack sky-high.",
+    url: "./flapjack-flip-out/index.html",
+    thumbnail: `
+      <svg viewBox="0 0 160 120" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Flapjack Flip-Out preview">
+        <defs>
+          <linearGradient id="flapjackSky" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="rgba(15,23,42,0.95)" />
+            <stop offset="100%" stop-color="rgba(8,13,28,0.92)" />
+          </linearGradient>
+          <linearGradient id="flapjackPlate" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0%" stop-color="rgba(56,189,248,0.75)" />
+            <stop offset="100%" stop-color="rgba(37,99,235,0.55)" />
+          </linearGradient>
+          <linearGradient id="flapjackStack" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="#fde68a" />
+            <stop offset="100%" stop-color="#f97316" />
+          </linearGradient>
+        </defs>
+        <rect x="10" y="10" width="140" height="100" rx="18" fill="rgba(6,10,22,0.95)" stroke="rgba(148,163,184,0.35)" />
+        <rect x="18" y="18" width="124" height="84" rx="16" fill="url(#flapjackSky)" stroke="rgba(148,163,184,0.28)" />
+        <g transform="translate(0 6)">
+          <rect x="32" y="70" width="96" height="18" rx="9" fill="url(#flapjackPlate)" stroke="rgba(148,163,184,0.4)" />
+          <ellipse cx="80" cy="79" rx="32" ry="6" fill="rgba(14,116,144,0.35)" />
+        </g>
+        <g transform="translate(0 -2)">
+          <g>
+            <rect x="60" y="60" width="40" height="10" rx="4" fill="#f97316" stroke="rgba(148,163,184,0.3)" />
+            <ellipse cx="80" cy="58" rx="32" ry="12" fill="url(#flapjackStack)" stroke="rgba(148,163,184,0.3)" />
+            <ellipse cx="80" cy="50" rx="28" ry="10" fill="#fde68a" stroke="rgba(148,163,184,0.28)" />
+            <ellipse cx="80" cy="42" rx="24" ry="9" fill="#fbbf24" stroke="rgba(148,163,184,0.26)" />
+            <ellipse cx="80" cy="34" rx="20" ry="8" fill="#fb7185" stroke="rgba(148,163,184,0.25)" />
+          </g>
+          <path d="M110 24 L142 16" stroke="rgba(59,130,246,0.65)" stroke-width="4" stroke-linecap="round" />
+          <path d="M112 24 L134 34" stroke="rgba(248,113,113,0.8)" stroke-width="5" stroke-linecap="round" />
+          <circle cx="134" cy="34" r="6" fill="#facc15" stroke="rgba(248,250,252,0.6)" stroke-width="2" />
+        </g>
+        <g>
+          <circle cx="44" cy="90" r="4" fill="#38bdf8" />
+          <circle cx="116" cy="90" r="4" fill="#f97316" />
+          <circle cx="80" cy="22" r="3" fill="#facc15" />
         </g>
       </svg>
     `,
@@ -669,6 +750,56 @@ const games = [
     `,
   },
   {
+    id: "diner-debate",
+    name: "The Diner Debate",
+    description: "Time every cue, shatter the doubts, and choose the perfect moment for the neon climax.",
+    url: "./diner-debate/index.html",
+    thumbnail: `
+      <svg viewBox="0 0 160 120" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="The Diner Debate preview">
+        <defs>
+          <linearGradient id="dinerBackdrop" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0%" stop-color="#1e293b" />
+            <stop offset="100%" stop-color="#0f172a" />
+          </linearGradient>
+          <linearGradient id="boothGlow" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="rgba(244,114,182,0.65)" />
+            <stop offset="100%" stop-color="rgba(56,189,248,0.45)" />
+          </linearGradient>
+          <linearGradient id="timelineSweep" x1="0" y1="0" x2="1" y2="0">
+            <stop offset="0%" stop-color="#38bdf8" />
+            <stop offset="50%" stop-color="#facc15" />
+            <stop offset="100%" stop-color="#f472b6" />
+          </linearGradient>
+        </defs>
+        <rect x="8" y="10" width="144" height="100" rx="18" fill="rgba(8,11,22,0.94)" stroke="rgba(148,163,184,0.35)" />
+        <rect x="16" y="18" width="128" height="84" rx="16" fill="url(#dinerBackdrop)" stroke="rgba(148,163,184,0.28)" />
+        <g>
+          <rect x="24" y="32" width="44" height="52" rx="16" fill="rgba(244,114,182,0.3)" stroke="rgba(244,114,182,0.55)" />
+          <rect x="92" y="32" width="44" height="52" rx="16" fill="rgba(56,189,248,0.28)" stroke="rgba(56,189,248,0.5)" />
+        </g>
+        <rect x="50" y="56" width="60" height="26" rx="12" fill="rgba(15,23,42,0.9)" stroke="rgba(148,163,184,0.45)" />
+        <rect x="62" y="44" width="36" height="12" rx="6" fill="url(#boothGlow)" stroke="rgba(248,250,252,0.35)" />
+        <g>
+          <rect x="24" y="84" width="112" height="18" rx="9" fill="rgba(15,23,42,0.9)" stroke="rgba(56,189,248,0.4)" />
+          <rect x="28" y="88" width="104" height="10" rx="5" fill="rgba(15,23,42,0.9)" stroke="rgba(56,189,248,0.4)" />
+          <rect x="30" y="90" width="100" height="6" rx="3" fill="rgba(15,23,42,0.9)" stroke="rgba(148,163,184,0.3)" />
+          <rect x="30" y="90" width="70" height="6" rx="3" fill="rgba(59,130,246,0.35)" />
+          <line x1="80" y1="86" x2="80" y2="104" stroke="url(#timelineSweep)" stroke-width="4" stroke-linecap="round" />
+          <circle cx="108" cy="93" r="8" fill="rgba(244,114,182,0.85)" stroke="rgba(248,250,252,0.5)" />
+          <circle cx="52" cy="93" r="8" fill="rgba(56,189,248,0.85)" stroke="rgba(248,250,252,0.45)" />
+          <circle cx="80" cy="93" r="9" fill="rgba(250,204,21,0.88)" stroke="rgba(248,250,252,0.6)" />
+        </g>
+        <g>
+          <path d="M34 28 C46 20 68 18 80 24" fill="none" stroke="rgba(244,114,182,0.55)" stroke-width="3" stroke-linecap="round" />
+          <path d="M80 24 C92 18 114 22 126 30" fill="none" stroke="rgba(56,189,248,0.5)" stroke-width="3" stroke-linecap="round" />
+          <circle cx="44" cy="28" r="5" fill="#facc15" stroke="rgba(248,250,252,0.6)" stroke-width="1.2" />
+          <circle cx="80" cy="24" r="5" fill="#38bdf8" stroke="rgba(248,250,252,0.6)" stroke-width="1.2" />
+          <circle cx="118" cy="30" r="5" fill="#f472b6" stroke="rgba(248,250,252,0.6)" stroke-width="1.2" />
+        </g>
+      </svg>
+    `,
+  },
+  {
     id: "speed-zone",
     name: "Speed Zone",
     description: "Chart a cannonball sprint past sirens, tolls, and neon checkpoints.",
@@ -757,6 +888,64 @@ const games = [
     `,
   },
   {
+    id: "tailing-the-trash",
+    name: "Tailing the Trash",
+    description: "Shadow Dockside Eight's suspect, scrub Hooch's chaos, and keep suspicion below the redline.",
+    url: "./tailing-the-trash/index.html",
+    thumbnail: `
+      <svg viewBox="0 0 160 120" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Tailing the Trash preview">
+        <defs>
+          <linearGradient id="dockBackdrop" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0%" stop-color="rgba(15,23,42,0.95)" />
+            <stop offset="100%" stop-color="rgba(6,12,26,0.95)" />
+          </linearGradient>
+          <linearGradient id="coneGlow" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0%" stop-color="rgba(250,204,21,0.65)" />
+            <stop offset="100%" stop-color="rgba(248,113,113,0.65)" />
+          </linearGradient>
+          <linearGradient id="trailGlow" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="rgba(56,189,248,0.6)" />
+            <stop offset="100%" stop-color="rgba(147,197,253,0.6)" />
+          </linearGradient>
+        </defs>
+        <rect x="8" y="10" width="144" height="100" rx="18" fill="url(#dockBackdrop)" stroke="rgba(148,163,184,0.4)" />
+        <rect x="18" y="20" width="124" height="80" rx="16" fill="rgba(10,18,36,0.9)" stroke="rgba(148,163,184,0.28)" />
+        <g stroke="rgba(94,234,212,0.25)" stroke-width="1">
+          ${Array.from({ length: 5 }, (_, i) => `<line x1="${32 + i * 18}" y1="26" x2="${32 + i * 18}" y2="94" />`).join("")}
+          ${Array.from({ length: 3 }, (_, i) => `<line x1="26" y1="${42 + i * 18}" x2="134" y2="${42 + i * 18}" />`).join("")}
+        </g>
+        <g opacity="0.9">
+          <path d="M118 36 L138 58 L98 70 Z" fill="url(#coneGlow)" />
+          <path d="M118 36 L136 54" stroke="rgba(250,204,21,0.6)" stroke-width="2" stroke-linecap="round" />
+        </g>
+        <g>
+          <rect x="56" y="58" width="12" height="12" rx="4" fill="rgba(147,197,253,0.85)" stroke="rgba(255,255,255,0.55)" />
+          <rect x="42" y="66" width="10" height="10" rx="4" fill="rgba(250,204,21,0.9)" stroke="rgba(255,255,255,0.45)" />
+          <circle cx="64" cy="64" r="3" fill="rgba(15,23,42,0.9)" />
+          <circle cx="46" cy="71" r="2.5" fill="rgba(15,23,42,0.8)" />
+        </g>
+        <g>
+          <rect x="94" y="42" width="12" height="12" rx="4" fill="rgba(56,189,248,0.92)" stroke="rgba(255,255,255,0.6)" />
+          <circle cx="100" cy="48" r="3" fill="rgba(15,23,42,0.9)" />
+        </g>
+        <g>
+          <path d="M48 72 L60 66 L72 74 L86 68" fill="none" stroke="url(#trailGlow)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" />
+          <circle cx="72" cy="74" r="3" fill="rgba(94,234,212,0.8)" stroke="rgba(255,255,255,0.5)" />
+        </g>
+        <g>
+          <rect x="34" y="40" width="10" height="10" rx="3" fill="rgba(249,115,22,0.78)" stroke="rgba(255,255,255,0.45)" />
+          <rect x="30" y="44" width="6" height="6" rx="2" fill="rgba(248,113,113,0.75)" />
+        </g>
+        <g>
+          <rect x="28" y="90" width="40" height="12" rx="6" fill="rgba(10,18,36,0.85)" stroke="rgba(148,163,184,0.35)" />
+          <rect x="32" y="92" width="12" height="8" rx="3" fill="rgba(94,234,212,0.6)" />
+          <rect x="48" y="92" width="8" height="8" rx="3" fill="rgba(250,204,21,0.7)" />
+          <rect x="60" y="92" width="6" height="8" rx="3" fill="rgba(248,113,113,0.7)" />
+        </g>
+      </svg>
+    `,
+  },
+  {
     id: "vendetta-convoy",
     name: "Vendetta Convoy",
     description: "Chain sabotage charges to shepherd the rogue tanker convoy past concealed explosives.",
@@ -806,6 +995,53 @@ const games = [
           <rect x="6" y="4" width="88" height="10" rx="5" fill="rgba(56,189,248,0.35)" stroke="rgba(168,85,247,0.45)" />
         </g>
           </svg>
+    `,
+  },
+  {
+    id: "whispers-garden",
+    name: "Whisper's Garden",
+    description: "Follow midnight whispers to raise a diamond before the moon fades.",
+    url: "./whispers-garden/index.html",
+    thumbnail: `
+      <svg viewBox="0 0 160 120" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Whisper's Garden preview">
+        <defs>
+          <radialGradient id="gardenNight" cx="50%" cy="30%" r="70%">
+            <stop offset="0%" stop-color="#0ea5e9" stop-opacity="0.4" />
+            <stop offset="60%" stop-color="#1e3a8a" stop-opacity="0.8" />
+            <stop offset="100%" stop-color="#020617" stop-opacity="0.95" />
+          </radialGradient>
+          <radialGradient id="gardenField" cx="50%" cy="70%" r="60%">
+            <stop offset="0%" stop-color="#facc15" stop-opacity="0.75" />
+            <stop offset="55%" stop-color="#4ade80" stop-opacity="0.25" />
+            <stop offset="100%" stop-color="#0f172a" stop-opacity="0.85" />
+          </radialGradient>
+          <linearGradient id="gardenLines" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0%" stop-color="#fde68a" />
+            <stop offset="100%" stop-color="#38bdf8" />
+          </linearGradient>
+        </defs>
+        <rect x="6" y="6" width="148" height="108" rx="18" fill="rgba(2,6,23,0.92)" stroke="rgba(148,163,184,0.35)" />
+        <rect x="16" y="16" width="128" height="88" rx="16" fill="url(#gardenNight)" stroke="rgba(148,163,184,0.25)" />
+        <g>
+          <ellipse cx="80" cy="84" rx="52" ry="28" fill="url(#gardenField)" stroke="rgba(250,204,21,0.35)" stroke-width="2" />
+          <path d="M40 84 Q80 54 120 84" fill="none" stroke="rgba(250,204,21,0.5)" stroke-width="3" stroke-linecap="round" />
+          <path d="M80 84 L80 60" stroke="rgba(56,189,248,0.6)" stroke-width="3" stroke-linecap="round" />
+          <circle cx="80" cy="60" r="6" fill="rgba(250,204,21,0.9)" stroke="rgba(248,250,252,0.55)" stroke-width="1.4" />
+        </g>
+        <g stroke="url(#gardenLines)" stroke-width="2.4" stroke-linecap="round">
+          <path d="M52 78 L68 68" />
+          <path d="M92 68 L108 78" />
+        </g>
+        <g fill="rgba(248,250,252,0.45)">
+          ${[15, 34, 122, 140].map((x, idx) => `<circle cx="${x}" cy="${idx % 2 === 0 ? 30 : 22}" r="1.6" />`).join("")}
+        </g>
+        <circle cx="48" cy="36" r="10" fill="rgba(252,255,255,0.85)" stroke="rgba(148,163,184,0.6)" stroke-width="2" />
+        <circle cx="48" cy="36" r="6" fill="rgba(252,211,77,0.7)" />
+        <g opacity="0.7">
+          <path d="M24 96 Q32 80 48 76" fill="none" stroke="rgba(148,163,184,0.4)" stroke-width="2" stroke-dasharray="4 6" />
+          <path d="M136 96 Q128 80 112 76" fill="none" stroke="rgba(148,163,184,0.4)" stroke-width="2" stroke-dasharray="4 6" />
+        </g>
+      </svg>
     `,
   },
   {
@@ -890,6 +1126,155 @@ const games = [
           <path d="M6 9 L26 9" stroke="rgba(250,204,21,0.65)" stroke-width="3" stroke-linecap="round" />
           <circle cx="16" cy="9" r="4" fill="rgba(250,204,21,0.85)" stroke="rgba(248,250,252,0.6)" stroke-width="1" />
         </g>
+      </svg>
+    `,
+  },
+  {
+    id: "restless-acre-rise",
+    name: "Restless Acre Rise",
+    description: "Climb the burial ridge ahead of the fog, dodge carrion lunges, and chase glowing effigies for doubled gains.",
+    url: "./restless-acre-rise/index.html",
+    thumbnail: `
+      <svg viewBox="0 0 160 120" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Restless Acre Rise preview">
+        <defs>
+          <linearGradient id="restlessSky" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="rgba(15,23,42,0.95)" />
+            <stop offset="70%" stop-color="rgba(2,6,23,0.92)" />
+            <stop offset="100%" stop-color="rgba(2,6,23,0.98)" />
+          </linearGradient>
+          <radialGradient id="effigyGlow" cx="0.5" cy="0.3" r="0.7">
+            <stop offset="0%" stop-color="rgba(250,204,21,0.9)" />
+            <stop offset="65%" stop-color="rgba(250,204,21,0.35)" />
+            <stop offset="100%" stop-color="rgba(0,0,0,0)" />
+          </radialGradient>
+          <linearGradient id="fogSweep" x1="0" y1="1" x2="0" y2="0">
+            <stop offset="0%" stop-color="rgba(148,163,184,0.45)" />
+            <stop offset="100%" stop-color="rgba(148,163,184,0)" />
+          </linearGradient>
+        </defs>
+        <rect x="8" y="10" width="144" height="100" rx="18" fill="url(#restlessSky)" stroke="rgba(148,163,184,0.35)" />
+        <g stroke="rgba(76,29,149,0.55)" stroke-width="2.4" stroke-linecap="round">
+          <path d="M34 94 C48 88 62 74 74 66 C86 58 98 46 114 40" fill="none" />
+        </g>
+        <g stroke="rgba(248,113,113,0.55)" stroke-width="2" stroke-dasharray="6 6" stroke-linecap="round">
+          <path d="M46 90 L52 74" />
+          <path d="M78 68 L86 54" />
+        </g>
+        <g>
+          <rect x="40" y="78" width="36" height="10" rx="4" fill="rgba(71,85,105,0.8)" />
+          <rect x="70" y="60" width="32" height="9" rx="4" fill="rgba(51,65,85,0.8)" />
+          <rect x="100" y="42" width="28" height="8" rx="4" fill="rgba(30,41,59,0.82)" />
+        </g>
+        <g>
+          <ellipse cx="116" cy="34" rx="18" ry="12" fill="url(#effigyGlow)" />
+          <circle cx="116" cy="34" r="8" fill="rgba(250,204,21,0.9)" stroke="rgba(253,224,71,0.8)" stroke-width="2" />
+          <text x="116" y="38" text-anchor="middle" font-size="10" fill="rgba(15,23,42,0.9)" font-family="'Press Start 2P', monospace">×2</text>
+        </g>
+        <g>
+          <ellipse cx="70" cy="92" rx="12" ry="7" fill="rgba(148,163,184,0.2)" />
+          <path d="M66 92 L74 92 L76 68 C78 64 82 62 88 62" fill="none" stroke="rgba(226,232,240,0.9)" stroke-width="3" stroke-linecap="round" />
+          <circle cx="80" cy="60" r="6" fill="rgba(244,114,182,0.85)" stroke="rgba(148,163,184,0.5)" stroke-width="1.5" />
+        </g>
+        <rect x="10" y="72" width="140" height="38" rx="18" fill="url(#fogSweep)" />
+        </g>
+      </svg>
+    `,
+  },
+  {
+    id: "personal-ad-trap",
+    name: "The Personal Ad Trap",
+    description: "Cross-link noir clues between lonely hearts and case files before the killer slips the net.",
+    url: "./personal-ad-trap/index.html",
+    thumbnail: `
+      <svg viewBox="0 0 160 120" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="The Personal Ad Trap preview">
+        <defs>
+          <linearGradient id="patBoard" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0%" stop-color="rgba(11,16,28,0.95)" />
+            <stop offset="100%" stop-color="rgba(6,10,22,0.88)" />
+          </linearGradient>
+          <linearGradient id="patPaper" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="rgba(248,250,252,0.96)" />
+            <stop offset="100%" stop-color="rgba(226,232,240,0.86)" />
+          </linearGradient>
+          <linearGradient id="patCase" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="rgba(30,41,59,0.94)" />
+            <stop offset="100%" stop-color="rgba(15,23,42,0.86)" />
+          </linearGradient>
+        </defs>
+        <rect x="6" y="6" width="148" height="108" rx="18" fill="rgba(6,8,20,0.94)" stroke="rgba(248,113,113,0.32)" />
+        <rect x="18" y="18" width="124" height="84" rx="16" fill="url(#patBoard)" stroke="rgba(148,163,184,0.35)" />
+        <rect x="26" y="30" width="42" height="60" rx="10" fill="url(#patCase)" stroke="rgba(248,113,113,0.45)" />
+        <rect x="32" y="36" width="30" height="8" rx="3" fill="rgba(248,250,252,0.92)" />
+        <rect x="32" y="48" width="30" height="5" rx="2.5" fill="rgba(148,163,184,0.45)" />
+        <rect x="32" y="57" width="30" height="5" rx="2.5" fill="rgba(148,163,184,0.35)" />
+        <rect x="32" y="66" width="30" height="5" rx="2.5" fill="rgba(148,163,184,0.35)" />
+        <rect x="32" y="75" width="30" height="5" rx="2.5" fill="rgba(148,163,184,0.3)" />
+        <rect x="78" y="26" width="56" height="36" rx="11" fill="url(#patPaper)" stroke="rgba(148,163,184,0.4)" />
+        <rect x="78" y="70" width="56" height="34" rx="11" fill="url(#patPaper)" stroke="rgba(148,163,184,0.4)" />
+        <rect x="84" y="34" width="44" height="4" rx="2" fill="rgba(71,85,105,0.35)" />
+        <rect x="84" y="42" width="40" height="3.5" rx="2" fill="rgba(99,102,241,0.35)" />
+        <rect x="84" y="79" width="44" height="4" rx="2" fill="rgba(71,85,105,0.35)" />
+        <rect x="84" y="87" width="38" height="3.5" rx="2" fill="rgba(248,113,113,0.35)" />
+        <path d="M58 48 C94 44 94 44 126 40" stroke="#f87171" stroke-width="3" stroke-linecap="round" />
+        <path d="M58 74 C90 78 108 90 126 86" stroke="#f87171" stroke-width="3" stroke-linecap="round" />
+        <circle cx="58" cy="48" r="4" fill="#f472b6" stroke="rgba(248,250,252,0.7)" stroke-width="1.2" />
+        <circle cx="126" cy="40" r="4" fill="#facc15" stroke="rgba(248,250,252,0.7)" stroke-width="1.2" />
+        <circle cx="58" cy="74" r="4" fill="#f472b6" stroke="rgba(248,250,252,0.7)" stroke-width="1.2" />
+        <circle cx="126" cy="86" r="4" fill="#38bdf8" stroke="rgba(248,250,252,0.7)" stroke-width="1.2" />
+        <circle cx="98" cy="26" r="5" fill="#ef4444" stroke="rgba(248,250,252,0.75)" stroke-width="1" />
+        </g>
+      </svg>
+    `,
+  },
+  {
+    id: "twenty-five-thousand-bulbs",
+    name: "Twenty-Five Thousand Bulbs",
+    description:
+      "Thread the Griswold blueprint from panel to roofline before the overloaded attic taps torch your holiday score.",
+    url: "./twenty-five-thousand-bulbs/index.html",
+    thumbnail: `
+      <svg viewBox="0 0 160 120" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Twenty-Five Thousand Bulbs preview">
+        <defs>
+          <linearGradient id="bulbBlueprint" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0%" stop-color="rgba(15,23,42,0.92)" />
+            <stop offset="100%" stop-color="rgba(12,20,40,0.85)" />
+          </linearGradient>
+          <linearGradient id="wireGlow" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0%" stop-color="#38bdf8" />
+            <stop offset="100%" stop-color="#facc15" />
+          </linearGradient>
+          <linearGradient id="overloadPulse" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="rgba(244,114,182,0.8)" />
+            <stop offset="100%" stop-color="rgba(244,114,182,0.35)" />
+          </linearGradient>
+        </defs>
+        <rect x="6" y="8" width="148" height="104" rx="20" fill="rgba(8,12,24,0.95)" stroke="rgba(56,189,248,0.35)" />
+        <rect x="18" y="20" width="124" height="80" rx="16" fill="url(#bulbBlueprint)" stroke="rgba(56,189,248,0.25)" />
+        <g stroke="rgba(56,189,248,0.16)" stroke-width="1">
+          ${Array.from({ length: 6 }, (_, i) => `<line x1="${30 + i * 18}" y1="24" x2="${30 + i * 18}" y2="100" />`).join("")}
+          ${Array.from({ length: 4 }, (_, i) => `<line x1="24" y1="${36 + i * 18}" x2="136" y2="${36 + i * 18}" />`).join("")}
+        </g>
+        <path d="M40 94 L40 78 L60 58 L60 44 L80 32 L104 44 L124 32" fill="none" stroke="rgba(148,163,184,0.4)" stroke-width="2"
+          stroke-dasharray="6 6" stroke-linecap="round" stroke-linejoin="round" />
+        <path d="M36 96 L68 68 L88 68 L108 52 L130 60" fill="none" stroke="url(#wireGlow)" stroke-width="4" stroke-linecap="round"
+          stroke-linejoin="round" />
+        <path d="M68 68 L68 48 L92 40 L92 28" fill="none" stroke="rgba(250,204,21,0.6)" stroke-width="3" stroke-linecap="round"
+          stroke-linejoin="round" />
+        <g>
+          <circle cx="36" cy="96" r="6" fill="rgba(59,130,246,0.85)" stroke="rgba(148,163,184,0.45)" stroke-width="1.5" />
+          <circle cx="68" cy="68" r="6" fill="rgba(250,204,21,0.85)" stroke="rgba(148,163,184,0.45)" stroke-width="1.5" />
+          <circle cx="92" cy="40" r="8" fill="url(#overloadPulse)" stroke="rgba(244,114,182,0.6)" stroke-width="2" />
+          <circle cx="130" cy="60" r="6" fill="rgba(59,214,164,0.85)" stroke="rgba(148,163,184,0.4)" stroke-width="1.5" />
+        </g>
+        <g>
+          <rect x="26" y="26" width="36" height="12" rx="6" fill="rgba(56,189,248,0.18)" stroke="rgba(56,189,248,0.35)" />
+          <rect x="26" y="26" width="18" height="12" rx="6" fill="rgba(56,189,248,0.75)" />
+          <rect x="98" y="82" width="42" height="12" rx="6" fill="rgba(250,204,21,0.18)" stroke="rgba(250,204,21,0.35)" />
+          <rect x="98" y="82" width="24" height="12" rx="6" fill="rgba(250,204,21,0.75)" />
+        </g>
+        <circle cx="92" cy="40" r="12" fill="rgba(244,114,182,0.15)" stroke="rgba(244,114,182,0.5)" stroke-width="2" />
+        <path d="M88 38 L96 42" stroke="rgba(248,113,113,0.8)" stroke-width="2" stroke-linecap="round" />
+        <path d="M96 38 L88 42" stroke="rgba(248,113,113,0.8)" stroke-width="2" stroke-linecap="round" />
       </svg>
     `,
   },
@@ -1039,6 +1424,54 @@ const games = [
         <circle cx="32" cy="92" r="6" fill="#22d3ee" stroke="rgba(148,163,184,0.4)" />
         <circle cx="118" cy="32" r="7" fill="#a855f7" stroke="rgba(148,163,184,0.4)" />
         <rect x="112" y="18" width="28" height="10" rx="5" fill="rgba(56,189,248,0.3)" stroke="rgba(120,255,255,0.4)" />
+      </svg>
+    `,
+  },
+  {
+    id: "voice-box-swap",
+    name: "Voice Box Swap",
+    description: "Decode the baby’s sitcom snark and trigger the perfect move before the timer melts.",
+    url: "./voice-box-swap/index.html",
+    thumbnail: `
+      <svg viewBox="0 0 160 120" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Voice Box Swap preview">
+        <defs>
+          <linearGradient id="voiceBg" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0%" stop-color="rgba(65,56,160,0.95)" />
+            <stop offset="100%" stop-color="rgba(236,72,153,0.85)" />
+          </linearGradient>
+          <radialGradient id="voiceGlow" cx="0.52" cy="0.28" r="0.7">
+            <stop offset="0%" stop-color="rgba(255,214,102,0.55)" />
+            <stop offset="100%" stop-color="rgba(255,214,102,0)" />
+          </radialGradient>
+          <linearGradient id="voiceBubble" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0%" stop-color="rgba(76,201,240,0.85)" />
+            <stop offset="100%" stop-color="rgba(255,133,243,0.85)" />
+          </linearGradient>
+          <linearGradient id="voiceFloor" x1="0" y1="0" x2="1" y2="0">
+            <stop offset="0%" stop-color="rgba(15,23,42,0.85)" />
+            <stop offset="100%" stop-color="rgba(30,41,59,0.85)" />
+          </linearGradient>
+        </defs>
+        <rect x="8" y="8" width="144" height="104" rx="18" fill="url(#voiceBg)" stroke="rgba(255,255,255,0.35)" />
+        <rect x="20" y="66" width="120" height="34" rx="14" fill="url(#voiceFloor)" stroke="rgba(148,163,184,0.4)" />
+        <circle cx="80" cy="52" r="46" fill="url(#voiceGlow)" opacity="0.75" />
+        <g>
+          <circle cx="78" cy="56" r="28" fill="rgba(255,240,248,0.95)" stroke="rgba(255,214,102,0.6)" stroke-width="2" />
+          <path d="M60 50 Q78 38 96 50" fill="none" stroke="rgba(236,72,153,0.55)" stroke-width="4" stroke-linecap="round" />
+          <path d="M64 66 Q78 76 92 66" fill="none" stroke="rgba(76,201,240,0.6)" stroke-width="4" stroke-linecap="round" />
+          <circle cx="68" cy="56" r="5" fill="rgba(30,41,59,0.85)" />
+          <circle cx="88" cy="56" r="5" fill="rgba(30,41,59,0.85)" />
+        </g>
+        <path d="M108 36 C130 24 150 44 140 60 C152 68 142 86 120 80 C104 76 96 60 104 46 Z" fill="url(#voiceBubble)" stroke="rgba(255,255,255,0.55)" stroke-width="2.4" stroke-linejoin="round" />
+        <circle cx="104" cy="68" r="6" fill="url(#voiceBubble)" stroke="rgba(255,255,255,0.5)" stroke-width="1.4" />
+        <path d="M34 40 C22 50 26 68 44 70" fill="none" stroke="rgba(76,201,240,0.6)" stroke-width="3.4" stroke-linecap="round" />
+        <g fill="rgba(255,255,255,0.8)">
+          <circle cx="40" cy="32" r="3" />
+          <circle cx="124" cy="28" r="2.6" />
+          <circle cx="110" cy="84" r="2.2" />
+        </g>
+        <rect x="30" y="80" width="36" height="10" rx="5" fill="rgba(6,214,160,0.6)" stroke="rgba(255,255,255,0.4)" />
+        <rect x="94" y="82" width="28" height="10" rx="5" fill="rgba(255,133,243,0.55)" stroke="rgba(255,255,255,0.4)" />
       </svg>
     `,
   },
