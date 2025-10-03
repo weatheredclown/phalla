@@ -238,6 +238,23 @@ export const scoreConfigs = {
       return `${value ?? 0} pts · ${comboLabel}${riskyLabel}`;
     },
   },
+  // Level 13
+  "under-the-sea-scramble": {
+    label: "Treasure Trove Score",
+    empty: "No treasures cataloged yet.",
+    format: ({ value, meta }) => {
+      const accuracy = Number.isFinite(meta?.accuracy) ? Math.round(meta.accuracy) : null;
+      const accuracyText = accuracy !== null ? `${accuracy}% accuracy` : "accuracy unknown";
+      const helpCalls = Number(meta?.helpCalls ?? 0);
+      const helpLabel =
+        helpCalls === 0
+          ? "no Scuttle calls"
+          : `${helpCalls} Scuttle ${helpCalls === 1 ? "call" : "calls"}`;
+      const timeBonus = Number(meta?.timeBonus ?? 0);
+      const bonusLabel = timeBonus > 0 ? `+${timeBonus} bonus` : "no bonus";
+      return `${value ?? 0} pts · ${accuracyText} · ${helpLabel} · ${bonusLabel}`;
+    },
+  }, // Level 13
   "whispers-garden": {
     label: "Field Completion",
     empty: "No whispers answered yet.",

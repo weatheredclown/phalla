@@ -1432,6 +1432,74 @@ const games = [
       </svg>
     `,
   },
+  { // Level 13
+    id: "under-the-sea-scramble",
+    name: "Under the Sea Scramble",
+    description: "Scan Ariel's hideouts for human gadgets before the sandglass empties and Flounder clouds the view.",
+    url: "./under-the-sea-scramble/index.html",
+    thumbnail: `
+      <svg viewBox="0 0 160 120" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Under the Sea Scramble preview">
+        <defs>
+          <linearGradient id="utsBackdrop" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="rgba(59,130,246,0.85)" />
+            <stop offset="100%" stop-color="rgba(15,23,42,0.95)" />
+          </linearGradient>
+          <linearGradient id="utsReef" x1="0" y1="1" x2="1" y2="0">
+            <stop offset="0%" stop-color="rgba(34,197,94,0.65)" />
+            <stop offset="100%" stop-color="rgba(56,189,248,0.5)" />
+          </linearGradient>
+          <linearGradient id="utsParchment" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0%" stop-color="rgba(254,240,138,0.95)" />
+            <stop offset="100%" stop-color="rgba(250,204,21,0.7)" />
+          </linearGradient>
+          <radialGradient id="utsGlow" cx="0.5" cy="0.3" r="0.6">
+            <stop offset="0%" stop-color="rgba(252,211,77,0.85)" />
+            <stop offset="100%" stop-color="rgba(252,211,77,0)" />
+          </radialGradient>
+        </defs>
+        <rect x="8" y="8" width="144" height="104" rx="18" fill="rgba(6,12,26,0.92)" stroke="rgba(148,163,184,0.35)" />
+        <rect x="18" y="18" width="124" height="88" rx="16" fill="url(#utsBackdrop)" stroke="rgba(56,189,248,0.35)" />
+        <g opacity="0.75">
+          <path d="M24 96 C30 74 44 56 58 44 C72 32 88 24 104 20" fill="none" stroke="rgba(16,185,129,0.5)" stroke-width="6" stroke-linecap="round" />
+          <path d="M40 96 C46 76 60 60 78 50" fill="none" stroke="rgba(45,212,191,0.45)" stroke-width="5" stroke-linecap="round" />
+          <path d="M120 96 C112 78 100 60 86 50" fill="none" stroke="rgba(56,189,248,0.4)" stroke-width="5" stroke-linecap="round" />
+        </g>
+        <g opacity="0.65">
+          ${Array.from({ length: 4 }, (_, i) => `<circle cx="${32 + i * 26}" cy="${34 + (i % 2) * 12}" r="${2 + (i % 3)}" fill="rgba(224,242,254,0.5)" />`).join("")}
+        </g>
+        <g transform="translate(24 48)">
+          <path d="M0 40 C10 22 22 10 40 0" fill="none" stroke="rgba(34,197,94,0.6)" stroke-width="4" stroke-linecap="round" />
+          <path d="M12 40 C22 26 34 14 52 6" fill="none" stroke="rgba(6,182,212,0.55)" stroke-width="4" stroke-linecap="round" />
+        </g>
+        <rect x="92" y="26" width="44" height="32" rx="9" fill="url(#utsParchment)" stroke="rgba(120,53,15,0.4)" />
+        <g font-family="'Press Start 2P', monospace" font-size="6" fill="#7f1d1d" transform="translate(98 34)">
+          <text x="0" y="6">LIST</text>
+          <text x="0" y="16">🍴</text>
+          <text x="14" y="16">🪈</text>
+          <text x="28" y="16">🎩</text>
+        </g>
+        <g>
+          <circle cx="58" cy="62" r="20" fill="rgba(14,165,233,0.3)" stroke="rgba(14,165,233,0.6)" stroke-width="2" />
+          <circle cx="58" cy="62" r="12" fill="url(#utsGlow)" />
+          <text x="58" y="66" text-anchor="middle" font-size="14" aria-hidden="true">⌛</text>
+        </g>
+        <g font-size="14" text-anchor="middle">
+          <text x="52" y="86">🍴</text>
+          <text x="78" y="90">🪈</text>
+          <text x="104" y="88">🌐</text>
+        </g>
+        <g stroke="url(#utsReef)" stroke-width="4" stroke-linecap="round" opacity="0.7">
+          <path d="M28 86 L52 76" />
+          <path d="M118 86 L94 74" />
+        </g>
+        <g transform="translate(32 92)">
+          <rect x="0" y="0" width="96" height="14" rx="7" fill="rgba(15,23,42,0.8)" stroke="rgba(56,189,248,0.45)" />
+          <rect x="6" y="4" width="56" height="6" rx="3" fill="rgba(56,189,248,0.65)" />
+          <rect x="64" y="4" width="24" height="6" rx="3" fill="rgba(234,179,8,0.7)" />
+        </g>
+      </svg>
+    `,
+  }, // Level 13
   {
     id: "prototype",
     name: "Prototype Cabinet",
