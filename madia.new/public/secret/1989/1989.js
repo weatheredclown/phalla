@@ -1236,6 +1236,57 @@ const games = [
       </svg>
     `,
   },
+  // Level 22
+  {
+    id: "deepcore-descent",
+    name: "Deepcore Descent",
+    description: "Pilot the Deepcore prototype through a crushing trench, juggling oxygen, hull fractures, and burst thrusters.",
+    url: "./deepcore-descent/index.html",
+    thumbnail: `
+      <svg viewBox="0 0 160 120" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Deepcore Descent preview">
+        <defs>
+          <linearGradient id="abyssBg" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="rgba(12,30,68,0.95)" />
+            <stop offset="100%" stop-color="rgba(2,6,23,0.95)" />
+          </linearGradient>
+          <radialGradient id="glowCone" cx="0.5" cy="0.25" r="0.6">
+            <stop offset="0%" stop-color="rgba(148,233,255,0.75)" />
+            <stop offset="60%" stop-color="rgba(59,130,246,0.25)" />
+            <stop offset="100%" stop-color="rgba(14,23,42,0)" />
+          </radialGradient>
+          <linearGradient id="trenchEdge" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0%" stop-color="rgba(2,132,199,0.45)" />
+            <stop offset="100%" stop-color="rgba(15,23,42,0.4)" />
+          </linearGradient>
+        </defs>
+        <rect x="10" y="10" width="140" height="100" rx="18" fill="url(#abyssBg)" stroke="rgba(148,163,184,0.35)" />
+        <g stroke="rgba(14,165,233,0.4)" stroke-width="2" stroke-linecap="round">
+          <path d="M36 16 C28 42 24 74 28 104" fill="none" />
+          <path d="M124 16 C132 46 136 78 132 104" fill="none" />
+        </g>
+        <path d="M54 18 C70 46 50 76 70 104" fill="none" stroke="url(#trenchEdge)" stroke-width="3" stroke-linecap="round" />
+        <path d="M108 18 C92 44 110 78 90 104" fill="none" stroke="url(#trenchEdge)" stroke-width="3" stroke-linecap="round" />
+        <g transform="translate(80 66)">
+          <ellipse cx="0" cy="0" rx="22" ry="12" fill="rgba(8,47,73,0.85)" stroke="rgba(148,233,255,0.6)" stroke-width="2" />
+          <ellipse cx="0" cy="-2" rx="10" ry="6" fill="rgba(191,219,254,0.8)" />
+          <g fill="rgba(56,189,248,0.7)">
+            <ellipse cx="-14" cy="6" rx="4" ry="8" />
+            <ellipse cx="14" cy="6" rx="4" ry="8" />
+          </g>
+        </g>
+        <path d="M70 34 L64 14" stroke="rgba(148,233,255,0.35)" stroke-width="2" stroke-linecap="round" />
+        <path d="M90 34 L96 14" stroke="rgba(148,233,255,0.35)" stroke-width="2" stroke-linecap="round" />
+        <path d="M60 92 L52 110" stroke="rgba(14,165,233,0.25)" stroke-width="2" stroke-linecap="round" />
+        <path d="M100 92 L108 110" stroke="rgba(14,165,233,0.25)" stroke-width="2" stroke-linecap="round" />
+        <rect x="48" y="46" width="64" height="58" fill="url(#glowCone)" opacity="0.8" />
+        <g>
+          <circle cx="42" cy="42" r="6" fill="rgba(56,189,248,0.6)" />
+          <circle cx="118" cy="56" r="5" fill="rgba(34,197,94,0.35)" />
+          <circle cx="50" cy="80" r="4" fill="rgba(59,130,246,0.4)" />
+        </g>
+      </svg>
+    `,
+  }, // Level 22
   {
     id: "restless-acre-rise",
     name: "Restless Acre Rise",
