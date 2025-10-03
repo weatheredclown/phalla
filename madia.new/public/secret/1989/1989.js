@@ -638,6 +638,51 @@ const games = [
       </svg>
     `,
   },
+  // Level 14
+  {
+    id: "the-final-barrier",
+    name: "The Final Barrier",
+    description: "Pilot the Enterprise through the Great Barrier, juggle power diversion, and shatter the sentinel beyond the veil.",
+    url: "./the-final-barrier/index.html",
+    thumbnail: `
+      <svg viewBox="0 0 160 120" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="The Final Barrier preview">
+        <defs>
+          <radialGradient id="barrierCore" cx="50%" cy="40%" r="70%">
+            <stop offset="0%" stop-color="#facc15" />
+            <stop offset="45%" stop-color="rgba(236,72,153,0.65)" />
+            <stop offset="80%" stop-color="rgba(37,99,235,0.4)" />
+            <stop offset="100%" stop-color="rgba(15,23,42,0.9)" />
+          </radialGradient>
+          <linearGradient id="warpRings" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0%" stop-color="#38bdf8" />
+            <stop offset="100%" stop-color="#c084fc" />
+          </linearGradient>
+        </defs>
+        <rect x="8" y="8" width="144" height="104" rx="18" fill="rgba(6,10,24,0.95)" stroke="rgba(148,163,184,0.35)" />
+        <rect x="18" y="18" width="124" height="84" rx="16" fill="url(#barrierCore)" stroke="rgba(56,189,248,0.35)" />
+        <g stroke="rgba(148,163,184,0.35)" stroke-width="1" opacity="0.6">
+          <path d="M30 60 C60 36 100 36 130 60" fill="none" />
+          <path d="M30 68 C60 44 100 44 130 68" fill="none" />
+          <path d="M30 76 C60 52 100 52 130 76" fill="none" />
+        </g>
+        <g stroke="url(#warpRings)" stroke-width="3" stroke-linecap="round" opacity="0.75">
+          <path d="M40 86 C66 70 94 70 120 86" fill="none" />
+          <path d="M46 92 C72 78 88 78 114 92" fill="none" />
+        </g>
+        <g fill="rgba(56,189,248,0.9)" opacity="0.85">
+          <circle cx="56" cy="44" r="6" />
+          <circle cx="104" cy="40" r="5" />
+          <circle cx="86" cy="54" r="4" />
+          <circle cx="72" cy="32" r="3" />
+        </g>
+        <g transform="translate(40 74)">
+          <path d="M32 18 L52 8 L72 18 L52 28 Z" fill="rgba(15,23,42,0.9)" stroke="rgba(148,163,184,0.45)" stroke-width="1.4" />
+          <path d="M40 18 L52 4 L64 18" fill="none" stroke="rgba(248,250,252,0.8)" stroke-width="2" stroke-linecap="round" />
+          <path d="M38 18 L52 24 L66 18" fill="none" stroke="rgba(236,72,153,0.7)" stroke-width="2" stroke-linecap="round" />
+        </g>
+      </svg>
+    `,
+  }, // Level 14
   {
     id: "wardline-breakout",
     name: "Wardline Breakout",

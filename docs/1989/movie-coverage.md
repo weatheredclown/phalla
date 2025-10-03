@@ -2,6 +2,8 @@
 
 This reference tracks how the 1989 arcade cabinets map to their source films and how far the ladder has progressed up the 1989 domestic box office chart.
 
+The Final Barrier now electrifies Level 14 with a neon on-rails gauntlet through Star Trek V’s Great Barrier, layering power-diversion gambles atop the arcade’s late-game ladder while earlier cabinets continue filling the remaining Top 50 slots.
+
 River of Slime Escape now shocks Level 27 with Ghostbusters II’s river chase while Three Fugitives continues anchoring Level 32, and the ladder keeps backfilling the remaining Top 50 slots.
 Three Fugitives now anchors Level 32 while Hoverboard Pursuit secures Level 26, covering another Top 10 release as the ladder continues to backfill the remaining hits.
 Rollercoaster of Life now anchors Level 25, pushing the ladder deeper into the top 25 while earlier levels keep filling in the remaining Top 50 slots.
@@ -43,6 +45,7 @@ Three Fugitives now anchors Level 32, covering the next-highest new release stil
 | 25 | Rollercoaster of Life | *Parenthood* | #9 |
 | 23 | Tailing the Trash | *Turner & Hooch* | #12 |
 | 18 | Restless Acre Rise | *Pet Sematary* | #17 |
+| 14 | The Final Barrier | *Star Trek V: The Final Frontier* | #21 |
 | 20 | Twenty-Five Thousand Bulbs | *National Lampoon's Christmas Vacation* | #15 |
 | 29 | The K-Mart Countdown | *Rain Man* | #5 |
 | 28 | Voice Box Swap | *Look Who's Talking* | #6 |
@@ -89,7 +92,6 @@ Remaining:
 | **17** | Harlem Nights | #18 | The Sugar Ray Hustle | A quick-draw or reaction game set in a 1930s speakeasy, perhaps a high-stakes, fast-paced dice game. |
 | **16** | Beaches | #19 | Wind Beneath My Wings | A musical rhythm or karaoke-style game hitting the notes of a powerful Bette Midler song. |
 | **15** | The Abyss | #20 | Deepcore Descent | A pressure/balance management game, keeping a deep-sea submersible stable and intact under crushing pressure. |
-| **14** | Star Trek V: The Final Frontier | #21 | The Final Barrier | A flying/shooting level piloting the Enterprise through a chaotic and disorienting energy field to reach a mythical planet. |
 | **13** | The Little Mermaid | #22 | Under the Sea Scramble | A hidden object or collection game in a colorful undersea environment, gathering "human gadgets." |
 | **12** | Steel Magnolias | #23 | Truvy's Salon Style | A rapid-fire styling/makeover game where you have to meet multiple clients' specific, complex hairstyle and makeup requests. |
 | **11** | Major League | #24 | Wild Thing Wind-Up | A timing/precision baseball pitching game focusing on a dramatically out-of-control, but fast, fastball. |
