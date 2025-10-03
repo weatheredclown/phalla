@@ -405,6 +405,45 @@ const games = [
     `,
   },
   {
+    id: "dialtone-honor-roll",
+    name: "Dialtone Honor Roll",
+    description: "Warp fixed-shape figures into the correct era bays via a plotted phone booth trail.",
+    url: "./dialtone-honor-roll/index.html",
+    thumbnail: `
+      <svg viewBox="0 0 160 120" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Dialtone Honor Roll preview">
+        <defs>
+          <linearGradient id="dialtoneSky" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0%" stop-color="#38bdf8" />
+            <stop offset="100%" stop-color="#7b5bff" />
+          </linearGradient>
+          <linearGradient id="dialtoneTrail" x1="0" y1="0" x2="1" y2="0">
+            <stop offset="0%" stop-color="#facc15" />
+            <stop offset="100%" stop-color="#22c55e" />
+          </linearGradient>
+        </defs>
+        <rect x="8" y="8" width="144" height="104" rx="18" fill="rgba(8,12,28,0.92)" stroke="rgba(148,163,184,0.35)" />
+        <rect x="22" y="20" width="116" height="80" rx="16" fill="rgba(10,16,36,0.9)" stroke="url(#dialtoneSky)" />
+        <g stroke="rgba(56,189,248,0.25)" stroke-width="1">
+          ${Array.from({ length: 3 }, (_, i) => `<line x1="${38 + i * 36}" y1="24" x2="${38 + i * 36}" y2="96" />`).join("")}
+          ${Array.from({ length: 3 }, (_, i) => `<line x1="32" y1="${48 + i * 16}" x2="132" y2="${48 + i * 16}" />`).join("")}
+        </g>
+        <g transform="translate(36 28)">
+          <rect x="0" y="0" width="28" height="56" rx="8" fill="rgba(234,179,8,0.75)" stroke="rgba(251,191,36,0.9)" />
+          <rect x="38" y="10" width="28" height="56" rx="8" fill="rgba(139,92,246,0.7)" stroke="rgba(167,139,250,0.9)" />
+          <rect x="76" y="4" width="28" height="56" rx="8" fill="rgba(59,130,246,0.75)" stroke="rgba(147,197,253,0.9)" />
+        </g>
+        <g transform="translate(30 20)">
+          <rect x="44" y="0" width="24" height="48" rx="6" fill="rgba(15,23,42,0.95)" stroke="rgba(226,232,240,0.35)" />
+          <rect x="48" y="6" width="16" height="24" rx="4" fill="rgba(8,145,178,0.7)" />
+          <rect x="48" y="34" width="16" height="8" rx="3" fill="rgba(226,232,240,0.6)" />
+        </g>
+        <path d="M40 30 Q64 16 88 26 T132 42" fill="none" stroke="url(#dialtoneTrail)" stroke-width="6" stroke-linecap="round" stroke-dasharray="6 8" />
+        <circle cx="40" cy="30" r="6" fill="#facc15" stroke="rgba(17,24,39,0.8)" stroke-width="2" />
+        <circle cx="132" cy="42" r="7" fill="#22c55e" stroke="rgba(17,24,39,0.8)" stroke-width="2" />
+      </svg>
+    `,
+  },
+  {
     id: "say-anything",
     name: "Say Anything...",
     description: "Sync emotional frequencies before the silence fractures the conversation.",
