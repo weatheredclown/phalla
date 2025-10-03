@@ -2,6 +2,8 @@ import { initHighScoreBanner } from "../arcade-scores.js";
 import { getScoreConfig } from "../score-config.js";
 import { mountParticleField } from "../particles.js";
 
+import { autoEnhanceFeedback } from "../feedback.js";
+
 const particleSystem = mountParticleField({
   effects: {
     palette: ["#38bdf8", "#facc15", "#a855f7", "#34d399"],
@@ -495,3 +497,5 @@ function logEvent(message) {
     eventList.removeChild(eventList.lastElementChild);
   }
 }
+
+autoEnhanceFeedback();
