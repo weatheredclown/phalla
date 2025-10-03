@@ -2,6 +2,8 @@ import { initHighScoreBanner } from "../arcade-scores.js";
 import { getScoreConfig } from "../score-config.js";
 import { mountParticleField } from "../particles.js";
 
+import { autoEnhanceFeedback } from "../feedback.js";
+
 const particleSystem = mountParticleField({
   effects: {
     palette: ["#f97316", "#facc15", "#38bdf8", "#fda4af"],
@@ -709,3 +711,5 @@ document.addEventListener("keydown", (event) => {
 });
 
 resetState();
+
+autoEnhanceFeedback();

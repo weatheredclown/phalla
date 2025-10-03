@@ -2,6 +2,8 @@ import { initHighScoreBanner } from "../arcade-scores.js";
 import { getScoreConfig } from "../score-config.js";
 import { mountParticleField } from "../particles.js";
 
+import { autoEnhanceFeedback } from "../feedback.js";
+
 const particleSystem = mountParticleField({
   effects: {
     palette: ["#38bdf8", "#facc15", "#fb7185", "#34d399"],
@@ -450,3 +452,5 @@ function activateChain() {
   updateStatus("Gates chained. New trouble frozen for a moment.", "success");
   logEvent("Chained the gates. Troublemaker spawns paused.");
 }
+
+autoEnhanceFeedback();

@@ -2,6 +2,8 @@ import { initHighScoreBanner } from "../arcade-scores.js";
 import { getScoreConfig } from "../score-config.js";
 import { mountParticleField } from "../particles.js";
 
+import { autoEnhanceFeedback } from "../feedback.js";
+
 const particleSystem = mountParticleField({
   effects: {
     palette: ["#38bdf8", "#f97316", "#facc15", "#fda4af"],
@@ -582,3 +584,5 @@ function shuffle(values) {
   }
   return copy;
 }
+
+autoEnhanceFeedback();
