@@ -2,6 +2,7 @@
 
 This reference tracks how the 1989 arcade cabinets map to their source films and how far the ladder has progressed up the 1989 domestic box office chart.
 
+Under the Sea Scramble now glitters at Level 13, turning Ariel's curiosity into a timed hidden-object sprint that punishes sloppy clicks while rewarding precise treasure hunts.
 The Final Barrier now electrifies Level 14 with a neon on-rails gauntlet through Star Trek V’s Great Barrier, layering power-diversion gambles atop the arcade’s late-game ladder while earlier cabinets continue filling the remaining Top 50 slots.
 Framed Breakout now secures Level 7 with *Tango & Cash*'s overcranked prison gauntlet, giving the ladder its first single-digit cabinet while the rest of the roster continues filling in the remaining Top 50 slots.
 Osaka Motorcycle Dash now floods Level 9 with a Black Rain tribute, filling another top-ten slot alongside Hoverboard Pursuit and River of Slime Escape. The focus shifts to the last few tentpoles still missing from the upper rungs while earlier levels continue closing the remaining Top 50 gaps.
@@ -63,6 +64,7 @@ Merger Madness now occupies Level 22, translating *Working Girl*'s corporate scr
 | 24 | The Diner Debate | *When Harry Met Sally...* | #11 |
 | 11 | Wild Thing Wind-Up | *Major League* | #24 |
 | 29 | Flapjack Flip-Out | *Uncle Buck* | #13 |
+| 13 | Under the Sea Scramble | *The Little Mermaid* | #22 |
 | 7 | Framed Breakout | *Tango & Cash* | #48 |
 
 Remaining:
@@ -104,6 +106,7 @@ Remaining:
 | **19** | Sea of Love | #16 | The Personal Ad Trap | A deductive game where you cross-reference different clues and profiles to find a killer who connects through newspaper personal ads. |
 | **17** | Harlem Nights | #18 | The Sugar Ray Hustle | A quick-draw or reaction game set in a 1930s speakeasy, perhaps a high-stakes, fast-paced dice game. |
 | **15** | The Abyss | #20 | Deepcore Descent | A pressure/balance management game, keeping a deep-sea submersible stable and intact under crushing pressure. |
+| **14** | Star Trek V: The Final Frontier | #21 | The Final Barrier | A flying/shooting level piloting the Enterprise through a chaotic and disorienting energy field to reach a mythical planet. |
 | **13** | The Little Mermaid | #22 | Under the Sea Scramble | A hidden object or collection game in a colorful undersea environment, gathering "human gadgets." |
 | **12** | Steel Magnolias | #23 | Truvy's Salon Style | A rapid-fire styling/makeover game where you have to meet multiple clients' specific, complex hairstyle and makeup requests. |
 | **11** | Major League | #24 | Wild Thing Wind-Up | A timing/precision baseball pitching game focusing on a dramatically out-of-control, but fast, fastball. |
