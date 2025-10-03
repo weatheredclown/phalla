@@ -1,6 +1,12 @@
 import { mountParticleField } from "../particles.js";
+import { initParticleSystem } from "../particle-effects.js";
 
 mountParticleField();
+
+const particleSystem = initParticleSystem({
+  palette: ["#38bdf8", "#facc15", "#a855f7", "#34d399"],
+  ambientDensity: 0.55,
+});
 
 const MAX_TIME = 80;
 const STARTING_TIME = 60;
@@ -135,10 +141,13 @@ function updateStatus(message, tone = "neutral") {
   statusBanner.classList.remove("is-success", "is-warning", "is-danger");
   if (tone === "success") {
     statusBanner.classList.add("is-success");
+    particleSystem.emitBurst(1.1);
   } else if (tone === "warning") {
     statusBanner.classList.add("is-warning");
+    particleSystem.emitSparkle(0.7);
   } else if (tone === "danger") {
     statusBanner.classList.add("is-danger");
+    particleSystem.emitSparkle(0.95);
   }
 }
 

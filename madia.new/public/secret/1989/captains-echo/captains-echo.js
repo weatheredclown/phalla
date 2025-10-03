@@ -1,6 +1,12 @@
 import { mountParticleField } from "../particles.js";
+import { initParticleSystem } from "../particle-effects.js";
 
 mountParticleField();
+
+const particleSystem = initParticleSystem({
+  palette: ["#38bdf8", "#f472b6", "#facc15", "#fb7185"],
+  ambientDensity: 0.5,
+});
 
 const students = [
   {
@@ -383,6 +389,7 @@ function evaluatePlan() {
     targetCallout.textContent = `Success! Score ${score}—the hall erupts in applause.`;
     targetCallout.classList.add("success");
     logEvent(`Score ${score}. The salute holds.`);
+    particleSystem.emitBurst(1.3);
   } else {
     const delta = TARGET_SCORE - score;
     targetCallout.textContent = `Score ${score}. Need ${delta} more to lock the salute.`;

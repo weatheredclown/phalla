@@ -1,6 +1,12 @@
 import { mountParticleField } from "../particles.js";
+import { initParticleSystem } from "../particle-effects.js";
 
 mountParticleField();
+
+const particleSystem = initParticleSystem({
+  palette: ["#38bdf8", "#f472b6", "#facc15", "#f97316"],
+  ambientDensity: 0.55,
+});
 
 const boardElement = document.getElementById("board");
 const statusBar = document.getElementById("status-bar");
@@ -449,10 +455,12 @@ function onCircuitClosed() {
   circuitClosed = true;
   setStatus("Circuit complete! The main-event slam erupts and stuns nearby rivals.");
   logEvent("The main-event slam fires—broadcast restored!");
+  particleSystem.emitBurst(1.4);
   rivals.forEach((rival) => {
     if (isAdjacent(rival.position, GOAL)) {
       rival.stunned = true;
       logEvent(`${rival.name} is stunned by the surge!`);
+      particleSystem.emitSparkle(0.9);
     }
   });
   cableNetwork.forEach((segment, tileKey) => {

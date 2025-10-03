@@ -1,6 +1,12 @@
 import { mountParticleField } from "../particles.js";
+import { initParticleSystem } from "../particle-effects.js";
 
 mountParticleField();
+
+const particleSystem = initParticleSystem({
+  palette: ["#38bdf8", "#facc15", "#f472b6", "#a855f7"],
+  ambientDensity: 0.55,
+});
 
 const GRID_SIZE = 6;
 const SHADOW_COUNT = 7;
@@ -442,6 +448,13 @@ function logEvent(message, variant = "info") {
     entry.classList.add(variant);
   }
   eventLog.prepend(entry);
+  if (variant === "success") {
+    particleSystem.emitBurst(1.3);
+  } else if (variant === "warning") {
+    particleSystem.emitSparkle(0.8);
+  } else if (variant === "danger") {
+    particleSystem.emitSparkle(1.0);
+  }
   while (eventLog.children.length > 12) {
     eventLog.removeChild(eventLog.lastElementChild);
   }

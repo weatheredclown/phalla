@@ -1,6 +1,12 @@
 import { mountParticleField } from "../particles.js";
+import { initParticleSystem } from "../particle-effects.js";
 
 mountParticleField();
+
+const particleSystem = initParticleSystem({
+  palette: ["#38bdf8", "#34d399", "#facc15", "#f97316"],
+  ambientDensity: 0.5,
+});
 
 const TURN_COUNT = 6;
 const SANITY_MAX = 3;
@@ -355,9 +361,11 @@ function pushEvent(message, type = "info") {
   item.textContent = message;
   if (type === "warning") {
     item.style.color = "#f97316";
-  }
-  if (type === "success") {
+  } else if (type === "success") {
     item.style.color = "#34d399";
+    particleSystem.emitBurst(1.2);
+  } else if (type === "info") {
+    particleSystem.emitSparkle(0.4);
   }
   eventList.appendChild(item);
 }

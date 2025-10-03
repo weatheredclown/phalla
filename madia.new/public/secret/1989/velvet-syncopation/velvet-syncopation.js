@@ -1,6 +1,12 @@
 import { mountParticleField } from "../particles.js";
+import { initParticleSystem } from "../particle-effects.js";
 
 mountParticleField();
+
+const particleSystem = initParticleSystem({
+  palette: ["#38bdf8", "#f472b6", "#facc15", "#a855f7"],
+  ambientDensity: 0.6,
+});
 
 const chart = [
   { left: "KeyA", right: "KeyL" },
@@ -511,8 +517,10 @@ function logEvent(message, type = "neutral") {
   item.textContent = message;
   if (type === "positive") {
     item.classList.add("is-positive");
+    particleSystem.emitBurst(1.2);
   } else if (type === "warning") {
     item.classList.add("is-warning");
+    particleSystem.emitSparkle(0.8);
   }
   eventList.prepend(item);
   while (eventList.children.length > 8) {

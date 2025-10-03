@@ -1,6 +1,12 @@
 import { mountParticleField } from "../particles.js";
+import { initParticleSystem } from "../particle-effects.js";
 
 mountParticleField();
+
+const particleSystem = initParticleSystem({
+  palette: ["#38bdf8", "#c084fc", "#facc15", "#f97316"],
+  ambientDensity: 0.55,
+});
 
 const boardElement = document.getElementById("gossip-grid");
 const statusBar = document.getElementById("status-bar");
@@ -380,6 +386,7 @@ function checkVictory() {
     paranoiaTimer = null;
     setStatus("Mystery solved. Deliver the evidence before the Klopeks notice.");
     logEvent("Curiosity meter filled—victory!");
+    particleSystem.emitBurst(1.6);
   }
 }
 
@@ -403,6 +410,7 @@ function resolveMatchesLoop(initialMatches) {
       totalCleared += clearedPositions.length;
       setStatus(`Rumor cascade x${chain}! ${clearedPositions.length} neighbors convinced.`);
       logEvent(`Cleared ${clearedPositions.length} tiles in chain ${chain}.`);
+      particleSystem.emitSparkle(0.8 + chain * 0.25);
       collapseBoard();
       renderBoard();
       setTimeout(() => {

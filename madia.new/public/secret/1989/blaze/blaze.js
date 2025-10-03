@@ -1,6 +1,12 @@
 import { mountParticleField } from "../particles.js";
+import { initParticleSystem } from "../particle-effects.js";
 
 mountParticleField();
+
+const particleSystem = initParticleSystem({
+  palette: ["#f97316", "#facc15", "#38bdf8", "#fda4af"],
+  ambientDensity: 0.55,
+});
 
 const boardElement = document.getElementById("board");
 const statusBar = document.getElementById("status-bar");
@@ -449,6 +455,7 @@ function advanceFlow() {
       signedBills += 1;
       politicalCapital += BILL_REWARD;
       logEvent(`Bill signed cleanly. Political Capital +${BILL_REWARD} (now ${politicalCapital}).`);
+      particleSystem.emitSparkle(1.1);
       updateCapitalMeter();
       if (gameOver) {
         return;
@@ -602,6 +609,7 @@ function triggerWin() {
   gameOver = true;
   setStatus("Two clean bills signed. The chamber erupts in relief.");
   logEvent("Victory! The paper trail held under pressure.");
+  particleSystem.emitBurst(1.5);
 }
 
 function setActiveMode(mode) {

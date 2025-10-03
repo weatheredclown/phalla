@@ -1,6 +1,12 @@
 import { mountParticleField } from "../particles.js";
+import { initParticleSystem } from "../particle-effects.js";
 
 mountParticleField();
+
+const particleSystem = initParticleSystem({
+  palette: ["#f97316", "#38bdf8", "#facc15", "#fb7185"],
+  ambientDensity: 0.6,
+});
 
 const GRID_SIZE = 5;
 const LEVEL_DURATION_MS = 90_000;
@@ -451,6 +457,13 @@ function logEvent(message, variant = "info") {
   entry.className = `log-entry ${variant}`;
   entry.textContent = message;
   logEntries.prepend(entry);
+  if (variant === "success") {
+    particleSystem.emitBurst(1.3);
+  } else if (variant === "warning") {
+    particleSystem.emitSparkle(0.8);
+  } else if (variant === "danger") {
+    particleSystem.emitSparkle(1.0);
+  }
   while (logEntries.children.length > 12) {
     logEntries.removeChild(logEntries.lastElementChild);
   }
