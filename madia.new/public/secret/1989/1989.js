@@ -2259,6 +2259,56 @@ const games = [
       </svg>
     `,
   }, // Level 16
+  { // Level 15
+    id: "lawnmower-labyrinth",
+    name: "Lawnmower Labyrinth",
+    description: "Dash between grass cover, dodge sprinkler blasts, and reach the patio flag before the mower closes in.",
+    url: "./lawnmower-labyrinth/index.html",
+    thumbnail: `
+      <svg viewBox="0 0 160 120" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Lawnmower Labyrinth preview">
+        <defs>
+          <linearGradient id="lmlawn" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="rgba(13,148,136,0.9)" />
+            <stop offset="100%" stop-color="rgba(15,118,110,0.85)" />
+          </linearGradient>
+          <linearGradient id="lmcover" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0%" stop-color="rgba(45,212,191,0.45)" />
+            <stop offset="100%" stop-color="rgba(8,47,73,0.75)" />
+          </linearGradient>
+          <linearGradient id="lmmower" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0%" stop-color="rgba(34,197,94,0.9)" />
+            <stop offset="100%" stop-color="rgba(249,115,22,0.9)" />
+          </linearGradient>
+        </defs>
+        <rect x="10" y="12" width="140" height="96" rx="20" fill="rgba(6,12,24,0.95)" stroke="rgba(148,163,184,0.35)" />
+        <rect x="20" y="22" width="120" height="76" rx="16" fill="url(#lmlawn)" stroke="rgba(14,165,233,0.25)" />
+        <g stroke="rgba(15,52,67,0.25)" stroke-width="2">
+          ${Array.from({ length: 5 }, (_, i) => `<line x1="${30 + i * 22}" y1="26" x2="${30 + i * 22}" y2="94" />`).join("")}
+          ${Array.from({ length: 3 }, (_, i) => `<line x1="26" y1="${40 + i * 18}" x2="138" y2="${40 + i * 18}" />`).join("")}
+        </g>
+        <g>
+          <rect x="28" y="34" width="26" height="20" rx="8" fill="url(#lmcover)" stroke="rgba(125,211,252,0.4)" />
+          <rect x="52" y="66" width="24" height="18" rx="7" fill="url(#lmcover)" stroke="rgba(125,211,252,0.35)" />
+          <rect x="96" y="50" width="22" height="16" rx="7" fill="rgba(59,130,246,0.25)" stroke="rgba(59,130,246,0.5)" />
+        </g>
+        <g>
+          <rect x="80" y="34" width="28" height="20" rx="6" fill="url(#lmmower)" stroke="rgba(248,250,252,0.5)" />
+          <rect x="86" y="28" width="16" height="8" rx="3" fill="rgba(15,23,42,0.85)" />
+          <circle cx="88" cy="56" r="4" fill="rgba(15,23,42,0.85)" />
+          <circle cx="100" cy="56" r="4" fill="rgba(15,23,42,0.85)" />
+        </g>
+        <g>
+          <circle cx="124" cy="40" r="9" fill="rgba(59,130,246,0.35)" stroke="rgba(191,219,254,0.6)" stroke-width="2" />
+          <path d="M124 31 L120 20" stroke="rgba(191,219,254,0.7)" stroke-width="2" stroke-linecap="round" />
+        </g>
+        <g>
+          <polygon points="130,82 138,78 140,88" fill="rgba(22,211,238,0.85)" stroke="rgba(14,165,233,0.7)" stroke-width="2" />
+          <path d="M130 88 L122 96" stroke="rgba(125,211,252,0.6)" stroke-width="3" stroke-linecap="round" />
+        </g>
+        <path d="M36 80 C48 84 60 88 74 90" fill="none" stroke="rgba(248,250,252,0.65)" stroke-width="3" stroke-dasharray="6 4" />
+      </svg>
+    `,
+  }, // Level 15
 ];
 
 const grid = document.getElementById("game-grid");

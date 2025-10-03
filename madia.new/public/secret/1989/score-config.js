@@ -122,6 +122,21 @@ export const scoreConfigs = {
       return `${value ?? 0} pts`;
     },
   },
+  // Level 15
+  "lawnmower-labyrinth": {
+    label: "Survival Rating",
+    empty: "No lawn escapes logged yet.",
+    format: ({ value, meta }) => {
+      const timeMs = Number.isFinite(meta?.survivalTimeMs) ? Number(meta.survivalTimeMs) : null;
+      const crumbs = Number(meta?.crumbs ?? 0);
+      const crumbLabel = crumbs === 1 ? "1 crumb" : `${crumbs} crumbs`;
+      if (timeMs !== null) {
+        const seconds = Math.max(0, timeMs) / 1000;
+        return `${value ?? 0} pts · ${seconds.toFixed(2)}s · ${crumbLabel}`;
+      }
+      return `${value ?? 0} pts · ${crumbLabel}`;
+    },
+  }, // Level 15
   "freddys-dream-maze": {
     label: "Sanity Retained",
     empty: "No dream escapes logged yet.",
