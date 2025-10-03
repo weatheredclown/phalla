@@ -148,6 +148,14 @@ export const scoreConfigs = {
       return `${value ?? 0} tempo`;
     },
   },
+  "twenty-five-thousand-bulbs": {
+    label: "Total Wattage",
+    empty: "No wattage recorded yet.",
+    format: ({ value, meta }) => {
+      const status = meta?.success ? "Full glow" : "Brownout";
+      return `${value ?? 0} watts · ${status}`;
+    },
+  },
   "velvet-syncopation": {
     label: "Harmony Peak",
     empty: "No harmony recorded yet.",
