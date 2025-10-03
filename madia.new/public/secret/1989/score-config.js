@@ -43,6 +43,16 @@ export const scoreConfigs = {
       return `${value ?? 0} pts · ${contexts} ${contextLabel}`;
     },
   },
+  "diner-debate": {
+    label: "Conviction Score",
+    empty: "No performances recorded yet.",
+    format: ({ value, meta }) => {
+      const accuracy = Number.isFinite(meta?.accuracy) ? Math.round(meta.accuracy) : null;
+      const combo = Number(meta?.combo ?? 0);
+      const accuracyText = accuracy !== null ? `${accuracy}% accuracy` : "0% accuracy";
+      return `${value ?? 0} pts · ${accuracyText} · combo ${combo}`;
+    },
+  },
   "wardline-breakout": {
     label: "Final Sanity",
     empty: "No breakout simulated yet.",
@@ -83,6 +93,11 @@ export const scoreConfigs = {
     empty: "No grievances cooled yet.",
     format: ({ value }) =>
       value === 1 ? "1 cooled" : `${value ?? 0} cooled`,
+  },
+  "flapjack-flip-out": {
+    label: "Stack Height",
+    empty: "No stacks flipped yet.",
+    format: ({ value }) => `${value ?? 0} cm`,
   },
   "kodiak-covenant": {
     label: "Traps Cleared",
@@ -144,6 +159,17 @@ export const scoreConfigs = {
       const comboLabel = combo === 1 ? "1 combo" : `${combo} combo streak`;
       const riskyLabel = risky > 0 ? ` · Risky +${risky}` : "";
       return `${value ?? 0} pts · ${comboLabel}${riskyLabel}`;
+    },
+  },
+  "whispers-garden": {
+    label: "Field Completion",
+    empty: "No whispers answered yet.",
+    format: ({ value, meta }) => {
+      const focus = Number(meta?.focusBursts ?? 0);
+      const bonus = Number(meta?.bonuses ?? 0);
+      const focusLabel = focus === 1 ? "focus" : "focuses";
+      const bonusLabel = bonus === 1 ? "bonus" : "bonuses";
+      return `${value ?? 0}% · ${focus} ${focusLabel} · ${bonus} ${bonusLabel}`;
     },
   },
 };
