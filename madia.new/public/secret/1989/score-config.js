@@ -39,6 +39,11 @@ export const scoreConfigs = {
     empty: "No breakout simulated yet.",
     format: ({ value }) => `Sanity ${value ?? 0} / 3`,
   },
+  "dojo-duality": {
+    label: "Focus Score",
+    empty: "No focus logged yet.",
+    format: ({ value }) => `Focus ${value ?? 0}`,
+  },
   "gates-of-eastside": {
     label: "Test Score",
     empty: "No study sessions yet.",

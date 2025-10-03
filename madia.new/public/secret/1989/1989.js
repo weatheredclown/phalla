@@ -50,6 +50,46 @@ const games = [
     `,
   },
   {
+    id: "dojo-duality",
+    name: "Dojo Duality",
+    description: "Balance Miyagi-Do focus against Cobra Kai pressure while keeping the fear meter at bay.",
+    url: "./dojo-duality/index.html",
+    thumbnail: `
+      <svg viewBox="0 0 160 120" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Dojo Duality preview">
+        <defs>
+          <linearGradient id="dojoSky" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="rgba(15,23,42,0.95)" />
+            <stop offset="100%" stop-color="rgba(8,12,28,0.92)" />
+          </linearGradient>
+          <linearGradient id="focusGlow" x1="0" y1="0" x2="1" y2="0">
+            <stop offset="0%" stop-color="#ef4444" />
+            <stop offset="50%" stop-color="#38bdf8" />
+            <stop offset="100%" stop-color="#fbbf24" />
+          </linearGradient>
+        </defs>
+        <rect x="10" y="12" width="140" height="96" rx="20" fill="url(#dojoSky)" stroke="rgba(148,163,184,0.35)" />
+        <g transform="translate(36 26)">
+          <circle cx="44" cy="34" r="32" fill="rgba(251,191,36,0.2)" stroke="rgba(251,191,36,0.6)" stroke-width="3" />
+          <circle cx="44" cy="34" r="22" fill="rgba(251,191,36,0.08)" stroke="rgba(249,115,22,0.45)" stroke-width="2" />
+          <path d="M24 36 C44 12 64 12 84 36" fill="none" stroke="rgba(249,115,22,0.6)" stroke-width="3" stroke-linecap="round" />
+          <path d="M28 44 C44 64 60 64 76 44" fill="none" stroke="rgba(55,65,81,0.45)" stroke-width="2" stroke-linecap="round" />
+          <text x="44" y="40" text-anchor="middle" font-size="16" fill="#fbbf24" font-family="'Press Start 2P', monospace">心</text>
+        </g>
+        <g transform="translate(32 82)">
+          <rect x="0" y="0" width="96" height="12" rx="6" fill="rgba(15,23,42,0.85)" stroke="rgba(148,163,184,0.35)" />
+          <rect x="8" y="2" width="80" height="8" rx="4" fill="rgba(15,23,42,0.7)" stroke="rgba(148,163,184,0.25)" />
+          <rect x="8" y="2" width="48" height="8" rx="4" fill="url(#focusGlow)" />
+          <circle cx="48" cy="6" r="6" fill="rgba(248,250,252,0.85)" stroke="rgba(148,163,184,0.3)" stroke-width="1.5" />
+        </g>
+        <g transform="translate(112 32)">
+          <rect x="0" y="0" width="22" height="48" rx="10" fill="rgba(15,23,42,0.7)" stroke="rgba(148,163,184,0.35)" />
+          <rect x="6" y="10" width="10" height="20" rx="4" fill="rgba(239,68,68,0.8)" />
+          <rect x="6" y="32" width="10" height="10" rx="4" fill="rgba(56,189,248,0.75)" />
+        </g>
+      </svg>
+    `,
+  },
+  {
     id: "heatwave-block-party",
     name: "Heatwave Block Party",
     description: "Route cooling fans to vent grievances before the block boils over.",
