@@ -703,6 +703,64 @@ const games = [
     `,
   },
   {
+    id: "tailing-the-trash",
+    name: "Tailing the Trash",
+    description: "Shadow Dockside Eight's suspect, scrub Hooch's chaos, and keep suspicion below the redline.",
+    url: "./tailing-the-trash/index.html",
+    thumbnail: `
+      <svg viewBox="0 0 160 120" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Tailing the Trash preview">
+        <defs>
+          <linearGradient id="dockBackdrop" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0%" stop-color="rgba(15,23,42,0.95)" />
+            <stop offset="100%" stop-color="rgba(6,12,26,0.95)" />
+          </linearGradient>
+          <linearGradient id="coneGlow" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0%" stop-color="rgba(250,204,21,0.65)" />
+            <stop offset="100%" stop-color="rgba(248,113,113,0.65)" />
+          </linearGradient>
+          <linearGradient id="trailGlow" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="rgba(56,189,248,0.6)" />
+            <stop offset="100%" stop-color="rgba(147,197,253,0.6)" />
+          </linearGradient>
+        </defs>
+        <rect x="8" y="10" width="144" height="100" rx="18" fill="url(#dockBackdrop)" stroke="rgba(148,163,184,0.4)" />
+        <rect x="18" y="20" width="124" height="80" rx="16" fill="rgba(10,18,36,0.9)" stroke="rgba(148,163,184,0.28)" />
+        <g stroke="rgba(94,234,212,0.25)" stroke-width="1">
+          ${Array.from({ length: 5 }, (_, i) => `<line x1="${32 + i * 18}" y1="26" x2="${32 + i * 18}" y2="94" />`).join("")}
+          ${Array.from({ length: 3 }, (_, i) => `<line x1="26" y1="${42 + i * 18}" x2="134" y2="${42 + i * 18}" />`).join("")}
+        </g>
+        <g opacity="0.9">
+          <path d="M118 36 L138 58 L98 70 Z" fill="url(#coneGlow)" />
+          <path d="M118 36 L136 54" stroke="rgba(250,204,21,0.6)" stroke-width="2" stroke-linecap="round" />
+        </g>
+        <g>
+          <rect x="56" y="58" width="12" height="12" rx="4" fill="rgba(147,197,253,0.85)" stroke="rgba(255,255,255,0.55)" />
+          <rect x="42" y="66" width="10" height="10" rx="4" fill="rgba(250,204,21,0.9)" stroke="rgba(255,255,255,0.45)" />
+          <circle cx="64" cy="64" r="3" fill="rgba(15,23,42,0.9)" />
+          <circle cx="46" cy="71" r="2.5" fill="rgba(15,23,42,0.8)" />
+        </g>
+        <g>
+          <rect x="94" y="42" width="12" height="12" rx="4" fill="rgba(56,189,248,0.92)" stroke="rgba(255,255,255,0.6)" />
+          <circle cx="100" cy="48" r="3" fill="rgba(15,23,42,0.9)" />
+        </g>
+        <g>
+          <path d="M48 72 L60 66 L72 74 L86 68" fill="none" stroke="url(#trailGlow)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" />
+          <circle cx="72" cy="74" r="3" fill="rgba(94,234,212,0.8)" stroke="rgba(255,255,255,0.5)" />
+        </g>
+        <g>
+          <rect x="34" y="40" width="10" height="10" rx="3" fill="rgba(249,115,22,0.78)" stroke="rgba(255,255,255,0.45)" />
+          <rect x="30" y="44" width="6" height="6" rx="2" fill="rgba(248,113,113,0.75)" />
+        </g>
+        <g>
+          <rect x="28" y="90" width="40" height="12" rx="6" fill="rgba(10,18,36,0.85)" stroke="rgba(148,163,184,0.35)" />
+          <rect x="32" y="92" width="12" height="8" rx="3" fill="rgba(94,234,212,0.6)" />
+          <rect x="48" y="92" width="8" height="8" rx="3" fill="rgba(250,204,21,0.7)" />
+          <rect x="60" y="92" width="6" height="8" rx="3" fill="rgba(248,113,113,0.7)" />
+        </g>
+      </svg>
+    `,
+  },
+  {
     id: "vendetta-convoy",
     name: "Vendetta Convoy",
     description: "Chain sabotage charges to shepherd the rogue tanker convoy past concealed explosives.",
