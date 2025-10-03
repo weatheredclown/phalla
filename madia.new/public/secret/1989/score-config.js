@@ -255,11 +255,11 @@ export const scoreConfigs = {
       return `${value ?? 0} m · ${burstLabel} · ${hullLabel}`;
     },
   }, // Level 22
-  "rollercoaster-of-life": {
+  "family-flux": { // Level 25
     label: "Family Harmony",
     empty: "No harmony runs logged yet.",
     format: ({ value }) => `Harmony ${value ?? 0}`,
-  }, // rollercoaster
+  }, // Level 25
   "truvys-salon-style": {
     label: "Tip Jar",
     empty: "No tips counted yet.",
