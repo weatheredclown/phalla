@@ -84,6 +84,11 @@ export const scoreConfigs = {
     format: ({ value }) =>
       value === 1 ? "1 cooled" : `${value ?? 0} cooled`,
   },
+  "flapjack-flip-out": {
+    label: "Stack Height",
+    empty: "No stacks flipped yet.",
+    format: ({ value }) => `${value ?? 0} cm`,
+  },
   "kodiak-covenant": {
     label: "Traps Cleared",
     empty: "No traps cleared yet.",
