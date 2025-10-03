@@ -1,3 +1,10 @@
+import { initParticleSystem } from "../particle-effects.js";
+
+const particleSystem = initParticleSystem({
+  palette: ["#38bdf8", "#f472b6", "#facc15", "#fb7185"],
+  ambientDensity: 0.6,
+});
+
 const STARTING_FLOW = 72;
 const MAX_FLOW = 100;
 const SYNC_WINDOW_MS = 520;
@@ -588,10 +595,13 @@ function logEvent(message, variant = "info") {
   item.className = "log-entry";
   if (variant === "success") {
     item.classList.add("success");
+    particleSystem.emitBurst(1.2);
   } else if (variant === "warning") {
     item.classList.add("warning");
+    particleSystem.emitSparkle(0.7);
   } else if (variant === "danger") {
     item.classList.add("danger");
+    particleSystem.emitSparkle(1.0);
   }
   item.textContent = message;
   eventLog.prepend(item);

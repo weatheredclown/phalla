@@ -1,3 +1,10 @@
+import { initParticleSystem } from "../particle-effects.js";
+
+const particleSystem = initParticleSystem({
+  palette: ["#f97316", "#facc15", "#38bdf8", "#fda4af"],
+  ambientDensity: 0.55,
+});
+
 const boardElement = document.getElementById("board");
 const statusBar = document.getElementById("status-bar");
 const capitalMeter = document.getElementById("capital-meter");
@@ -441,14 +448,15 @@ function advanceFlow() {
   } else {
     const nextStep = route[currentIndex + 1];
     billPosition = { ...nextStep };
-    if (billPosition.row === GOAL.row && billPosition.col === GOAL.col) {
-      signedBills += 1;
-      politicalCapital += BILL_REWARD;
-      logEvent(`Bill signed cleanly. Political Capital +${BILL_REWARD} (now ${politicalCapital}).`);
-      updateCapitalMeter();
-      if (gameOver) {
-        return;
-      }
+      if (billPosition.row === GOAL.row && billPosition.col === GOAL.col) {
+        signedBills += 1;
+        politicalCapital += BILL_REWARD;
+        logEvent(`Bill signed cleanly. Political Capital +${BILL_REWARD} (now ${politicalCapital}).`);
+        particleSystem.emitSparkle(1.1);
+        updateCapitalMeter();
+        if (gameOver) {
+          return;
+        }
       if (signedBills >= BILLS_REQUIRED) {
         renderBillToken();
         triggerWin();
@@ -598,6 +606,7 @@ function triggerWin() {
   gameOver = true;
   setStatus("Two clean bills signed. The chamber erupts in relief.");
   logEvent("Victory! The paper trail held under pressure.");
+  particleSystem.emitBurst(1.5);
 }
 
 function setActiveMode(mode) {

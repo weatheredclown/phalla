@@ -1,3 +1,10 @@
+import { initParticleSystem } from "../particle-effects.js";
+
+const particleSystem = initParticleSystem({
+  palette: ["#f97316", "#38bdf8", "#facc15", "#fb7185"],
+  ambientDensity: 0.6,
+});
+
 const boardSize = 6;
 const shop = { row: 2, col: 0, label: "Hub", name: "Amore Slices dispatch" };
 const houses = [
@@ -403,6 +410,7 @@ function finalizeRoute() {
   deliveredCount += 1;
   updateDeliveredCount();
   logEvent(`Delivered ${order.pizza} to ${housesById.get(order.houseId)?.name ?? "a client"}.`);
+  particleSystem.emitBurst(1.2);
   updateStatus("Delivery locked in. Queue up the next order.");
 
   activeOrders = activeOrders.filter((item) => item.id !== order.id);
@@ -448,6 +456,7 @@ function endShift(success, message) {
     logEvent(message);
   } else {
     logEvent("Shift cleared with every order delivered.");
+    particleSystem.emitBurst(1.6);
   }
 }
 

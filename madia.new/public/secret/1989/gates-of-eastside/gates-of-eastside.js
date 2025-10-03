@@ -1,3 +1,10 @@
+import { initParticleSystem } from "../particle-effects.js";
+
+const particleSystem = initParticleSystem({
+  palette: ["#38bdf8", "#facc15", "#fb7185", "#34d399"],
+  ambientDensity: 0.55,
+});
+
 const ROWS = 5;
 const COLS = 6;
 const CHAOS_LIMIT = 18;
@@ -401,10 +408,13 @@ function updateStatus(message, tone = "neutral") {
   statusBanner.classList.remove("is-success", "is-warning", "is-danger");
   if (tone === "success") {
     statusBanner.classList.add("is-success");
+    particleSystem.emitBurst(1.2);
   } else if (tone === "warning") {
     statusBanner.classList.add("is-warning");
+    particleSystem.emitSparkle(0.7);
   } else if (tone === "danger") {
     statusBanner.classList.add("is-danger");
+    particleSystem.emitSparkle(0.9);
   }
 }
 

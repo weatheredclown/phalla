@@ -1,3 +1,10 @@
+import { initParticleSystem } from "../particle-effects.js";
+
+const particleSystem = initParticleSystem({
+  palette: ["#38bdf8", "#facc15", "#fb7185", "#34d399"],
+  ambientDensity: 0.55,
+});
+
 const BOARD_WIDTH = 8;
 const BOARD_HEIGHT = 14;
 const LANE_COLUMNS = [2, 3, 4, 5];
@@ -694,6 +701,13 @@ function logEvent(message, tone = "info") {
   state.logs.unshift({ message, tone });
   if (state.logs.length > MAX_LOG_ENTRIES) {
     state.logs.length = MAX_LOG_ENTRIES;
+  }
+  if (tone === "success") {
+    particleSystem.emitBurst(1.4);
+  } else if (tone === "danger") {
+    particleSystem.emitSparkle(1.0);
+  } else if (tone === "warning") {
+    particleSystem.emitSparkle(0.8);
   }
   renderLog();
 }

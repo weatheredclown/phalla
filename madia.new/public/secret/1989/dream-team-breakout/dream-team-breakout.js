@@ -1,3 +1,10 @@
+import { initParticleSystem } from "../particle-effects.js";
+
+const particleSystem = initParticleSystem({
+  palette: ["#38bdf8", "#34d399", "#facc15", "#f97316"],
+  ambientDensity: 0.5,
+});
+
 const TURN_COUNT = 6;
 const SANITY_MAX = 3;
 const wildcardDeck = ["S", "E", "S", "E", "S", "E"];
@@ -354,6 +361,9 @@ function pushEvent(message, type = "info") {
   }
   if (type === "success") {
     item.style.color = "#34d399";
+    particleSystem.emitBurst(1.2);
+  } else if (type === "info") {
+    particleSystem.emitSparkle(0.4);
   }
   eventList.appendChild(item);
 }

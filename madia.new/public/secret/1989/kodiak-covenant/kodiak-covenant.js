@@ -1,3 +1,10 @@
+import { initParticleSystem } from "../particle-effects.js";
+
+const particleSystem = initParticleSystem({
+  palette: ["#38bdf8", "#facc15", "#fb7185", "#34d399"],
+  ambientDensity: 0.5,
+});
+
 const TURN_COUNT = 9;
 const PROTECTION_WINDOW = 2;
 const GRID_WIDTH = 6;
@@ -264,7 +271,7 @@ function renderState() {
 
 function renderEvents(events) {
   eventList.innerHTML = "";
-  events.forEach((event) => {
+  events.forEach((event, index) => {
     const item = document.createElement("li");
     item.className = "event-entry";
     item.textContent = event.text;
@@ -272,6 +279,15 @@ function renderEvents(events) {
       item.dataset.tone = event.tone;
     }
     eventList.appendChild(item);
+    if (index === events.length - 1) {
+      if (event.tone === "success") {
+        particleSystem.emitBurst(1.4);
+      } else if (event.tone === "danger") {
+        particleSystem.emitSparkle(0.9);
+      } else if (event.tone) {
+        particleSystem.emitSparkle(0.6);
+      }
+    }
   });
 }
 
