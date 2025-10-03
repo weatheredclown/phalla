@@ -155,11 +155,23 @@ export const scoreConfigs = {
     empty: "No climbs logged yet.",
     format: ({ value }) => `${value ?? 0} m`,
   },
+  // Level 22
+  "deepcore-descent": {
+    label: "Max Depth",
+    empty: "No dives logged yet.",
+    format: ({ value, meta }) => {
+      const bursts = Number(meta?.powerBursts ?? 0);
+      const hull = Number(meta?.hull);
+      const burstLabel = bursts === 1 ? "1 burst" : `${bursts} bursts`;
+      const hullLabel = Number.isFinite(hull) ? `${hull}% hull` : "hull unknown";
+      return `${value ?? 0} m · ${burstLabel} · ${hullLabel}`;
+    },
+  }, // Level 22
   "rollercoaster-of-life": {
     label: "Family Harmony",
     empty: "No harmony runs logged yet.",
     format: ({ value }) => `Harmony ${value ?? 0}`,
-  }
+  },
   "tailing-the-trash": {
     label: "Evidence Logged",
     empty: "No stakeouts logged yet.",
@@ -169,7 +181,7 @@ export const scoreConfigs = {
         return `${value ?? 0} logs · ${suspicion}% peak`;
       }
       return `${value ?? 0} logs`;
-    }
+    },
   },
   "restless-acre-rise": {
     label: "Altitude",
@@ -252,6 +264,17 @@ export const scoreConfigs = {
       return `${value ?? 0} Ks · ${innings} IP · ${runsLabel} · ${wildLabel}`;
     },
   },
+  // Level 16
+  "wind-beneath-my-wings": {
+    label: "Applause Score",
+    empty: "No applause recorded yet.",
+    format: ({ value, meta }) => {
+      const accuracy = Number.isFinite(meta?.accuracy) ? `${meta.accuracy}% accuracy` : "0% accuracy";
+      const crescendos = Number(meta?.crescendos ?? 0);
+      const crescLabel = crescendos === 1 ? "1 crescendo" : `${crescendos} crescendos`;
+      return `${value ?? 0} applause · ${accuracy} · ${crescLabel}`;
+    },
+  }, // Level 16
   "whispers-garden": {
     label: "Field Completion",
     empty: "No whispers answered yet.",
