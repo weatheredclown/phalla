@@ -74,7 +74,18 @@ function decorateStatusElement(element) {
   ensureStatusRole(element);
   const tone = detectToneFromElement(element);
   setToneData(element, tone);
-  const observer = new MutationObserver(() => {
+  const observer = new MutationObserver((mutations) => {
+    const hasRelevantChange = mutations.some((mutation) => {
+      if (mutation.type !== "attributes" || mutation.attributeName !== "class") {
+        return true;
+      }
+      const previous = (mutation.oldValue ?? "").replace(/\bfeedback-status-pulse\b/g, "").trim();
+      const current = mutation.target.className.replace(/\bfeedback-status-pulse\b/g, "").trim();
+      return previous !== current;
+    });
+    if (!hasRelevantChange) {
+      return;
+    }
     const updatedTone = detectToneFromElement(element);
     setToneData(element, updatedTone);
     pulse(element, "feedback-status-pulse");
@@ -85,6 +96,7 @@ function decorateStatusElement(element) {
     subtree: true,
     attributes: true,
     attributeFilter: ["class", "data-tone", "data-status-tone"],
+    attributeOldValue: true,
   });
 }
 

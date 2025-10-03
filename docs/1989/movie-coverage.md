@@ -30,6 +30,7 @@ Three Fugitives now anchors Level 32, covering the next-highest new release stil
 | 31 | Nose for Trouble | *K-9* | #30 |
 | 30 | Gilded Partition | *The War of the Roses* | #12 |
 | 24 | The Diner Debate | *When Harry Met Sally...* | #11 |
+| 29 | Flapjack Flip-Out | *Uncle Buck* | #13 |
 
 Remaining:
 ## Remaining Targets to Reach #1
@@ -62,7 +63,6 @@ Remaining:
 | **26** | Back to the Future Part II | #8 | Hoverboard Pursuit | A time-trial race level using a hoverboard to navigate future (2015) traffic and obstacles. |
 | **25** | Parenthood | #9 | Rollercoaster of Life | A fast-paced decision-making game, quickly choosing the 'right' or 'wrong' answer to various parental/family dilemmas. |
 | **23** | Turner & Hooch | #12 | Tailing the Trash | A stealth/clean-up mission where you follow a key item (or suspect) without leaving any messy dog-related evidence behind. |
-| **22** | Uncle Buck | #13 | Flapjack Flip-Out | A physics/timing game where you try to stack giant, burned pancakes without them collapsing. |
 | **21** | Field of Dreams | #14 | Whisper's Garden | A meditative game where you follow subtle auditory cues ("If you build it...") to find and plant crops on a field before time runs out. |
 | **20** | National Lampoon's Christmas Vacation | #15 | Twenty-Five Thousand Bulbs | An electrical circuit puzzle where you must connect all the wires in the neighborhood to light up the house. |
 | **19** | Sea of Love | #16 | The Personal Ad Trap | A deductive game where you cross-reference different clues and profiles to find a killer who connects through newspaper personal ads. |
