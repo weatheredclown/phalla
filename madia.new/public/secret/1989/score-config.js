@@ -150,6 +150,17 @@ export const scoreConfigs = {
       return `${value ?? 0} / ${total}`;
     },
   },
+  "whispers-garden": {
+    label: "Field Completion",
+    empty: "No whispers answered yet.",
+    format: ({ value, meta }) => {
+      const focus = Number(meta?.focusBursts ?? 0);
+      const bonus = Number(meta?.bonuses ?? 0);
+      const focusLabel = focus === 1 ? "focus" : "focuses";
+      const bonusLabel = bonus === 1 ? "bonus" : "bonuses";
+      return `${value ?? 0}% · ${focus} ${focusLabel} · ${bonus} ${bonusLabel}`;
+    },
+  },
 };
 
 export function getScoreConfig(gameId) {

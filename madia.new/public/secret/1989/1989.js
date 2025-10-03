@@ -852,6 +852,53 @@ const games = [
     `,
   },
   {
+    id: "whispers-garden",
+    name: "Whisper's Garden",
+    description: "Follow midnight whispers to raise a diamond before the moon fades.",
+    url: "./whispers-garden/index.html",
+    thumbnail: `
+      <svg viewBox="0 0 160 120" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Whisper's Garden preview">
+        <defs>
+          <radialGradient id="gardenNight" cx="50%" cy="30%" r="70%">
+            <stop offset="0%" stop-color="#0ea5e9" stop-opacity="0.4" />
+            <stop offset="60%" stop-color="#1e3a8a" stop-opacity="0.8" />
+            <stop offset="100%" stop-color="#020617" stop-opacity="0.95" />
+          </radialGradient>
+          <radialGradient id="gardenField" cx="50%" cy="70%" r="60%">
+            <stop offset="0%" stop-color="#facc15" stop-opacity="0.75" />
+            <stop offset="55%" stop-color="#4ade80" stop-opacity="0.25" />
+            <stop offset="100%" stop-color="#0f172a" stop-opacity="0.85" />
+          </radialGradient>
+          <linearGradient id="gardenLines" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0%" stop-color="#fde68a" />
+            <stop offset="100%" stop-color="#38bdf8" />
+          </linearGradient>
+        </defs>
+        <rect x="6" y="6" width="148" height="108" rx="18" fill="rgba(2,6,23,0.92)" stroke="rgba(148,163,184,0.35)" />
+        <rect x="16" y="16" width="128" height="88" rx="16" fill="url(#gardenNight)" stroke="rgba(148,163,184,0.25)" />
+        <g>
+          <ellipse cx="80" cy="84" rx="52" ry="28" fill="url(#gardenField)" stroke="rgba(250,204,21,0.35)" stroke-width="2" />
+          <path d="M40 84 Q80 54 120 84" fill="none" stroke="rgba(250,204,21,0.5)" stroke-width="3" stroke-linecap="round" />
+          <path d="M80 84 L80 60" stroke="rgba(56,189,248,0.6)" stroke-width="3" stroke-linecap="round" />
+          <circle cx="80" cy="60" r="6" fill="rgba(250,204,21,0.9)" stroke="rgba(248,250,252,0.55)" stroke-width="1.4" />
+        </g>
+        <g stroke="url(#gardenLines)" stroke-width="2.4" stroke-linecap="round">
+          <path d="M52 78 L68 68" />
+          <path d="M92 68 L108 78" />
+        </g>
+        <g fill="rgba(248,250,252,0.45)">
+          ${[15, 34, 122, 140].map((x, idx) => `<circle cx="${x}" cy="${idx % 2 === 0 ? 30 : 22}" r="1.6" />`).join("")}
+        </g>
+        <circle cx="48" cy="36" r="10" fill="rgba(252,255,255,0.85)" stroke="rgba(148,163,184,0.6)" stroke-width="2" />
+        <circle cx="48" cy="36" r="6" fill="rgba(252,211,77,0.7)" />
+        <g opacity="0.7">
+          <path d="M24 96 Q32 80 48 76" fill="none" stroke="rgba(148,163,184,0.4)" stroke-width="2" stroke-dasharray="4 6" />
+          <path d="M136 96 Q128 80 112 76" fill="none" stroke="rgba(148,163,184,0.4)" stroke-width="2" stroke-dasharray="4 6" />
+        </g>
+      </svg>
+    `,
+  },
+  {
     id: "kodiak-covenant",
     name: "Kodiak Covenant",
     description: "Coordinate guardian and cub trails while shielding them from the roaming hunter.",
