@@ -840,6 +840,51 @@ const games = [
     `,
   },
   {
+    id: "personal-ad-trap",
+    name: "The Personal Ad Trap",
+    description: "Cross-link noir clues between lonely hearts and case files before the killer slips the net.",
+    url: "./personal-ad-trap/index.html",
+    thumbnail: `
+      <svg viewBox="0 0 160 120" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="The Personal Ad Trap preview">
+        <defs>
+          <linearGradient id="patBoard" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0%" stop-color="rgba(11,16,28,0.95)" />
+            <stop offset="100%" stop-color="rgba(6,10,22,0.88)" />
+          </linearGradient>
+          <linearGradient id="patPaper" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="rgba(248,250,252,0.96)" />
+            <stop offset="100%" stop-color="rgba(226,232,240,0.86)" />
+          </linearGradient>
+          <linearGradient id="patCase" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="rgba(30,41,59,0.94)" />
+            <stop offset="100%" stop-color="rgba(15,23,42,0.86)" />
+          </linearGradient>
+        </defs>
+        <rect x="6" y="6" width="148" height="108" rx="18" fill="rgba(6,8,20,0.94)" stroke="rgba(248,113,113,0.32)" />
+        <rect x="18" y="18" width="124" height="84" rx="16" fill="url(#patBoard)" stroke="rgba(148,163,184,0.35)" />
+        <rect x="26" y="30" width="42" height="60" rx="10" fill="url(#patCase)" stroke="rgba(248,113,113,0.45)" />
+        <rect x="32" y="36" width="30" height="8" rx="3" fill="rgba(248,250,252,0.92)" />
+        <rect x="32" y="48" width="30" height="5" rx="2.5" fill="rgba(148,163,184,0.45)" />
+        <rect x="32" y="57" width="30" height="5" rx="2.5" fill="rgba(148,163,184,0.35)" />
+        <rect x="32" y="66" width="30" height="5" rx="2.5" fill="rgba(148,163,184,0.35)" />
+        <rect x="32" y="75" width="30" height="5" rx="2.5" fill="rgba(148,163,184,0.3)" />
+        <rect x="78" y="26" width="56" height="36" rx="11" fill="url(#patPaper)" stroke="rgba(148,163,184,0.4)" />
+        <rect x="78" y="70" width="56" height="34" rx="11" fill="url(#patPaper)" stroke="rgba(148,163,184,0.4)" />
+        <rect x="84" y="34" width="44" height="4" rx="2" fill="rgba(71,85,105,0.35)" />
+        <rect x="84" y="42" width="40" height="3.5" rx="2" fill="rgba(99,102,241,0.35)" />
+        <rect x="84" y="79" width="44" height="4" rx="2" fill="rgba(71,85,105,0.35)" />
+        <rect x="84" y="87" width="38" height="3.5" rx="2" fill="rgba(248,113,113,0.35)" />
+        <path d="M58 48 C94 44 94 44 126 40" stroke="#f87171" stroke-width="3" stroke-linecap="round" />
+        <path d="M58 74 C90 78 108 90 126 86" stroke="#f87171" stroke-width="3" stroke-linecap="round" />
+        <circle cx="58" cy="48" r="4" fill="#f472b6" stroke="rgba(248,250,252,0.7)" stroke-width="1.2" />
+        <circle cx="126" cy="40" r="4" fill="#facc15" stroke="rgba(248,250,252,0.7)" stroke-width="1.2" />
+        <circle cx="58" cy="74" r="4" fill="#f472b6" stroke="rgba(248,250,252,0.7)" stroke-width="1.2" />
+        <circle cx="126" cy="86" r="4" fill="#38bdf8" stroke="rgba(248,250,252,0.7)" stroke-width="1.2" />
+        <circle cx="98" cy="26" r="5" fill="#ef4444" stroke="rgba(248,250,252,0.75)" stroke-width="1" />
+      </svg>
+    `,
+  },
+  {
     id: "captains-echo",
     name: "Captain's Echo",
     description: "Stage the four-beat desk salute before the dean snuffs the Carpe Diem spark.",

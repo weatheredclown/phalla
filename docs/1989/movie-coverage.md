@@ -2,7 +2,7 @@
 
 This reference tracks how the 1989 arcade cabinets map to their source films and how far the ladder has progressed up the 1989 domestic box office chart.
 
-Three Fugitives now anchors Level 32, covering the next-highest new release still on the chart while the rest of the ladder continues to backfill the remaining Top 50 slots.
+Three Fugitives now anchors Level 32, covering the next-highest new release still on the chart while the rest of the ladder continues to backfill the remaining Top 50 slots. The Personal Ad Trap joins the cabinet lineup at Level 19, translating *Sea of Love*'s classifieds hunt into a noir deduction puzzle.
 
 ## Covered Films
 
@@ -65,7 +65,6 @@ Remaining:
 | **22** | Uncle Buck | #13 | Flapjack Flip-Out | A physics/timing game where you try to stack giant, burned pancakes without them collapsing. |
 | **21** | Field of Dreams | #14 | Whisper's Garden | A meditative game where you follow subtle auditory cues ("If you build it...") to find and plant crops on a field before time runs out. |
 | **20** | National Lampoon's Christmas Vacation | #15 | Twenty-Five Thousand Bulbs | An electrical circuit puzzle where you must connect all the wires in the neighborhood to light up the house. |
-| **19** | Sea of Love | #16 | The Personal Ad Trap | A deductive game where you cross-reference different clues and profiles to find a killer who connects through newspaper personal ads. |
 | **18** | Pet Sematary | #17 | The Creepy Climb | A platforming/climbing game where you ascend a spooky burial ground path while avoiding reanimated obstacles. |
 | **17** | Harlem Nights | #18 | The Sugar Ray Hustle | A quick-draw or reaction game set in a 1930s speakeasy, perhaps a high-stakes, fast-paced dice game. |
 | **16** | Beaches | #19 | Wind Beneath My Wings | A musical rhythm or karaoke-style game hitting the notes of a powerful Bette Midler song. |
