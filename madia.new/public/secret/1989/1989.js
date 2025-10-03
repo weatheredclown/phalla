@@ -205,6 +205,60 @@ const games = [
     `,
   },
   {
+    id: "rollercoaster-of-life",
+    name: "Rollercoaster of Life",
+    description: "Race through parenting crises, weigh safe answers against wild gambles, and keep Family Harmony glowing.",
+    url: "./rollercoaster-of-life/index.html",
+    thumbnail: `
+      <svg viewBox="0 0 160 120" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Rollercoaster of Life preview">
+        <defs>
+          <linearGradient id="rolBg" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0%" stop-color="#fbbf24" />
+            <stop offset="100%" stop-color="#f472b6" />
+          </linearGradient>
+          <linearGradient id="rolPanel" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0%" stop-color="rgba(15,23,42,0.92)" />
+            <stop offset="100%" stop-color="rgba(30,64,175,0.82)" />
+          </linearGradient>
+          <linearGradient id="rolTimer" x1="0" y1="0" x2="1" y2="0">
+            <stop offset="0%" stop-color="#22c55e" />
+            <stop offset="100%" stop-color="#f97316" />
+          </linearGradient>
+        </defs>
+        <rect x="6" y="6" width="148" height="108" rx="20" fill="rgba(15,23,42,0.92)" stroke="rgba(148,163,184,0.35)" />
+        <rect x="14" y="14" width="132" height="92" rx="16" fill="url(#rolBg)" opacity="0.25" />
+        <g transform="translate(24 24)">
+          <rect x="0" y="0" width="112" height="24" rx="12" fill="rgba(15,23,42,0.85)" stroke="rgba(148,163,184,0.35)" />
+          <rect x="6" y="6" width="62" height="12" rx="6" fill="rgba(248,250,252,0.92)" />
+          <rect x="72" y="6" width="34" height="12" rx="6" fill="url(#rolTimer)" />
+          <text x="24" y="15" font-family="'Press Start 2P', monospace" font-size="6" fill="#0ea5e9">Harmony</text>
+          <text x="97" y="15" font-family="'Press Start 2P', monospace" font-size="6" fill="#f8fafc" text-anchor="end">540</text>
+        </g>
+        <g transform="translate(24 52)">
+          <rect x="0" y="0" width="48" height="48" rx="12" fill="url(#rolPanel)" stroke="rgba(148,163,184,0.35)" />
+          <path d="M8 38 C18 26 30 18 40 10" fill="none" stroke="#facc15" stroke-width="4" stroke-linecap="round" />
+          <circle cx="20" cy="26" r="5" fill="#38bdf8" />
+          <circle cx="32" cy="18" r="4" fill="#f97316" />
+          <path d="M12 12 L22 4" stroke="rgba(248,250,252,0.6)" stroke-width="3" stroke-linecap="round" />
+        </g>
+        <g transform="translate(80 52)">
+          <rect x="0" y="0" width="56" height="24" rx="10" fill="rgba(15,23,42,0.85)" stroke="rgba(148,163,184,0.35)" />
+          <rect x="4" y="4" width="24" height="16" rx="8" fill="rgba(34,197,94,0.85)" />
+          <rect x="28" y="4" width="24" height="16" rx="8" fill="rgba(248,113,113,0.85)" />
+          <text x="16" y="15" font-size="7" font-family="'Press Start 2P', monospace" fill="#0f172a" text-anchor="middle">SAFE</text>
+          <text x="40" y="15" font-size="7" font-family="'Press Start 2P', monospace" fill="#0f172a" text-anchor="middle">WILD</text>
+        </g>
+        <g transform="translate(80 82)">
+          <rect x="0" y="0" width="56" height="24" rx="10" fill="rgba(15,23,42,0.85)" stroke="rgba(148,163,184,0.35)" />
+          <path d="M12 16 C18 12 26 12 32 8" stroke="#f472b6" stroke-width="3" stroke-linecap="round" />
+          <path d="M24 8 L36 4" stroke="#38bdf8" stroke-width="3" stroke-linecap="round" />
+          <circle cx="12" cy="16" r="4" fill="#22d3ee" />
+          <circle cx="32" cy="8" r="4" fill="#facc15" />
+        </g>
+      </svg>
+    `,
+  },
+  {
     id: "flapjack-flip-out",
     name: "Flapjack Flip-Out",
     description: "Juggle Uncle Buck's oversized flapjacks and gamble on nudges to keep the stack sky-high.",

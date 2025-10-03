@@ -133,6 +133,11 @@ export const scoreConfigs = {
     format: ({ value }) =>
       value === 1 ? "1 intercept" : `${value ?? 0} intercepts`,
   },
+  "rollercoaster-of-life": {
+    label: "Family Harmony",
+    empty: "No harmony runs logged yet.",
+    format: ({ value }) => `Harmony ${value ?? 0}`,
+  }
   "tailing-the-trash": {
     label: "Evidence Logged",
     empty: "No stakeouts logged yet.",

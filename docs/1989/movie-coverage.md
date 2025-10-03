@@ -2,6 +2,7 @@
 
 This reference tracks how the 1989 arcade cabinets map to their source films and how far the ladder has progressed up the 1989 domestic box office chart.
 
+Rollercoaster of Life now anchors Level 25, pushing the ladder deeper into the top 25 while earlier levels keep filling in the remaining Top 50 slots.
 Three Fugitives now anchors Level 32, covering the next-highest new release still on the chart while the rest of the ladder continues to backfill the remaining Top 50 slots. Tailing the Trash joins the catalog at Level 23 to secure the Turner & Hooch slot and escalate the stakeout mechanics.
 Restless Acre Rise now haunts Level 18, drawing the ladder deeper into the domestic Top 20 while earlier cabinets continue to backfill the remaining slots.
 Three Fugitives now anchors Level 32, covering the next-highest new release still on the chart while the rest of the ladder continues to backfill the remaining Top 50 slots. The Personal Ad Trap joins the cabinet lineup at Level 19, translating *Sea of Love*'s classifieds hunt into a noir deduction puzzle.
@@ -35,6 +36,7 @@ Three Fugitives now anchors Level 32, covering the next-highest new release stil
 | 32 | Three Fugitives | *Three Fugitives* | #31 |
 | 31 | Nose for Trouble | *K-9* | #30 |
 | 30 | Gilded Partition | *The War of the Roses* | #12 |
+| 25 | Rollercoaster of Life | *Parenthood* | #9 |
 | 23 | Tailing the Trash | *Turner & Hooch* | #12 |
 | 18 | Restless Acre Rise | *Pet Sematary* | #17 |
 | 20 | Twenty-Five Thousand Bulbs | *National Lampoon's Christmas Vacation* | #15 |
@@ -72,7 +74,6 @@ Remaining:
 | **29** | Rain Man | #5 | The K-Mart Countdown | A memory/timing game where you have to correctly count a pile of matchsticks dropped on the floor as quickly as possible. |
 | **27** | Ghostbusters II | #7 | River of Slime Escape | A frantic action level where you navigate a maze while avoiding a rising, negative pink slime that reacts to bad vibes. |
 | **26** | Back to the Future Part II | #8 | Hoverboard Pursuit | A time-trial race level using a hoverboard to navigate future (2015) traffic and obstacles. |
-| **25** | Parenthood | #9 | Rollercoaster of Life | A fast-paced decision-making game, quickly choosing the 'right' or 'wrong' answer to various parental/family dilemmas. |
 | **24** | When Harry Met Sally... | #11 | The Diner Debate | A reaction game where you have to perfectly time a very convincing vocal display in a crowded diner (like a rhythm or memory sequence). |
 | **23** | Turner & Hooch | #12 | Tailing the Trash | A stealth/clean-up mission where you follow a key item (or suspect) without leaving any messy dog-related evidence behind. |
 | **22** | Uncle Buck | #13 | Flapjack Flip-Out | A physics/timing game where you try to stack giant, burned pancakes without them collapsing. |
