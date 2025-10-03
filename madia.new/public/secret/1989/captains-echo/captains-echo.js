@@ -1,3 +1,14 @@
+
+import {
+  animateAction,
+  animateCounter,
+  animateListEntry,
+  animateWarning,
+  enableActionAnimations
+} from "../action-animations.js";
+
+enableActionAnimations();
+
 const students = [
   {
     id: "neil",
@@ -149,6 +160,7 @@ function setActiveSlot(index) {
     if (slot === index) {
       button.classList.add("is-active");
       button.focus({ preventScroll: true });
+      animateAction(button, "pulse");
     } else {
       button.classList.remove("is-active");
     }
@@ -183,12 +195,14 @@ function updateInterface() {
     const student = studentMap.get(studentId);
     button.textContent = `${student.name}`;
     button.classList.add("is-filled");
+    animateAction(button, "pulse");
   });
 
   rosterList.querySelectorAll(".roster-card").forEach((card) => {
     const { studentId } = card.dataset;
     if (studentId && usedStudents.has(studentId)) {
       card.classList.add("is-used");
+      animateAction(card, "flash");
     } else {
       card.classList.remove("is-used");
     }
@@ -205,6 +219,8 @@ function setMeter(score) {
   meterFill.style.width = `${percent}%`;
   meter.setAttribute("aria-valuenow", String(bounded));
   meterValue.textContent = `${Math.round(bounded)} / ${METER_MAX}`;
+  animateAction(meterFill, "pulse");
+  animateCounter(meterValue);
 }
 
 function renderIssues(issues) {
@@ -214,6 +230,7 @@ function renderIssues(issues) {
     item.className = "report-item negative";
     item.textContent = issue;
     reportList.append(item);
+    animateListEntry(item);
   });
 }
 
@@ -237,6 +254,7 @@ function renderContributions(contributions) {
 
     item.append(label, value);
     reportList.append(item);
+    animateListEntry(item);
   });
 }
 
@@ -248,6 +266,7 @@ function logEvent(message) {
   while (eventLog.children.length > 8) {
     eventLog.removeChild(eventLog.firstElementChild);
   }
+  animateListEntry(item);
 }
 
 function evaluatePlan() {
@@ -296,6 +315,7 @@ function evaluatePlan() {
     setMeter(0);
     renderIssues(issues);
     logEvent("Plan rejected—check the rumor board for issues.");
+    animateWarning(targetCallout);
     return;
   }
 
@@ -379,11 +399,13 @@ function evaluatePlan() {
     targetCallout.textContent = `Success! Score ${score}—the hall erupts in applause.`;
     targetCallout.classList.add("success");
     logEvent(`Score ${score}. The salute holds.`);
+    animateAction(targetCallout, "flash");
   } else {
     const delta = TARGET_SCORE - score;
     targetCallout.textContent = `Score ${score}. Need ${delta} more to lock the salute.`;
     targetCallout.classList.add("warning");
     logEvent(`Score ${score}. Short by ${delta}.`);
+    animateWarning(targetCallout);
   }
 }
 
@@ -398,6 +420,7 @@ function resetPlan() {
   setMeter(0);
   targetCallout.textContent = "Queue a full plan to begin.";
   targetCallout.classList.remove("warning", "success");
+  animateAction(targetCallout, "flash");
 }
 
 function loadFacultyPlan() {
@@ -412,6 +435,7 @@ function loadFacultyPlan() {
   targetCallout.classList.add("warning");
   resetReport();
   setMeter(0);
+  animateWarning(targetCallout);
 }
 
 renderTimeline();

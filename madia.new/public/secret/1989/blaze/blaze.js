@@ -1,3 +1,14 @@
+
+import {
+  animateAction,
+  animateCounter,
+  animateListEntry,
+  animateWarning,
+  enableActionAnimations
+} from "../action-animations.js";
+
+enableActionAnimations();
+
 const boardElement = document.getElementById("board");
 const statusBar = document.getElementById("status-bar");
 const capitalMeter = document.getElementById("capital-meter");
@@ -84,19 +95,24 @@ function inBounds(row, col) {
 
 function setStatus(message) {
   statusBar.textContent = message;
+  animateAction(statusBar, "flash");
 }
 
 function logEvent(message) {
   const item = document.createElement("li");
   item.textContent = message;
+
+  animateAction(item, "flash");
   logList.appendChild(item);
   logList.scrollTop = logList.scrollHeight;
+  animateListEntry(item);
 }
 
 function updateCapitalMeter() {
   capitalMeter.textContent = `Political Capital: ${politicalCapital}`;
   capitalMeter.classList.toggle("low", politicalCapital <= 2);
   capitalMeter.classList.toggle("strong", politicalCapital >= 8);
+  animateCounter(capitalMeter);
   if (politicalCapital < 0) {
     triggerLoss("Political Capital collapsed below zero. The caucus walks out.");
   } else if (politicalCapital === 0) {
@@ -124,6 +140,7 @@ function resetState() {
   logList.innerHTML = "";
   logEvent("Session reset. Governor queues a fresh bill.");
   updateCapitalMeter();
+  animateAction(boardElement, "pulse");
 }
 
 function buildBoard() {
@@ -202,6 +219,7 @@ function buildBoard() {
 function handleTileClick(row, col) {
   if (gameOver) {
     setStatus("Session complete. Reset to try again.");
+    animateWarning(statusBar);
     return;
   }
 
@@ -210,6 +228,7 @@ function handleTileClick(row, col) {
   if (role && role !== "") {
     if (role === "barricade" || role === "start" || role === "goal" || role === "source" || role === "archive") {
       setStatus("That tile is bound by statute—choose another.");
+      animateWarning(statusBar);
       return;
     }
   }
@@ -221,12 +240,14 @@ function handleTileClick(row, col) {
 
   if (activeMode === "bill" && selectedPiece.type === "junction") {
     setStatus("Bill drafters can't install a junction. Switch to Scandal mode for that piece.");
+    animateWarning(statusBar);
     return;
   }
 
   const existing = boardState.get(tileKey);
   if (existing && existing.occupant !== activeMode) {
     setStatus("That tile already carries the other conduit. Find a new route.");
+    animateWarning(statusBar);
     return;
   }
 
@@ -241,6 +262,7 @@ function clearSegment(tileKey) {
   const existing = boardState.get(tileKey);
   if (!existing) {
     setStatus("Nothing to clear on that tile.");
+    animateWarning(statusBar);
     return;
   }
   boardState.delete(tileKey);
@@ -250,6 +272,7 @@ function clearSegment(tileKey) {
     if (existingSegment) {
       existingSegment.remove();
     }
+    animateAction(tile, "pulse");
   }
   setStatus("Conduit removed. Rework the flow before advancing.");
 }
@@ -262,6 +285,10 @@ function placeSegment(tileKey, segment) {
       ? "Bill conduit laid."
       : "Scandal channel positioned."
   );
+  const tile = tileElements.get(tileKey);
+  if (tile) {
+    animateAction(tile, "pulse");
+  }
 }
 
 function renderSegment(tileKey) {
@@ -299,6 +326,7 @@ function renderBillToken() {
   const token = document.createElement("div");
   token.classList.add("token", "bill");
   content.appendChild(token);
+  animateAction(content, "flash");
 }
 
 function renderScandals() {
@@ -315,6 +343,7 @@ function renderScandals() {
     const token = document.createElement("div");
     token.classList.add("token", "scandal");
     content.appendChild(token);
+    animateAction(content, "pulse");
   });
 }
 
@@ -417,6 +446,7 @@ function computeBillRoute() {
 function advanceFlow() {
   if (gameOver) {
     setStatus("Session complete. Reset to launch another run.");
+    animateWarning(statusBar);
     return;
   }
 
@@ -424,6 +454,7 @@ function advanceFlow() {
   if (!route) {
     setStatus("The bill's conduit is incomplete. Shore it up before advancing.");
     logEvent("Bill route collapsed—paper trail must be continuous.");
+    animateWarning(statusBar);
     return;
   }
 
@@ -431,6 +462,7 @@ function advanceFlow() {
   if (currentIndex === -1) {
     setStatus("The bill lost the paper trail. Rebuild from the desk.");
     logEvent("Bill position is off the conduit. Resetting to the desk.");
+    animateWarning(statusBar);
     billPosition = { ...START };
     renderBillToken();
     return;
@@ -457,9 +489,11 @@ function advanceFlow() {
       billPosition = { ...START };
       logEvent("Fresh legislation drafted at the Governor's Desk.");
       setStatus("Bill signed without scandal. A new draft is ready.");
+      animateAction(statusBar, "flash");
     } else {
       logEvent(`Bill advanced to row ${billPosition.row + 1}, column ${billPosition.col + 1}.`);
       setStatus("Bill advanced along the conduit.");
+      animateAction(statusBar, "flash");
     }
   }
 
@@ -482,6 +516,10 @@ function spawnScandalPoint() {
     cameFrom: null,
   });
   logEvent(`Scandal Point ${scandalId} erupts from Blaze's parlor.`);
+  const sourceTile = tileElements.get(key(SCANDAL_SOURCE.row, SCANDAL_SOURCE.col));
+  if (sourceTile) {
+    animateAction(sourceTile, "flash");
+  }
 }
 
 function moveScandals() {
@@ -588,6 +626,7 @@ function triggerLoss(message) {
   }
   gameOver = true;
   setStatus(message);
+  animateWarning(statusBar);
   logEvent("Proceedings collapse. Reset to attempt another session.");
 }
 
@@ -597,6 +636,7 @@ function triggerWin() {
   }
   gameOver = true;
   setStatus("Two clean bills signed. The chamber erupts in relief.");
+  animateAction(statusBar, "flash");
   logEvent("Victory! The paper trail held under pressure.");
 }
 
@@ -605,6 +645,9 @@ function setActiveMode(mode) {
   modeButtons.forEach((button) => {
     const pressed = button.dataset.mode === mode;
     button.setAttribute("aria-pressed", pressed ? "true" : "false");
+    if (pressed) {
+      animateAction(button, "pulse");
+    }
   });
   paletteButtons.forEach((button) => {
     const isJunction = button.dataset.piece === "junction";
@@ -618,6 +661,7 @@ function setActiveMode(mode) {
   }
   if (mode === "clear") {
     setStatus("Clear mode: select a placed conduit to remove it.");
+    animateAction(statusBar, "flash");
   }
 }
 
@@ -628,6 +672,7 @@ function setSelectedPiece(type, orientation) {
     button.setAttribute("aria-pressed", pressed ? "true" : "false");
     if (pressed) {
       button.dataset.orientation = orientation;
+      animateAction(button, "pulse");
     }
   });
 }
@@ -643,6 +688,7 @@ function rotateSelectedPiece() {
   paletteButtons.forEach((button) => {
     if (button.dataset.piece === selectedPiece.type) {
       button.dataset.orientation = selectedPiece.orientation;
+      animateAction(button, "pulse");
     }
   });
 }

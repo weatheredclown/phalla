@@ -1,3 +1,20 @@
+import {
+  animateAction,
+  animateCounter,
+  animateListEntry,
+  animateWarning,
+  enableActionAnimations
+} from "../action-animations.js";
+
+enableActionAnimations({
+  selectors: [
+    ".action-button",
+    ".route-button",
+    ".intersection",
+    "[data-action]"
+  ]
+});
+
 const boardSize = 6;
 const shop = { row: 2, col: 0, label: "Hub", name: "Amore Slices dispatch" };
 const houses = [
@@ -105,18 +122,21 @@ boardElement.addEventListener("click", (event) => {
 
   if (!selectedOrderId) {
     updateStatus("Select an order before plotting a route.");
+    animateWarning(statusReadout);
     return;
   }
 
   const target = getTargetHouse();
   if (!target) {
     updateStatus("The chosen order no longer exists.");
+    animateWarning(statusReadout);
     return;
   }
 
   if (activePath.length === 0) {
     if (!positionsEqual(position, shop)) {
       updateStatus("Start at the Amore Slices hub.");
+      animateWarning(statusReadout);
       return;
     }
     activePath.push(position);
@@ -145,6 +165,7 @@ boardElement.addEventListener("click", (event) => {
       jumpUsedThisRoute = true;
       logEvent("Bike Jump deployed to glide across a locked trail.");
       updateJumpStatus();
+      animateAction(button, "pulse");
     } else {
       triggerTrafficJam("Crossed an existing trail and triggered a traffic jam.");
       return;
@@ -202,6 +223,7 @@ function startShift() {
   shiftActive = true;
   logEvent("Shift started. Orders are dialing in.");
   updateStatus("Shift in motion. Select an order and chart a path.");
+  animateAction(statusReadout, "flash");
   startButton.disabled = true;
   endButton.disabled = false;
   clearPathButton.disabled = true;
@@ -332,6 +354,7 @@ function setSelectedOrder(orderId) {
   const order = activeOrders.find((item) => item.id === orderId);
   if (!order) {
     updateStatus("That order is no longer active.");
+    animateWarning(statusReadout);
     return;
   }
   selectedOrderId = orderId;
@@ -340,6 +363,7 @@ function setSelectedOrder(orderId) {
   clearActivePath();
   renderOrders();
   updateStatus("Start from the hub and reach the highlighted mansion.");
+  animateAction(statusReadout, "flash");
 }
 
 function highlightTarget(houseId) {
@@ -368,11 +392,13 @@ function finalizeRoute() {
   const order = activeOrders.find((item) => item.id === selectedOrderId);
   if (!order) {
     updateStatus("The selected order vanished.");
+    animateWarning(statusReadout);
     return;
   }
 
   if (activePath.length < 2) {
     updateStatus("Extend the trail beyond the hub.");
+    animateWarning(statusReadout);
     return;
   }
 
@@ -404,6 +430,7 @@ function finalizeRoute() {
   updateDeliveredCount();
   logEvent(`Delivered ${order.pizza} to ${housesById.get(order.houseId)?.name ?? "a client"}.`);
   updateStatus("Delivery locked in. Queue up the next order.");
+  animateAction(statusReadout, "flash");
 
   activeOrders = activeOrders.filter((item) => item.id !== order.id);
   selectedOrderId = null;
@@ -423,12 +450,16 @@ function finalizeRoute() {
 
 function triggerTrafficJam(reason) {
   endShift(false, `Traffic jam! ${reason}`);
+  animateWarning(statusReadout);
 }
 
 function endShift(success, message) {
   if (!shiftActive && !success) {
     resetShiftState();
     updateStatus(message);
+    if (!success) {
+      animateWarning(statusReadout);
+    }
     return;
   }
   shiftActive = false;
@@ -441,6 +472,7 @@ function endShift(success, message) {
   clearActivePath();
   highlightTarget(null);
   updateStatus(message);
+  animateAction(statusReadout, success ? "flash" : "shake");
   if (!success) {
     activeOrders = [];
     orderList.innerHTML = "";
@@ -506,14 +538,18 @@ function updateJumpStatus() {
     jumpStatus.classList.add("spent");
     jumpStatusText.textContent = "Charge spent. Future routes must avoid every glowing trail.";
   }
+  animateAction(jumpStatus, "pulse");
 }
 
 function updateDeliveredCount() {
   deliveredCountLabel.textContent = `${deliveredCount} delivered`;
+  animateCounter(deliveredCountLabel);
 }
 
 function updateStatus(message) {
   statusReadout.textContent = message;
+
+  animateAction(statusReadout, "flash");
 }
 
 function updateQueueMeter() {
@@ -521,6 +557,8 @@ function updateQueueMeter() {
     queueMeterFill.style.width = "100%";
     queueMeterValue.textContent = "100";
     queueMeter.setAttribute("aria-valuenow", "100");
+    animateAction(queueMeterFill, "pulse");
+    animateCounter(queueMeterValue);
     return;
   }
   let lowest = 100;
@@ -531,12 +569,17 @@ function updateQueueMeter() {
   queueMeterFill.style.width = `${lowest}%`;
   queueMeterValue.textContent = String(lowest);
   queueMeter.setAttribute("aria-valuenow", String(lowest));
+  animateAction(queueMeterFill, "pulse");
+  animateCounter(queueMeterValue);
 }
 
 function logEvent(message) {
   const item = document.createElement("li");
   item.textContent = message;
+
+  animateAction(item, "flash");
   eventList.prepend(item);
+  animateListEntry(item);
   while (eventList.children.length > 8) {
     eventList.removeChild(eventList.lastChild);
   }
@@ -544,6 +587,9 @@ function logEvent(message) {
 
 function updateClearPathState() {
   clearPathButton.disabled = activePath.length === 0;
+  if (!clearPathButton.disabled) {
+    animateAction(clearPathButton, "pulse");
+  }
 }
 
 function positionKey(position) {

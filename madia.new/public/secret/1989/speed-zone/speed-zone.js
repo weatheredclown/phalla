@@ -1,3 +1,14 @@
+
+import {
+  animateAction,
+  animateCounter,
+  animateListEntry,
+  animateWarning,
+  enableActionAnimations
+} from "../action-animations.js";
+
+enableActionAnimations();
+
 const svgNS = "http://www.w3.org/2000/svg";
 
 const nodes = [
@@ -220,6 +231,8 @@ function updateCurrentNode() {
 function logEvent(message) {
   const entry = document.createElement("li");
   entry.textContent = message;
+
+  animateAction(entry, "flash");
   eventList.prepend(entry);
   while (eventList.children.length > 8) {
     eventList.removeChild(eventList.lastElementChild);

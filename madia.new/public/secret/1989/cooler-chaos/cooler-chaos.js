@@ -1,3 +1,21 @@
+import {
+  animateAction,
+  animateCounter,
+  animateListEntry,
+  animateWarning,
+  enableActionAnimations
+} from "../action-animations.js";
+
+enableActionAnimations({
+  selectors: [
+    "#start-shift",
+    "#pause-shift",
+    "#reset-shift",
+    ".pad-button",
+    "[data-action]"
+  ]
+});
+
 const GRID_ROWS = 8;
 const GRID_COLS = 8;
 const TICK_MS = 1200;
@@ -122,6 +140,7 @@ function wireControls() {
       const direction = button.dataset.dir;
       if (direction) {
         handleMove(direction);
+        animateAction(button, "press");
       }
     });
   });
@@ -210,12 +229,14 @@ function handleMove(direction) {
   const targetCol = state.cooler.col + delta.col;
   if (!inBounds(targetRow, targetCol)) {
     addLog("Cooler bumps the wall—no give there.");
+    animateWarning(gridElement);
     return;
   }
 
   const targetKey = keyFrom(targetRow, targetCol);
   if (state.glass.has(targetKey)) {
     addLog(`Broken glass blocks ${formatTile(targetRow, targetCol)}.`);
+    animateWarning(gridElement);
     return;
   }
 
@@ -223,10 +244,15 @@ function handleMove(direction) {
     const pushed = tryPushChain(targetRow, targetCol, delta);
     if (!pushed) {
       addLog("Stack will not budge—blocked further down the lane.");
+      animateWarning(gridElement);
       return;
     }
   } else {
     state.cooler = { row: targetRow, col: targetCol };
+    const cell = cellsByKey.get(targetKey);
+    if (cell) {
+      animateAction(cell, "pulse");
+    }
   }
 
   updateStatus();
@@ -310,6 +336,11 @@ function handleEjection(exitCell) {
   if (state.comboCount >= 3) {
     triggerBeNice(exitCell);
     state.comboCount = 0;
+  }
+  const exitKey = keyFrom(exitCell.row, exitCell.col);
+  const exitNode = cellsByKey.get(exitKey);
+  if (exitNode) {
+    animateAction(exitNode, "flash");
   }
 }
 
@@ -459,6 +490,10 @@ function maybeSpawnTroublemaker() {
   const spawnCell = openCells[Math.floor(Math.random() * openCells.length)];
   state.troublemakers.set(spawnCell.key, { row: spawnCell.row, col: spawnCell.col });
   addLog(`New trouble ignites at ${formatTile(spawnCell.row, spawnCell.col)}.`);
+  const spawnNode = cellsByKey.get(spawnCell.key);
+  if (spawnNode) {
+    animateAction(spawnNode, "pulse");
+  }
 }
 
 function addGlass(row, col) {
@@ -491,6 +526,7 @@ function render() {
   const coolerCell = cellsByKey.get(coolerKey);
   if (coolerCell) {
     coolerCell.dataset.occupant = "cooler";
+    animateAction(coolerCell, "pulse");
   }
 
   cellsByKey.forEach((cell) => updateCellAria(cell));
@@ -501,6 +537,10 @@ function updateStatus() {
   glassCount.textContent = String(state.glass.size);
   comboMeter.textContent = `${state.comboCount} / 3`;
   beatCount.textContent = String(state.beat);
+  animateCounter(ejectedCount);
+  animateCounter(glassCount);
+  animateCounter(comboMeter);
+  animateCounter(beatCount);
 }
 
 function addLog(message) {
@@ -509,8 +549,11 @@ function addLog(message) {
     entry.textContent = `Beat ${state.beat}: ${message}`;
   } else {
     entry.textContent = message;
+
+    animateAction(entry, "flash");
   }
   eventLog.prepend(entry);
+  animateListEntry(entry);
   while (eventLog.children.length > 12) {
     eventLog.removeChild(eventLog.lastChild);
   }

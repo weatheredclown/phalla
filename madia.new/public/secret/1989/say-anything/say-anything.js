@@ -1,3 +1,14 @@
+
+import {
+  animateAction,
+  animateCounter,
+  animateListEntry,
+  animateWarning,
+  enableActionAnimations
+} from "../action-animations.js";
+
+enableActionAnimations();
+
 const STARTING_FLOW = 72;
 const MAX_FLOW = 100;
 const SYNC_WINDOW_MS = 520;
@@ -553,10 +564,14 @@ function stopFlowDrift() {
 
 function updateStatus(message) {
   statusReadout.textContent = message;
+
+  animateAction(statusReadout, "flash");
 }
 
 function updateBoombox(message) {
   boomboxIndicator.textContent = message;
+
+  animateAction(boomboxIndicator, "flash");
 }
 
 function updateClouds() {
@@ -594,6 +609,8 @@ function logEvent(message, variant = "info") {
     item.classList.add("danger");
   }
   item.textContent = message;
+
+  animateAction(item, "flash");
   eventLog.prepend(item);
   while (eventLog.children.length > 9) {
     eventLog.removeChild(eventLog.lastChild);

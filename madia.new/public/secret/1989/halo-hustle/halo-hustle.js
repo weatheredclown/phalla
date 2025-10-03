@@ -1,3 +1,14 @@
+
+import {
+  animateAction,
+  animateCounter,
+  animateListEntry,
+  animateWarning,
+  enableActionAnimations
+} from "../action-animations.js";
+
+enableActionAnimations();
+
 const MAX_TIME = 80;
 const STARTING_TIME = 60;
 const CHIP_TIME_VALUE = 4;
@@ -128,6 +139,8 @@ function updateChipDisplays() {
 
 function updateStatus(message, tone = "neutral") {
   statusBanner.textContent = message;
+
+  animateAction(statusBanner, "flash");
   statusBanner.classList.remove("is-success", "is-warning", "is-danger");
   if (tone === "success") {
     statusBanner.classList.add("is-success");
@@ -467,6 +480,8 @@ function setActivePuzzle(cleanup) {
 function logEvent(message) {
   const item = document.createElement("li");
   item.textContent = message;
+
+  animateAction(item, "flash");
   eventList.prepend(item);
   while (eventList.children.length > LOG_LIMIT) {
     eventList.removeChild(eventList.lastElementChild);

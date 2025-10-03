@@ -1,3 +1,14 @@
+
+import {
+  animateAction,
+  animateCounter,
+  animateListEntry,
+  animateWarning,
+  enableActionAnimations
+} from "../action-animations.js";
+
+enableActionAnimations();
+
 const TURN_COUNT = 9;
 const PROTECTION_WINDOW = 2;
 const GRID_WIDTH = 6;

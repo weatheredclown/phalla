@@ -1,3 +1,14 @@
+
+import {
+  animateAction,
+  animateCounter,
+  animateListEntry,
+  animateWarning,
+  enableActionAnimations
+} from "../action-animations.js";
+
+enableActionAnimations();
+
 const GRID_SIZE = 5;
 const LEVEL_DURATION_MS = 90_000;
 const TEMPERATURE_MAX = 100;
@@ -440,12 +451,16 @@ function updateTimerDisplay(remainingMs) {
 
 function updateStatus(message) {
   statusBar.textContent = message;
+
+  animateAction(statusBar, "flash");
 }
 
 function logEvent(message, variant = "info") {
   const entry = document.createElement("li");
   entry.className = `log-entry ${variant}`;
   entry.textContent = message;
+
+  animateAction(entry, "flash");
   logEntries.prepend(entry);
   while (logEntries.children.length > 12) {
     logEntries.removeChild(logEntries.lastElementChild);

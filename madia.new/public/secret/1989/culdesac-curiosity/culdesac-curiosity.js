@@ -1,3 +1,14 @@
+
+import {
+  animateAction,
+  animateCounter,
+  animateListEntry,
+  animateWarning,
+  enableActionAnimations
+} from "../action-animations.js";
+
+enableActionAnimations();
+
 const boardElement = document.getElementById("gossip-grid");
 const statusBar = document.getElementById("status-bar");
 const logList = document.getElementById("log-entries");
@@ -315,11 +326,15 @@ function clearSelection() {
 
 function setStatus(message) {
   statusBar.textContent = message;
+
+  animateAction(statusBar, "flash");
 }
 
 function logEvent(message) {
   const item = document.createElement("li");
   item.textContent = message;
+
+  animateAction(item, "flash");
   logList.prepend(item);
   while (logList.children.length > 12) {
     logList.removeChild(logList.lastElementChild);

@@ -1,3 +1,14 @@
+
+import {
+  animateAction,
+  animateCounter,
+  animateListEntry,
+  animateWarning,
+  enableActionAnimations
+} from "../action-animations.js";
+
+enableActionAnimations();
+
 const ROWS = 5;
 const COLS = 6;
 const CHAOS_LIMIT = 18;
@@ -398,6 +409,8 @@ function updateLaneHint() {
 
 function updateStatus(message, tone = "neutral") {
   statusBanner.textContent = message;
+
+  animateAction(statusBanner, "flash");
   statusBanner.classList.remove("is-success", "is-warning", "is-danger");
   if (tone === "success") {
     statusBanner.classList.add("is-success");
@@ -411,6 +424,8 @@ function updateStatus(message, tone = "neutral") {
 function logEvent(message) {
   const entry = document.createElement("li");
   entry.textContent = message;
+
+  animateAction(entry, "flash");
   eventList.prepend(entry);
   while (eventList.children.length > LOG_LIMIT) {
     eventList.removeChild(eventList.lastElementChild);

@@ -1,3 +1,14 @@
+
+import {
+  animateAction,
+  animateCounter,
+  animateListEntry,
+  animateWarning,
+  enableActionAnimations
+} from "../action-animations.js";
+
+enableActionAnimations();
+
 const chart = [
   { left: "KeyA", right: "KeyL" },
   { left: "KeyS", right: "KeyK" },
@@ -505,6 +516,8 @@ function stopLoop() {
 function logEvent(message, type = "neutral") {
   const item = document.createElement("li");
   item.textContent = message;
+
+  animateAction(item, "flash");
   if (type === "positive") {
     item.classList.add("is-positive");
   } else if (type === "warning") {
@@ -518,6 +531,8 @@ function logEvent(message, type = "neutral") {
 
 function updateStatus(message) {
   statusReadout.textContent = message;
+
+  animateAction(statusReadout, "flash");
 }
 
 function clearHighlights() {

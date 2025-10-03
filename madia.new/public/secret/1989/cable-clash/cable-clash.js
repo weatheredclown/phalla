@@ -1,3 +1,14 @@
+
+import {
+  animateAction,
+  animateCounter,
+  animateListEntry,
+  animateWarning,
+  enableActionAnimations
+} from "../action-animations.js";
+
+enableActionAnimations();
+
 const boardElement = document.getElementById("board");
 const statusBar = document.getElementById("status-bar");
 const logList = document.getElementById("log-entries");
@@ -149,6 +160,7 @@ function resetState() {
   setStatus("Select a tile to begin routing.");
   logEvent("Arena reset. Cobalt corner is charged.");
   logEvent(`Lockdown plates stocked: ${lockdownsLeft}.`);
+  animateAction(boardElement, "pulse");
 }
 
 function buildBoard() {
@@ -212,6 +224,7 @@ function renderSegment(tile, orientation) {
   }
   content.innerHTML = "";
   content.appendChild(segment);
+  animateAction(content, "pulse");
 }
 
 function renderRivals() {
@@ -229,7 +242,9 @@ function renderRivals() {
     if (rival.stunned) {
       marker.classList.add("stunned");
     }
-    tile.querySelector(".tile-content").appendChild(marker);
+    const content = tile.querySelector(".tile-content");
+    content.appendChild(marker);
+    animateAction(content, rival.stunned ? "shake" : "pulse");
   });
 }
 
@@ -239,13 +254,17 @@ function getTile(row, col) {
 
 function setStatus(message) {
   statusBar.textContent = message;
+  animateAction(statusBar, "flash");
 }
 
 function logEvent(message) {
   const entry = document.createElement("li");
   entry.textContent = message;
+
+  animateAction(entry, "flash");
   logList.appendChild(entry);
   logList.scrollTop = logList.scrollHeight;
+  animateListEntry(entry);
 }
 
 function selectPiece(button) {
@@ -256,6 +275,7 @@ function selectPiece(button) {
     btn.setAttribute("aria-pressed", btn === button ? "true" : "false");
   });
   setStatus(`Selected ${type === "lockdown" ? "Lockdown plate" : `${type} segment`}.`);
+  animateAction(button, "pulse");
 }
 
 function rotateActivePiece() {
@@ -269,6 +289,7 @@ function rotateActivePiece() {
   const button = paletteButtons.find((btn) => btn.dataset.piece === activePiece.type);
   if (button) {
     button.dataset.orientation = activePiece.orientation;
+    animateAction(button, "pulse");
   }
   setStatus(`Orientation set to ${activePiece.orientation}.`);
 }
@@ -276,6 +297,7 @@ function rotateActivePiece() {
 function handleTileClick(row, col) {
   if (circuitClosed) {
     setStatus("Circuit closed! Reset to rerun the bout.");
+    animateWarning(statusBar);
     return;
   }
   const selection = { ...activePiece };
@@ -294,10 +316,12 @@ function lockTile(row, col) {
   const existing = cableNetwork.get(tileKey);
   if (!existing || existing.locked || existing.type === "goal" || existing.type === "start") {
     setStatus("Lockdown can only be used on active cable segments.");
+    animateWarning(statusBar);
     return;
   }
   if (lockdownsLeft <= 0) {
     setStatus("No lockdown plates remaining.");
+    animateWarning(statusBar);
     return;
   }
   existing.locked = true;
@@ -305,27 +329,32 @@ function lockTile(row, col) {
   const tile = getTile(row, col);
   tile.classList.add("locked");
   logEvent(`Lockdown plate secured on tile ${row + 1}, ${col + 1}. (${lockdownsLeft} remaining)`);
+  animateAction(tile, "pulse");
 }
 
 function placeSegment(row, col, selection) {
   const tileKey = key(row, col);
   const tile = getTile(row, col);
   if (!tile || tile.classList.contains("locked")) {
+    animateWarning(statusBar);
     return;
   }
   if (cableNetwork.has(tileKey)) {
     setStatus("Tile already occupied.");
+    animateWarning(statusBar);
     return;
   }
   if (AC_TILES.has(tileKey)) {
     if (lastAcType === selection.type) {
       setStatus("AC plates demand alternating segment types.");
+      animateWarning(statusBar);
       return;
     }
   }
   const connectors = ORIENTATION_CONNECTORS[selection.orientation];
   if (!connectors) {
     setStatus("Select an orientation before placing this segment.");
+    animateWarning(statusBar);
     return;
   }
   const hasConnection = connectors.some((direction) => {
@@ -338,6 +367,7 @@ function placeSegment(row, col, selection) {
   });
   if (!hasConnection) {
     setStatus("Segments must link to the active circuit.");
+    animateWarning(statusBar);
     return;
   }
   cableNetwork.set(tileKey, {
@@ -351,6 +381,7 @@ function placeSegment(row, col, selection) {
   }
   renderSegment(tile, selection.orientation);
   setStatus(`Segment placed on tile ${row + 1}, ${col + 1}. Resolve the turn to continue.`);
+  animateAction(tile, "pulse");
   renderRivals();
   checkCircuitClosure();
 }
@@ -371,6 +402,7 @@ function neighborKey(row, col, direction) {
 function resolveTurn() {
   if (circuitClosed) {
     setStatus("Circuit is already secure. Reset to play again.");
+    animateWarning(statusBar);
     return;
   }
   turnCounter += 1;
@@ -390,6 +422,7 @@ function resolveTurn() {
   });
   renderRivals();
   checkCircuitClosure();
+  animateAction(boardElement, "pulse");
 }
 
 function checkRivalCollision(rival, position) {
@@ -406,6 +439,9 @@ function checkRivalCollision(rival, position) {
   tile?.querySelector(".tile-content").replaceChildren();
   setStatus(`${rival.name} wrecked a segment at ${position.row + 1}, ${position.col + 1}.`);
   logEvent(`${rival.name} snapped the cable at tile ${position.row + 1}, ${position.col + 1}.`);
+  if (tile) {
+    animateWarning(tile);
+  }
 }
 
 function checkCircuitClosure() {
@@ -445,6 +481,8 @@ function onCircuitClosed() {
   circuitClosed = true;
   setStatus("Circuit complete! The main-event slam erupts and stuns nearby rivals.");
   logEvent("The main-event slam fires—broadcast restored!");
+  animateAction(statusBar, "flash");
+  animateAction(boardElement, "flash");
   rivals.forEach((rival) => {
     if (isAdjacent(rival.position, GOAL)) {
       rival.stunned = true;
@@ -459,6 +497,9 @@ function onCircuitClosed() {
     const [row, col] = tileKey.split(",").map(Number);
     const tile = getTile(row, col);
     tile?.classList.add("locked");
+    if (tile) {
+      animateAction(tile, "pulse");
+    }
   });
   renderRivals();
 }

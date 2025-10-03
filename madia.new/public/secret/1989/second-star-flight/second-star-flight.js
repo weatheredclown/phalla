@@ -1,3 +1,14 @@
+
+import {
+  animateAction,
+  animateCounter,
+  animateListEntry,
+  animateWarning,
+  enableActionAnimations
+} from "../action-animations.js";
+
+enableActionAnimations();
+
 const GRID_SIZE = 6;
 const SHADOW_COUNT = 7;
 const LIGHT_DURATION_MS = 8000;
@@ -429,11 +440,15 @@ function updateCaptures() {
 
 function updateStatus(message) {
   statusMessage.textContent = message;
+
+  animateAction(statusMessage, "flash");
 }
 
 function logEvent(message, variant = "info") {
   const entry = document.createElement("li");
   entry.textContent = message;
+
+  animateAction(entry, "flash");
   if (variant !== "info") {
     entry.classList.add(variant);
   }

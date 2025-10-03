@@ -1,3 +1,14 @@
+
+import {
+  animateAction,
+  animateCounter,
+  animateListEntry,
+  animateWarning,
+  enableActionAnimations
+} from "../action-animations.js";
+
+enableActionAnimations();
+
 const BOARD_WIDTH = 8;
 const BOARD_HEIGHT = 14;
 const LANE_COLUMNS = [2, 3, 4, 5];
