@@ -491,6 +491,53 @@ const games = [
     `,
   },
   {
+    id: "gilded-partition",
+    name: "Gilded Partition",
+    description: "Broker rival deeds while avoiding the ruinous sparks of a split estate.",
+    url: "./gilded-partition/index.html",
+    thumbnail: `
+      <svg viewBox="0 0 160 120" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Gilded Partition preview">
+        <defs>
+          <linearGradient id="partitionGlow" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0%" stop-color="#f87171" />
+            <stop offset="100%" stop-color="#38bdf8" />
+          </linearGradient>
+          <linearGradient id="estateFloor" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="rgba(248,113,113,0.32)" />
+            <stop offset="50%" stop-color="rgba(15,23,42,0.88)" />
+            <stop offset="100%" stop-color="rgba(56,189,248,0.32)" />
+          </linearGradient>
+        </defs>
+        <rect x="8" y="10" width="144" height="100" rx="18" fill="rgba(7,11,24,0.92)" stroke="rgba(148,163,184,0.35)" />
+        <rect x="18" y="22" width="124" height="76" rx="16" fill="url(#estateFloor)" stroke="rgba(148,163,184,0.35)" />
+        <g stroke="rgba(148,163,184,0.2)" stroke-width="1">
+          ${Array.from({ length: 5 }, (_, i) => `<line x1="${32 + i * 18}" y1="28" x2="${32 + i * 18}" y2="92" />`).join("")}
+          ${Array.from({ length: 3 }, (_, i) => `<line x1="26" y1="${44 + i * 16}" x2="134" y2="${44 + i * 16}" />`).join("")}
+        </g>
+        <g>
+          <rect x="28" y="30" width="40" height="26" rx="8" fill="rgba(248,113,113,0.65)" stroke="rgba(248,250,252,0.45)" />
+          <rect x="92" y="54" width="40" height="26" rx="8" fill="rgba(56,189,248,0.65)" stroke="rgba(248,250,252,0.45)" />
+        </g>
+        <g>
+          <rect x="52" y="58" width="24" height="24" rx="6" fill="rgba(15,23,42,0.88)" stroke="url(#partitionGlow)" />
+          <path d="M52 70h24" stroke="rgba(248,250,252,0.4)" stroke-width="2" stroke-dasharray="4 6" />
+          <path d="M64 58v24" stroke="rgba(248,250,252,0.25)" stroke-width="2" stroke-dasharray="4 6" />
+        </g>
+        <g>
+          <rect x="36" y="82" width="32" height="14" rx="6" fill="rgba(248,113,113,0.8)" stroke="rgba(248,113,113,0.5)" />
+          <rect x="92" y="34" width="32" height="14" rx="6" fill="rgba(56,189,248,0.8)" stroke="rgba(56,189,248,0.5)" />
+        </g>
+        <g>
+          <rect x="76" y="42" width="12" height="12" rx="4" fill="rgba(148,163,184,0.45)" />
+          <rect x="108" y="74" width="12" height="12" rx="4" fill="rgba(148,163,184,0.45)" />
+        </g>
+        <rect x="60" y="18" width="40" height="12" rx="6" fill="rgba(15,23,42,0.95)" stroke="url(#partitionGlow)" />
+        <rect x="60" y="18" width="20" height="12" rx="6" fill="rgba(248,113,113,0.7)" />
+        <rect x="80" y="18" width="20" height="12" rx="6" fill="rgba(56,189,248,0.7)" />
+      </svg>
+    `,
+  },
+  {
     id: "vendetta-convoy",
     name: "Vendetta Convoy",
     description: "Chain sabotage charges to shepherd the rogue tanker convoy past concealed explosives.",
