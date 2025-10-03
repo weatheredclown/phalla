@@ -1132,6 +1132,54 @@ const games = [
       </svg>
     `,
   },
+  {
+    id: "voice-box-swap",
+    name: "Voice Box Swap",
+    description: "Decode the baby’s sitcom snark and trigger the perfect move before the timer melts.",
+    url: "./voice-box-swap/index.html",
+    thumbnail: `
+      <svg viewBox="0 0 160 120" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Voice Box Swap preview">
+        <defs>
+          <linearGradient id="voiceBg" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0%" stop-color="rgba(65,56,160,0.95)" />
+            <stop offset="100%" stop-color="rgba(236,72,153,0.85)" />
+          </linearGradient>
+          <radialGradient id="voiceGlow" cx="0.52" cy="0.28" r="0.7">
+            <stop offset="0%" stop-color="rgba(255,214,102,0.55)" />
+            <stop offset="100%" stop-color="rgba(255,214,102,0)" />
+          </radialGradient>
+          <linearGradient id="voiceBubble" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0%" stop-color="rgba(76,201,240,0.85)" />
+            <stop offset="100%" stop-color="rgba(255,133,243,0.85)" />
+          </linearGradient>
+          <linearGradient id="voiceFloor" x1="0" y1="0" x2="1" y2="0">
+            <stop offset="0%" stop-color="rgba(15,23,42,0.85)" />
+            <stop offset="100%" stop-color="rgba(30,41,59,0.85)" />
+          </linearGradient>
+        </defs>
+        <rect x="8" y="8" width="144" height="104" rx="18" fill="url(#voiceBg)" stroke="rgba(255,255,255,0.35)" />
+        <rect x="20" y="66" width="120" height="34" rx="14" fill="url(#voiceFloor)" stroke="rgba(148,163,184,0.4)" />
+        <circle cx="80" cy="52" r="46" fill="url(#voiceGlow)" opacity="0.75" />
+        <g>
+          <circle cx="78" cy="56" r="28" fill="rgba(255,240,248,0.95)" stroke="rgba(255,214,102,0.6)" stroke-width="2" />
+          <path d="M60 50 Q78 38 96 50" fill="none" stroke="rgba(236,72,153,0.55)" stroke-width="4" stroke-linecap="round" />
+          <path d="M64 66 Q78 76 92 66" fill="none" stroke="rgba(76,201,240,0.6)" stroke-width="4" stroke-linecap="round" />
+          <circle cx="68" cy="56" r="5" fill="rgba(30,41,59,0.85)" />
+          <circle cx="88" cy="56" r="5" fill="rgba(30,41,59,0.85)" />
+        </g>
+        <path d="M108 36 C130 24 150 44 140 60 C152 68 142 86 120 80 C104 76 96 60 104 46 Z" fill="url(#voiceBubble)" stroke="rgba(255,255,255,0.55)" stroke-width="2.4" stroke-linejoin="round" />
+        <circle cx="104" cy="68" r="6" fill="url(#voiceBubble)" stroke="rgba(255,255,255,0.5)" stroke-width="1.4" />
+        <path d="M34 40 C22 50 26 68 44 70" fill="none" stroke="rgba(76,201,240,0.6)" stroke-width="3.4" stroke-linecap="round" />
+        <g fill="rgba(255,255,255,0.8)">
+          <circle cx="40" cy="32" r="3" />
+          <circle cx="124" cy="28" r="2.6" />
+          <circle cx="110" cy="84" r="2.2" />
+        </g>
+        <rect x="30" y="80" width="36" height="10" rx="5" fill="rgba(6,214,160,0.6)" stroke="rgba(255,255,255,0.4)" />
+        <rect x="94" y="82" width="28" height="10" rx="5" fill="rgba(255,133,243,0.55)" stroke="rgba(255,255,255,0.4)" />
+      </svg>
+    `,
+  },
 ];
 
 const grid = document.getElementById("game-grid");

@@ -150,6 +150,17 @@ export const scoreConfigs = {
       return `${value ?? 0} / ${total}`;
     },
   },
+  "voice-box-swap": {
+    label: "Sync Score",
+    empty: "No sync logged yet.",
+    format: ({ value, meta }) => {
+      const combo = Number(meta?.longestCombo ?? 0);
+      const risky = Number(meta?.bestRisky ?? 0);
+      const comboLabel = combo === 1 ? "1 combo" : `${combo} combo streak`;
+      const riskyLabel = risky > 0 ? ` · Risky +${risky}` : "";
+      return `${value ?? 0} pts · ${comboLabel}${riskyLabel}`;
+    },
+  },
   "whispers-garden": {
     label: "Field Completion",
     empty: "No whispers answered yet.",
