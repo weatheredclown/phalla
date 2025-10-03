@@ -159,7 +159,7 @@ export const scoreConfigs = {
     label: "Family Harmony",
     empty: "No harmony runs logged yet.",
     format: ({ value }) => `Harmony ${value ?? 0}`,
-  }
+  },
   "tailing-the-trash": {
     label: "Evidence Logged",
     empty: "No stakeouts logged yet.",
@@ -238,6 +238,19 @@ export const scoreConfigs = {
       return `${value ?? 0} pts · ${comboLabel}${riskyLabel}`;
     },
   },
+  // Level 22
+  "merger-madness": {
+    label: "Efficiency Rating",
+    empty: "No desk shifts logged yet.",
+    format: ({ value, meta }) => {
+      const accuracy = Number.isFinite(meta?.accuracy)
+        ? `${meta.accuracy}% accuracy`
+        : "0% accuracy";
+      const docs = Number(meta?.documents ?? 0);
+      const docLabel = docs === 1 ? "doc" : "docs";
+      return `${value ?? 0} pts · ${accuracy} · ${docs} ${docLabel}`;
+    },
+  }, // Level 22
   "whispers-garden": {
     label: "Field Completion",
     empty: "No whispers answered yet.",

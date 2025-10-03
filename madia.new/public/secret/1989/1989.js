@@ -1059,6 +1059,50 @@ const games = [
           </svg>
     `,
   },
+  // Level 22
+  {
+    id: "merger-madness",
+    name: "Merger Madness",
+    description: "Juggle memos, documents, and ringing phones to keep the merger pitch spotless before stress overloads the desk.",
+    url: "./merger-madness/index.html",
+    thumbnail: `
+      <svg viewBox="0 0 160 120" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Merger Madness preview">
+        <defs>
+          <linearGradient id="mergerPanel" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0%" stop-color="rgba(34,211,238,0.8)" />
+            <stop offset="100%" stop-color="rgba(250,204,21,0.7)" />
+          </linearGradient>
+          <linearGradient id="mergerDesk" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="rgba(252,211,77,0.35)" />
+            <stop offset="100%" stop-color="rgba(15,23,42,0.9)" />
+          </linearGradient>
+        </defs>
+        <rect x="6" y="6" width="148" height="108" rx="18" fill="rgba(8,13,32,0.92)" stroke="rgba(148,163,184,0.35)" />
+        <rect x="16" y="16" width="128" height="88" rx="16" fill="rgba(15,23,42,0.85)" stroke="rgba(34,211,238,0.35)" />
+        <rect x="24" y="28" width="112" height="32" rx="12" fill="rgba(15,23,42,0.9)" stroke="rgba(34,211,238,0.45)" />
+        <rect x="28" y="32" width="104" height="24" rx="10" fill="url(#mergerPanel)" opacity="0.55" />
+        <g transform="translate(30 70)">
+          <rect x="0" y="0" width="100" height="32" rx="12" fill="url(#mergerDesk)" stroke="rgba(250,204,21,0.45)" />
+          <rect x="8" y="6" width="26" height="20" rx="6" fill="rgba(15,23,42,0.88)" stroke="rgba(34,211,238,0.5)" />
+          <rect x="40" y="4" width="24" height="24" rx="6" fill="rgba(248,250,252,0.85)" stroke="rgba(148,163,184,0.45)" />
+          <rect x="70" y="4" width="22" height="24" rx="6" fill="rgba(34,197,94,0.6)" stroke="rgba(34,197,94,0.75)" />
+        </g>
+        <g fill="none" stroke="rgba(148,163,184,0.45)" stroke-width="1.4" stroke-linecap="round">
+          <path d="M40 40 H120" />
+          <path d="M48 46 H112" />
+          <path d="M38 84 L54 96" />
+          <path d="M70 84 L90 96" />
+        </g>
+        <g>
+          <circle cx="46" cy="86" r="6" fill="#38bdf8" stroke="rgba(255,255,255,0.5)" stroke-width="1.2" />
+          <circle cx="76" cy="86" r="6" fill="#facc15" stroke="rgba(255,255,255,0.45)" stroke-width="1.2" />
+          <circle cx="104" cy="86" r="6" fill="#fb7185" stroke="rgba(255,255,255,0.45)" stroke-width="1.2" />
+        </g>
+        <rect x="44" y="24" width="72" height="8" rx="4" fill="rgba(15,23,42,0.8)" stroke="rgba(34,211,238,0.45)" />
+        <rect x="60" y="20" width="40" height="6" rx="3" fill="rgba(248,113,113,0.75)" opacity="0.8" />
+      </svg>
+    `,
+  }, // Level 22
   {
     id: "whispers-garden",
     name: "Whisper's Garden",
