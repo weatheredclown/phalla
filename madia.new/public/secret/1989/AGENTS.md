@@ -6,6 +6,9 @@ Each level should ladder upward from Level 50 to Level 1, pairing puzzle mechani
 Use oblique level titles that allude to, but do not repeat, the exact film names.
 games should be added to the 1989 arcade so that they can be played/replayed in any order
 
+Shared animation/particle conventions:
+- Use `particles.js` via `mountParticleField` for ambient cabinet effects when you need celebratory bursts (see `augmentum` and other neon-heavy stages).
+- Keep palettes within the synthwave/neon spectrum defined in `particles.js` unless a level demands a bespoke theme; prefer extending the palette rather than writing new particle systems.
 ## 1989 Arcade Polish Rules
 
 Study the strongest cabinet builds (e.g., "Speed Zone", "Second Star Flight", "Velvet Syncopation") and apply these shared rules to every new level so it instantly feels at home in the arcade:

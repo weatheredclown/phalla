@@ -97,6 +97,17 @@ export const scoreConfigs = {
     empty: "No checkpoints cleared yet.",
     format: ({ value }) => `${value ?? 0} / 4`,
   },
+  "three-fugitives": {
+    label: "Tempo Buffer",
+    empty: "No rescues logged yet.",
+    format: ({ value, meta }) => {
+      const turns = Number(meta?.turns);
+      if (Number.isFinite(turns)) {
+        return `${value ?? 0} tempo · ${turns} turn${turns === 1 ? "" : "s"}`;
+      }
+      return `${value ?? 0} tempo`;
+    },
+  },
   "velvet-syncopation": {
     label: "Harmony Peak",
     empty: "No harmony recorded yet.",
