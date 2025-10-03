@@ -484,6 +484,55 @@ const games = [
     `,
   },
   {
+    id: "half-inch-heroes",
+    name: "Half-Inch Heroes",
+    description: "Steer the micro squad across the lawn while juggling dew, loyalty, and sprinkler cycles.",
+    url: "./half-inch-heroes/index.html",
+    thumbnail: `
+      <svg viewBox="0 0 160 120" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Half-Inch Heroes preview">
+        <defs>
+          <linearGradient id="microSky" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="rgba(56,189,248,0.4)" />
+            <stop offset="100%" stop-color="rgba(13,22,38,0.92)" />
+          </linearGradient>
+          <linearGradient id="grassGlow" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0%" stop-color="rgba(132,204,22,0.85)" />
+            <stop offset="100%" stop-color="rgba(56,189,248,0.4)" />
+          </linearGradient>
+          <radialGradient id="dewDrop" cx="50%" cy="40%" r="60%">
+            <stop offset="0%" stop-color="#e0f2fe" />
+            <stop offset="70%" stop-color="rgba(56,189,248,0.65)" />
+            <stop offset="100%" stop-color="rgba(15,23,42,0.85)" />
+          </radialGradient>
+        </defs>
+        <rect x="8" y="10" width="144" height="100" rx="18" fill="rgba(9,14,32,0.92)" stroke="rgba(148,163,184,0.35)" />
+        <rect x="18" y="20" width="124" height="80" rx="16" fill="url(#microSky)" stroke="rgba(56,189,248,0.35)" />
+        <g stroke="rgba(148,163,184,0.18)" stroke-width="1" opacity="0.9">
+          ${Array.from({ length: 5 }, (_, i) => `<line x1="${30 + i * 20}" y1="26" x2="${30 + i * 16}" y2="92" />`).join("")}
+        </g>
+        <g fill="url(#grassGlow)" opacity="0.88">
+          <path d="M28 94 C36 70 48 46 60 32 L70 34 C58 58 46 84 40 102 Z" />
+          <path d="M62 96 C68 72 84 46 96 32 L104 36 C92 60 82 84 76 104 Z" />
+          <path d="M100 94 C110 68 124 44 132 30 L138 36 C130 58 118 84 112 104 Z" />
+        </g>
+        <ellipse cx="70" cy="54" rx="18" ry="12" fill="url(#dewDrop)" stroke="rgba(226,232,240,0.45)" stroke-width="1.5" />
+        <path d="M82 66 Q92 70 100 78 T122 94" fill="none" stroke="rgba(132,204,22,0.7)" stroke-width="3" stroke-linecap="round" stroke-dasharray="6 8" />
+        <g transform="translate(48 72)">
+          <path d="M0 18 Q10 10 22 12" fill="none" stroke="rgba(59,130,246,0.6)" stroke-width="2" stroke-linecap="round" />
+          <circle cx="22" cy="12" r="5" fill="#84cc16" stroke="rgba(15,23,42,0.8)" stroke-width="1.5" />
+          <circle cx="6" cy="18" r="4" fill="#facc15" stroke="rgba(15,23,42,0.85)" stroke-width="1.5" />
+          <path d="M-4 24 C6 12 12 4 18 0" fill="none" stroke="rgba(38,198,218,0.45)" stroke-width="2" stroke-linecap="round" />
+        </g>
+        <g transform="translate(96 64)">
+          <path d="M0 16 C8 12 18 12 26 16" fill="none" stroke="rgba(15,23,42,0.7)" stroke-width="6" stroke-linecap="round" />
+          <circle cx="4" cy="16" r="4" fill="#0f172a" />
+          <circle cx="20" cy="16" r="4" fill="#0f172a" />
+          <path d="M8 12 C12 4 18 4 22 12" fill="none" stroke="#84cc16" stroke-width="2" stroke-linecap="round" />
+        </g>
+      </svg>
+    `,
+  },
+  {
     id: "boombox-serenade",
     name: "Boombox Serenade",
     description: "Sync emotional frequencies before the silence fractures the conversation.",
