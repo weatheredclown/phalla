@@ -252,6 +252,26 @@ export const scoreConfigs = {
     empty: "No checkpoints cleared yet.",
     format: ({ value }) => `${value ?? 0} / 4`,
   },
+  "sugar-ray-hustle": {
+    label: "Career Take",
+    empty: "No winnings recorded yet.",
+    format: ({ value, meta }) => {
+      const amount = Number(value ?? 0);
+      const formatter = new Intl.NumberFormat("en-US", {
+        style: "currency",
+        currency: "USD",
+        maximumFractionDigits: 0,
+      });
+      const take = formatter.format(amount);
+      const streak = Number(meta?.longestStreak ?? 0);
+      const foes = Number(meta?.opponents ?? 0);
+      const swagger = Number(meta?.swaggerActivations ?? 0);
+      const streakLabel = streak === 1 ? "1 perfect" : `${streak} perfects`;
+      const foeLabel = foes === 1 ? "1 foe" : `${foes} foes`;
+      const swaggerLabel = swagger === 1 ? "1 slow-mo" : `${swagger} slow-mo`;
+      return `${take} · ${streakLabel} · ${foeLabel} · ${swaggerLabel}`;
+    },
+  },
   "three-fugitives": {
     label: "Tempo Buffer",
     empty: "No rescues logged yet.",
