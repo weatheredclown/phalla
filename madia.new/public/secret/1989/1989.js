@@ -1582,6 +1582,55 @@ const games = [
       </svg>
     `,
   },
+  // Level 7
+  {
+    id: "framed-breakout",
+    name: "Framed Breakout",
+    description: "Crack mini-heists and gamble QTE haymakers to sneak Tango & Cash past prison patrols.",
+    url: "./framed-breakout/index.html",
+    thumbnail: `
+      <svg viewBox="0 0 160 120" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Framed Breakout preview">
+        <defs>
+          <linearGradient id="framedBackdrop" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0%" stop-color="rgba(59,130,246,0.85)" />
+            <stop offset="100%" stop-color="rgba(15,23,42,0.92)" />
+          </linearGradient>
+          <linearGradient id="framedCone" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0%" stop-color="rgba(248,113,113,0.6)" />
+            <stop offset="100%" stop-color="rgba(56,189,248,0.45)" />
+          </linearGradient>
+          <linearGradient id="framedFloor" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="rgba(15,23,42,0.85)" />
+            <stop offset="100%" stop-color="rgba(2,6,23,0.95)" />
+          </linearGradient>
+        </defs>
+        <rect x="8" y="8" width="144" height="104" rx="18" fill="rgba(5,8,20,0.92)" stroke="rgba(148,163,184,0.4)" />
+        <rect x="16" y="20" width="128" height="80" rx="16" fill="url(#framedBackdrop)" stroke="rgba(148,163,184,0.35)" />
+        <g transform="translate(24 28)">
+          <rect x="0" y="0" width="104" height="64" rx="14" fill="url(#framedFloor)" stroke="rgba(148,163,184,0.25)" />
+          <path d="M80 12 L112 44 L48 60 Z" fill="url(#framedCone)" opacity="0.8" />
+          <g>
+            <circle cx="36" cy="44" r="10" fill="rgba(251,191,36,0.25)" stroke="rgba(251,191,36,0.65)" stroke-width="2" />
+            <circle cx="36" cy="44" r="5" fill="#38bdf8" stroke="rgba(15,23,42,0.9)" />
+            <path d="M32 44 L12 56" stroke="rgba(34,197,94,0.7)" stroke-width="3" stroke-linecap="round" />
+            <circle cx="14" cy="56" r="5" fill="#22c55e" stroke="rgba(15,23,42,0.8)" />
+          </g>
+          <g>
+            <rect x="70" y="8" width="20" height="20" rx="8" fill="rgba(15,23,42,0.92)" stroke="rgba(148,163,184,0.5)" />
+            <circle cx="80" cy="18" r="6" fill="#0f172a" stroke="rgba(148,163,184,0.5)" />
+            <path d="M72 4 L88 0 L94 14" fill="none" stroke="rgba(248,250,252,0.55)" stroke-width="2" />
+          </g>
+          <g stroke="rgba(94,234,212,0.4)" stroke-width="1.2">
+            ${Array.from({ length: 4 }, (_, i) => `<line x1="${12 + i * 22}" y1="6" x2="${12 + i * 22}" y2="58" />`).join("")}
+            ${Array.from({ length: 3 }, (_, i) => `<line x1="10" y1="${18 + i * 16}" x2="94" y2="${18 + i * 16}" />`).join("")}
+          </g>
+        </g>
+        <rect x="26" y="94" width="108" height="12" rx="6" fill="rgba(10,16,36,0.85)" stroke="rgba(148,163,184,0.35)" />
+        <rect x="30" y="96" width="52" height="8" rx="4" fill="rgba(248,113,113,0.65)" />
+        <rect x="84" y="96" width="36" height="8" rx="4" fill="rgba(56,189,248,0.65)" />
+      </svg>
+    `,
+  }, // Level 7
 ];
 
 const grid = document.getElementById("game-grid");
