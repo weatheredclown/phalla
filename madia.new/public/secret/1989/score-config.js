@@ -133,6 +133,17 @@ export const scoreConfigs = {
     format: ({ value }) =>
       value === 1 ? "1 intercept" : `${value ?? 0} intercepts`,
   },
+  "tailing-the-trash": {
+    label: "Evidence Logged",
+    empty: "No stakeouts logged yet.",
+    format: ({ value, meta }) => {
+      const suspicion = Number(meta?.suspicion);
+      if (Number.isFinite(suspicion)) {
+        return `${value ?? 0} logs · ${suspicion}% peak`;
+      }
+      return `${value ?? 0} logs`;
+    }
+  },
   "restless-acre-rise": {
     label: "Altitude",
     empty: "No ascents logged yet.",
