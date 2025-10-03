@@ -96,6 +96,15 @@ export const scoreConfigs = {
     format: ({ value }) =>
       value === 1 ? "1 intercept" : `${value ?? 0} intercepts`,
   },
+  "restless-acre-rise": {
+    label: "Altitude",
+    empty: "No ascents logged yet.",
+    format: ({ value, meta }) => {
+      const effigies = Number(meta?.effigies ?? 0);
+      const effigyLabel = effigies === 1 ? "effigy" : "effigies";
+      return `${value ?? 0} ft · ${effigies} ${effigyLabel}`;
+    },
+  },
   "boombox-serenade": {
     label: "Peak Flow",
     empty: "No sync sessions yet.",

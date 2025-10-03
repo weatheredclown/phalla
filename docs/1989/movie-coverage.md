@@ -2,7 +2,7 @@
 
 This reference tracks how the 1989 arcade cabinets map to their source films and how far the ladder has progressed up the 1989 domestic box office chart.
 
-Three Fugitives now anchors Level 32, covering the next-highest new release still on the chart while the rest of the ladder continues to backfill the remaining Top 50 slots.
+Restless Acre Rise now haunts Level 18, drawing the ladder deeper into the domestic Top 20 while earlier cabinets continue to backfill the remaining slots.
 
 ## Covered Films
 
@@ -29,6 +29,7 @@ Three Fugitives now anchors Level 32, covering the next-highest new release stil
 | 32 | Three Fugitives | *Three Fugitives* | #31 |
 | 31 | Nose for Trouble | *K-9* | #30 |
 | 30 | Gilded Partition | *The War of the Roses* | #12 |
+| 18 | Restless Acre Rise | *Pet Sematary* | #17 |
 
 Remaining:
 ## Remaining Targets to Reach #1
@@ -66,7 +67,6 @@ Remaining:
 | **21** | Field of Dreams | #14 | Whisper's Garden | A meditative game where you follow subtle auditory cues ("If you build it...") to find and plant crops on a field before time runs out. |
 | **20** | National Lampoon's Christmas Vacation | #15 | Twenty-Five Thousand Bulbs | An electrical circuit puzzle where you must connect all the wires in the neighborhood to light up the house. |
 | **19** | Sea of Love | #16 | The Personal Ad Trap | A deductive game where you cross-reference different clues and profiles to find a killer who connects through newspaper personal ads. |
-| **18** | Pet Sematary | #17 | The Creepy Climb | A platforming/climbing game where you ascend a spooky burial ground path while avoiding reanimated obstacles. |
 | **17** | Harlem Nights | #18 | The Sugar Ray Hustle | A quick-draw or reaction game set in a 1930s speakeasy, perhaps a high-stakes, fast-paced dice game. |
 | **16** | Beaches | #19 | Wind Beneath My Wings | A musical rhythm or karaoke-style game hitting the notes of a powerful Bette Midler song. |
 | **15** | The Abyss | #20 | Deepcore Descent | A pressure/balance management game, keeping a deep-sea submersible stable and intact under crushing pressure. |

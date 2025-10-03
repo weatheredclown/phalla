@@ -840,6 +840,56 @@ const games = [
     `,
   },
   {
+    id: "restless-acre-rise",
+    name: "Restless Acre Rise",
+    description: "Climb the burial ridge ahead of the fog, dodge carrion lunges, and chase glowing effigies for doubled gains.",
+    url: "./restless-acre-rise/index.html",
+    thumbnail: `
+      <svg viewBox="0 0 160 120" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Restless Acre Rise preview">
+        <defs>
+          <linearGradient id="restlessSky" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="rgba(15,23,42,0.95)" />
+            <stop offset="70%" stop-color="rgba(2,6,23,0.92)" />
+            <stop offset="100%" stop-color="rgba(2,6,23,0.98)" />
+          </linearGradient>
+          <radialGradient id="effigyGlow" cx="0.5" cy="0.3" r="0.7">
+            <stop offset="0%" stop-color="rgba(250,204,21,0.9)" />
+            <stop offset="65%" stop-color="rgba(250,204,21,0.35)" />
+            <stop offset="100%" stop-color="rgba(0,0,0,0)" />
+          </radialGradient>
+          <linearGradient id="fogSweep" x1="0" y1="1" x2="0" y2="0">
+            <stop offset="0%" stop-color="rgba(148,163,184,0.45)" />
+            <stop offset="100%" stop-color="rgba(148,163,184,0)" />
+          </linearGradient>
+        </defs>
+        <rect x="8" y="10" width="144" height="100" rx="18" fill="url(#restlessSky)" stroke="rgba(148,163,184,0.35)" />
+        <g stroke="rgba(76,29,149,0.55)" stroke-width="2.4" stroke-linecap="round">
+          <path d="M34 94 C48 88 62 74 74 66 C86 58 98 46 114 40" fill="none" />
+        </g>
+        <g stroke="rgba(248,113,113,0.55)" stroke-width="2" stroke-dasharray="6 6" stroke-linecap="round">
+          <path d="M46 90 L52 74" />
+          <path d="M78 68 L86 54" />
+        </g>
+        <g>
+          <rect x="40" y="78" width="36" height="10" rx="4" fill="rgba(71,85,105,0.8)" />
+          <rect x="70" y="60" width="32" height="9" rx="4" fill="rgba(51,65,85,0.8)" />
+          <rect x="100" y="42" width="28" height="8" rx="4" fill="rgba(30,41,59,0.82)" />
+        </g>
+        <g>
+          <ellipse cx="116" cy="34" rx="18" ry="12" fill="url(#effigyGlow)" />
+          <circle cx="116" cy="34" r="8" fill="rgba(250,204,21,0.9)" stroke="rgba(253,224,71,0.8)" stroke-width="2" />
+          <text x="116" y="38" text-anchor="middle" font-size="10" fill="rgba(15,23,42,0.9)" font-family="'Press Start 2P', monospace">×2</text>
+        </g>
+        <g>
+          <ellipse cx="70" cy="92" rx="12" ry="7" fill="rgba(148,163,184,0.2)" />
+          <path d="M66 92 L74 92 L76 68 C78 64 82 62 88 62" fill="none" stroke="rgba(226,232,240,0.9)" stroke-width="3" stroke-linecap="round" />
+          <circle cx="80" cy="60" r="6" fill="rgba(244,114,182,0.85)" stroke="rgba(148,163,184,0.5)" stroke-width="1.5" />
+        </g>
+        <rect x="10" y="72" width="140" height="38" rx="18" fill="url(#fogSweep)" />
+      </svg>
+    `,
+  },
+  {
     id: "captains-echo",
     name: "Captain's Echo",
     description: "Stage the four-beat desk salute before the dean snuffs the Carpe Diem spark.",
