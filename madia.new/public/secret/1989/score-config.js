@@ -34,15 +34,29 @@ export const scoreConfigs = {
     format: ({ value }) =>
       value === 1 ? "1 token" : `${value ?? 0} tokens`,
   },
-  "dream-team-breakout": {
+  "wardline-breakout": {
     label: "Final Sanity",
     empty: "No breakout simulated yet.",
     format: ({ value }) => `Sanity ${value ?? 0} / 3`,
+  },
+  "dojo-duality": {
+    label: "Focus Score",
+    empty: "No focus logged yet.",
+    format: ({ value }) => `Focus ${value ?? 0}`,
   },
   "gates-of-eastside": {
     label: "Test Score",
     empty: "No study sessions yet.",
     format: ({ value }) => `${value ?? 0} / 120`,
+  },
+  "gilded-partition": {
+    label: "Estate Claim",
+    empty: "No estate claim recorded yet.",
+    format: ({ value, meta }) => {
+      const ruins = Number(meta?.destruction ?? 0);
+      const ruinLabel = ruins === 1 ? "ruin" : "ruins";
+      return `${value ?? 0}% estate · ${ruins} ${ruinLabel}`;
+    },
   },
   "halo-hustle": {
     label: "Life Chips Banked",
@@ -62,7 +76,13 @@ export const scoreConfigs = {
     format: ({ value }) =>
       value === 1 ? "1 trap" : `${value ?? 0} traps`,
   },
-  "say-anything": {
+  "nose-for-trouble": {
+    label: "Intercept Streak",
+    empty: "No intercepts logged yet.",
+    format: ({ value }) =>
+      value === 1 ? "1 intercept" : `${value ?? 0} intercepts`,
+  },
+  "boombox-serenade": {
     label: "Peak Flow",
     empty: "No sync sessions yet.",
     format: ({ value }) => `${value ?? 0}% flow`,

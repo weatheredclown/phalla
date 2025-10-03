@@ -9,9 +9,9 @@ const particleSystem = mountParticleField({
   },
 });
 
-const scoreConfig = getScoreConfig("say-anything");
+const scoreConfig = getScoreConfig("boombox-serenade");
 const highScore = initHighScoreBanner({
-  gameId: "say-anything",
+  gameId: "boombox-serenade",
   label: scoreConfig.label,
   format: scoreConfig.format,
   emptyText: scoreConfig.empty,

@@ -9,9 +9,9 @@ const particleSystem = mountParticleField({
   },
 });
 
-const scoreConfig = getScoreConfig("dream-team-breakout");
+const scoreConfig = getScoreConfig("wardline-breakout");
 const highScore = initHighScoreBanner({
-  gameId: "dream-team-breakout",
+  gameId: "wardline-breakout",
   label: scoreConfig.label,
   format: scoreConfig.format,
   emptyText: scoreConfig.empty,
