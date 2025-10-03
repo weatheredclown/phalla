@@ -365,12 +365,12 @@ const games = [
     `,
   },
   {
-    id: "dream-team-breakout",
-    name: "Dream Team Breakout",
+    id: "wardline-breakout",
+    name: "Wardline Breakout",
     description: "Plan six simultaneous moves to sneak the quartet into the stadium gates.",
-    url: "./dream-team-breakout/index.html",
+    url: "./wardline-breakout/index.html",
     thumbnail: `
-      <svg viewBox="0 0 160 120" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Dream Team Breakout preview">
+      <svg viewBox="0 0 160 120" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Wardline Breakout preview">
         <defs>
           <linearGradient id="cityGlow" x1="0" y1="0" x2="1" y2="1">
             <stop offset="0%" stop-color="#38bdf8" />
@@ -405,12 +405,12 @@ const games = [
     `,
   },
   {
-    id: "say-anything",
-    name: "Say Anything...",
+    id: "boombox-serenade",
+    name: "Boombox Serenade",
     description: "Sync emotional frequencies before the silence fractures the conversation.",
-    url: "./say-anything/index.html",
+    url: "./boombox-serenade/index.html",
     thumbnail: `
-      <svg viewBox="0 0 160 120" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Say Anything preview">
+      <svg viewBox="0 0 160 120" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Boombox Serenade preview">
         <defs>
           <linearGradient id="sayBackdrop" x1="0" y1="0" x2="1" y2="1">
             <stop offset="0%" stop-color="#38bdf8" />

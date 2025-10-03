@@ -34,7 +34,7 @@ export const scoreConfigs = {
     format: ({ value }) =>
       value === 1 ? "1 token" : `${value ?? 0} tokens`,
   },
-  "dream-team-breakout": {
+  "wardline-breakout": {
     label: "Final Sanity",
     empty: "No breakout simulated yet.",
     format: ({ value }) => `Sanity ${value ?? 0} / 3`,
@@ -62,7 +62,7 @@ export const scoreConfigs = {
     format: ({ value }) =>
       value === 1 ? "1 trap" : `${value ?? 0} traps`,
   },
-  "say-anything": {
+  "boombox-serenade": {
     label: "Peak Flow",
     empty: "No sync sessions yet.",
     format: ({ value }) => `${value ?? 0}% flow`,
