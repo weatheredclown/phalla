@@ -31,6 +31,7 @@ Three Fugitives now anchors Level 32, covering the next-highest new release stil
 | 32 | Three Fugitives | *Three Fugitives* | #31 |
 | 31 | Nose for Trouble | *K-9* | #30 |
 | 30 | Gilded Partition | *The War of the Roses* | #12 |
+| 29 | The K-Mart Countdown | *Rain Man* | #5 |
 | 28 | Voice Box Swap | *Look Who's Talking* | #6 |
 | 24 | The Diner Debate | *When Harry Met Sally...* | #11 |
 | 29 | Flapjack Flip-Out | *Uncle Buck* | #13 |
@@ -60,6 +61,7 @@ Remaining:
 | **32** | Three Fugitives | #31 | Three Fugitives | A timed escort mission, navigating a crowded area while protecting a young child. |
 | **31** | K-9 | #30 | Nose for Trouble | A scent-tracking and item retrieval game as a police dog. |
 | **30** | The War of the Roses | #29 | Gilded Partition | A destruction/physics game where you try to sabotage a mansion without getting caught by your spouse. |
+| **28** | Look Who's Talking | #6 | Voice Box Swap | A puzzle game where you match a baby's actions to the inner monologue voiceover's text or visual cue. |
 | **29** | Rain Man | #5 | The K-Mart Countdown | A memory/timing game where you have to correctly count a pile of matchsticks dropped on the floor as quickly as possible. |
 | **27** | Ghostbusters II | #7 | River of Slime Escape | A frantic action level where you navigate a maze while avoiding a rising, negative pink slime that reacts to bad vibes. |
 | **26** | Back to the Future Part II | #8 | Hoverboard Pursuit | A time-trial race level using a hoverboard to navigate future (2015) traffic and obstacles. |

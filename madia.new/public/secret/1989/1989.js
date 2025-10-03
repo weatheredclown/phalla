@@ -87,6 +87,40 @@ const games = [
     `,
   },
   {
+    id: "k-mart-countdown",
+    name: "The K-Mart Countdown",
+    description: "Memorize the spilled matchstick pile and slam your final count before the multiplier fizzles.",
+    url: "./k-mart-countdown/index.html",
+    thumbnail: `
+      <svg viewBox="0 0 160 120" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="The K-Mart Countdown preview">
+        <defs>
+          <linearGradient id="countdownBg" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="rgba(8,12,28,0.95)" />
+            <stop offset="100%" stop-color="rgba(5,9,20,0.9)" />
+          </linearGradient>
+          <linearGradient id="displayGlow" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0%" stop-color="#38bdf8" />
+            <stop offset="100%" stop-color="#facc15" />
+          </linearGradient>
+        </defs>
+        <rect x="10" y="12" width="140" height="96" rx="20" fill="url(#countdownBg)" stroke="rgba(148,163,184,0.38)" />
+        <rect x="24" y="20" width="112" height="30" rx="10" fill="rgba(10,19,42,0.85)" stroke="rgba(56,189,248,0.6)" />
+        <text x="36" y="40" font-size="10" fill="rgba(148,163,184,0.75)" font-family="'Share Tech Mono', monospace">COUNT</text>
+        <text x="116" y="40" text-anchor="end" font-size="20" fill="#38bdf8" font-family="'Segment7Standard', 'Share Tech Mono', monospace">054</text>
+        <rect x="26" y="58" width="108" height="40" rx="16" fill="rgba(12,18,35,0.95)" stroke="rgba(148,163,184,0.35)" />
+        <g stroke-width="5" stroke-linecap="round">
+          <line x1="54" y1="78" x2="90" y2="96" stroke="#facc15" />
+          <line x1="64" y1="88" x2="104" y2="70" stroke="#f97316" />
+          <line x1="76" y1="74" x2="118" y2="92" stroke="#38bdf8" />
+          <line x1="44" y1="90" x2="80" y2="72" stroke="#f472b6" />
+          <line x1="38" y1="74" x2="70" y2="94" stroke="#34d399" />
+        </g>
+        <circle cx="118" cy="70" r="6" fill="#facc15" stroke="rgba(248,250,252,0.65)" stroke-width="2" />
+        <circle cx="42" cy="96" r="5" fill="#f472b6" stroke="rgba(248,250,252,0.5)" stroke-width="2" />
+      </svg>
+    `,
+  },
+  {
     id: "dojo-duality",
     name: "Dojo Duality",
     description: "Balance Miyagi-Do focus against Cobra Kai pressure while keeping the fear meter at bay.",

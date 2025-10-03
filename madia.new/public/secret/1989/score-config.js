@@ -94,6 +94,17 @@ export const scoreConfigs = {
     format: ({ value }) =>
       value === 1 ? "1 cooled" : `${value ?? 0} cooled`,
   },
+  "k-mart-countdown": {
+    label: "Accuracy Score",
+    empty: "No counts recorded yet.",
+    format: ({ value, meta }) => {
+      const bestMultiplier = Number(meta?.bestMultiplier ?? meta?.multiplier);
+      if (Number.isFinite(bestMultiplier) && bestMultiplier > 0) {
+        return `${value ?? 0} pts · ×${bestMultiplier.toFixed(1)} best`;
+      }
+      return `${value ?? 0} pts`;
+    },
+  },
   "flapjack-flip-out": {
     label: "Stack Height",
     empty: "No stacks flipped yet.",
