@@ -62,6 +62,12 @@ export const scoreConfigs = {
     format: ({ value }) =>
       value === 1 ? "1 trap" : `${value ?? 0} traps`,
   },
+  "nose-for-trouble": {
+    label: "Intercept Streak",
+    empty: "No intercepts logged yet.",
+    format: ({ value }) =>
+      value === 1 ? "1 intercept" : `${value ?? 0} intercepts`,
+  },
   "say-anything": {
     label: "Peak Flow",
     empty: "No sync sessions yet.",
