@@ -1,3 +1,14 @@
+import { initHighScoreBanner } from "../arcade-scores.js";
+import { getScoreConfig } from "../score-config.js";
+
+const scoreConfig = getScoreConfig("second-star-flight");
+const highScore = initHighScoreBanner({
+  gameId: "second-star-flight",
+  label: scoreConfig.label,
+  format: scoreConfig.format,
+  emptyText: scoreConfig.empty,
+});
+
 const GRID_SIZE = 6;
 const SHADOW_COUNT = 7;
 const LIGHT_DURATION_MS = 8000;
@@ -43,6 +54,7 @@ const state = {
   flowMode: false,
   dust: 0,
   flight: STARTING_FLIGHT,
+  peakFlight: STARTING_FLIGHT,
   captured: 0,
   path: [],
   pathCells: new Set(),
@@ -414,6 +426,10 @@ function updateDust(value) {
 function updateFlight(value, announce = true) {
   const clamped = Math.max(0, Math.min(FLIGHT_GOAL, value));
   state.flight = clamped;
+  if (clamped > state.peakFlight) {
+    state.peakFlight = clamped;
+    highScore.submit(state.peakFlight);
+  }
   flightFill.style.width = `${clamped}%`;
   flightValue.textContent = String(clamped);
   flightMeter.setAttribute("aria-valuenow", String(clamped));

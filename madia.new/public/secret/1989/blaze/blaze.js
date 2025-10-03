@@ -1,3 +1,14 @@
+import { initHighScoreBanner } from "../arcade-scores.js";
+import { getScoreConfig } from "../score-config.js";
+
+const scoreConfig = getScoreConfig("blaze");
+const highScore = initHighScoreBanner({
+  gameId: "blaze",
+  label: scoreConfig.label,
+  format: scoreConfig.format,
+  emptyText: scoreConfig.empty,
+});
+
 const boardElement = document.getElementById("board");
 const statusBar = document.getElementById("status-bar");
 const capitalMeter = document.getElementById("capital-meter");
@@ -443,6 +454,7 @@ function advanceFlow() {
     billPosition = { ...nextStep };
     if (billPosition.row === GOAL.row && billPosition.col === GOAL.col) {
       signedBills += 1;
+      highScore.submit(signedBills);
       politicalCapital += BILL_REWARD;
       logEvent(`Bill signed cleanly. Political Capital +${BILL_REWARD} (now ${politicalCapital}).`);
       updateCapitalMeter();

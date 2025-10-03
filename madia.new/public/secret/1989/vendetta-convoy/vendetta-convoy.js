@@ -1,3 +1,14 @@
+import { initHighScoreBanner } from "../arcade-scores.js";
+import { getScoreConfig } from "../score-config.js";
+
+const scoreConfig = getScoreConfig("vendetta-convoy");
+const highScore = initHighScoreBanner({
+  gameId: "vendetta-convoy",
+  label: scoreConfig.label,
+  format: scoreConfig.format,
+  emptyText: scoreConfig.empty,
+});
+
 const BOARD_WIDTH = 8;
 const BOARD_HEIGHT = 14;
 const LANE_COLUMNS = [2, 3, 4, 5];
@@ -392,6 +403,7 @@ function sabotageEvidence(row, col) {
     cell.type = "cleared";
     cell.revealed = true;
     state.evidenceCleared += 1;
+    highScore.submit(state.evidenceCleared, { total: TOTAL_EVIDENCE });
   }
 
   state.actuation = Math.max(0, state.actuation - SABOTAGE_COST);
@@ -521,6 +533,7 @@ function triggerPhoenix(row) {
       const cell = state.board[r][c];
       if (cell.type === "evidence" || cell.type === "explosive") {
         state.evidenceCleared += 1;
+        highScore.submit(state.evidenceCleared, { total: TOTAL_EVIDENCE });
         cell.type = "cleared";
         cell.revealed = true;
       }

@@ -15,6 +15,17 @@ const ROUTE_COOL_PER_EXTRA = 2;
 const TRASH_CAN_LOCK_MS = 6_000;
 const STARTING_TEMPERATURE = 46;
 
+import { initHighScoreBanner } from "../arcade-scores.js";
+import { getScoreConfig } from "../score-config.js";
+
+const scoreConfig = getScoreConfig("heatwave-block-party");
+const highScore = initHighScoreBanner({
+  gameId: "heatwave-block-party",
+  label: scoreConfig.label,
+  format: scoreConfig.format,
+  emptyText: scoreConfig.empty,
+});
+
 const boardTemplate = [
   { id: "dj-rooftop", label: "DJ Booth Roof", type: "vent", passable: true, initialGrievance: 0 },
   { id: "stoop-a", label: "Brownstone Stoop", type: "stoop", passable: true, initialGrievance: 1 },
@@ -77,6 +88,8 @@ const state = {
   cells: [],
 };
 
+let totalCooling = 0;
+
 initializeBoard();
 resetState();
 
@@ -138,6 +151,7 @@ function resetState() {
     ...cell,
     grievance: cell.initialGrievance,
   }));
+  totalCooling = 0;
   logEntries.innerHTML = "";
   updateBoard();
   updateGauges();
@@ -211,6 +225,8 @@ function commitRoute() {
     adjustOutburst(OUTBURST_COOL_BONUS);
     updateStatus(`Cooling fan clears ${cleared} grievance block${cleared > 1 ? "s" : ""}.`);
     logEvent(`Cooling fan clears ${cleared} grievance block${cleared > 1 ? "s" : ""}.`, "success");
+    totalCooling += cleared;
+    highScore.submit(totalCooling);
   } else if (!blocked) {
     adjustOutburst(OUTBURST_WAIT_PENALTY);
     updateStatus("The route swept clean stoops. No relief, pressure grows.");

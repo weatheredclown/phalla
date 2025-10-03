@@ -1,3 +1,14 @@
+import { initHighScoreBanner } from "../arcade-scores.js";
+import { getScoreConfig } from "../score-config.js";
+
+const scoreConfig = getScoreConfig("say-anything");
+const highScore = initHighScoreBanner({
+  gameId: "say-anything",
+  label: scoreConfig.label,
+  format: scoreConfig.format,
+  emptyText: scoreConfig.empty,
+});
+
 const STARTING_FLOW = 72;
 const MAX_FLOW = 100;
 const SYNC_WINDOW_MS = 520;
@@ -48,6 +59,7 @@ const state = {
   playing: false,
   index: -1,
   flow: STARTING_FLOW,
+  highestFlow: STARTING_FLOW,
   miscommunication: [],
   positiveStreak: 0,
   activeEvent: null,
@@ -106,6 +118,7 @@ function beginSession() {
   state.miscommunication = [];
   state.positiveStreak = 0;
   state.flow = STARTING_FLOW;
+  state.highestFlow = STARTING_FLOW;
   state.activeEvent = null;
   state.activePair = null;
   state.boomboxWindow = false;
@@ -524,6 +537,10 @@ function setFlow(value) {
   flowFill.style.width = `${clamped}%`;
   flowValue.textContent = String(clamped);
   flowMeter.setAttribute("aria-valuenow", String(clamped));
+  if (clamped > state.highestFlow) {
+    state.highestFlow = clamped;
+    highScore.submit(state.highestFlow);
+  }
   if (clamped === 0 && state.playing) {
     logEvent("Communication flow collapsed. The moment slips away.", "danger");
     stopSession({ status: "Communication flow collapsed. The moment slips away." });

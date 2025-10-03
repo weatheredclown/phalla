@@ -1,3 +1,14 @@
+import { initHighScoreBanner } from "../arcade-scores.js";
+import { getScoreConfig } from "../score-config.js";
+
+const scoreConfig = getScoreConfig("velvet-syncopation");
+const highScore = initHighScoreBanner({
+  gameId: "velvet-syncopation",
+  label: scoreConfig.label,
+  format: scoreConfig.format,
+  emptyText: scoreConfig.empty,
+});
+
 const chart = [
   { left: "KeyA", right: "KeyL" },
   { left: "KeyS", right: "KeyK" },
@@ -47,6 +58,7 @@ const syncCells = [];
 const syncStepBadges = new Map();
 
 let harmony = STARTING_HARMONY;
+let highestHarmony = STARTING_HARMONY;
 let playing = false;
 let currentTick = 0;
 let intervalId = null;
@@ -165,6 +177,7 @@ function beginSequence() {
   clearHighlights();
   eventList.innerHTML = "";
   setHarmony(STARTING_HARMONY);
+  highestHarmony = STARTING_HARMONY;
   updateStatus("Rehearsal in motion.");
   logEvent("Rehearsal started. Keep the brothers in phase.");
   startButton.disabled = true;
@@ -450,6 +463,10 @@ function handleInput(code) {
 function setHarmony(value) {
   const clamped = Math.max(0, Math.min(HARMONY_MAX, Math.round(value)));
   harmony = clamped;
+  if (clamped > highestHarmony) {
+    highestHarmony = clamped;
+    highScore.submit(highestHarmony);
+  }
   harmonyFill.style.width = `${clamped}%`;
   harmonyMeter.setAttribute("aria-valuenow", String(clamped));
   harmonyValue.textContent = String(clamped);

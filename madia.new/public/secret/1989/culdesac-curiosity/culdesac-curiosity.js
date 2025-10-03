@@ -1,3 +1,14 @@
+import { initHighScoreBanner } from "../arcade-scores.js";
+import { getScoreConfig } from "../score-config.js";
+
+const scoreConfig = getScoreConfig("culdesac-curiosity");
+const highScore = initHighScoreBanner({
+  gameId: "culdesac-curiosity",
+  label: scoreConfig.label,
+  format: scoreConfig.format,
+  emptyText: scoreConfig.empty,
+});
+
 const boardElement = document.getElementById("gossip-grid");
 const statusBar = document.getElementById("status-bar");
 const logList = document.getElementById("log-entries");
@@ -87,6 +98,7 @@ let selectedTile = null;
 let resolvingBoard = false;
 let paranoia = 0;
 let tokens = 0;
+let peakTokens = 0;
 let curiosity = 0;
 let paranoiaTimer = null;
 let gameActive = true;
@@ -352,6 +364,10 @@ function updateTokensUI() {
   tokenReading.textContent = String(tokens);
   const ratio = Math.min(tokens / MAX_TOKENS_DISPLAY, 1);
   tokenFill.style.width = `${ratio * 100}%`;
+  if (tokens > peakTokens) {
+    peakTokens = tokens;
+    highScore.submit(peakTokens);
+  }
 }
 
 function updateCuriosityUI() {
@@ -626,6 +642,7 @@ function resetGame() {
   resolvingBoard = false;
   paranoia = 0;
   tokens = 0;
+  peakTokens = 0;
   curiosity = 0;
   selectedTile = null;
   updateParanoiaUI();

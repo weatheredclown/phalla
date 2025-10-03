@@ -1,3 +1,14 @@
+import { initHighScoreBanner } from "../arcade-scores.js";
+import { getScoreConfig } from "../score-config.js";
+
+const scoreConfig = getScoreConfig("kodiak-covenant");
+const highScore = initHighScoreBanner({
+  gameId: "kodiak-covenant",
+  label: scoreConfig.label,
+  format: scoreConfig.format,
+  emptyText: scoreConfig.empty,
+});
+
 const TURN_COUNT = 9;
 const PROTECTION_WINDOW = 2;
 const GRID_WIDTH = 6;
@@ -492,6 +503,7 @@ function simulatePlan(plan) {
     states,
     events,
     success,
+    trapCount: clearedTraps.size,
   };
 }
 
@@ -540,6 +552,7 @@ function loadExamplePlan() {
 function runSimulation() {
   const plan = readPlan();
   const result = simulatePlan(plan);
+  highScore.submit(result.trapCount ?? 0);
   history = result.states;
   executedTurns = history[history.length - 1]?.turn ?? 0;
   currentStateIndex = 0;

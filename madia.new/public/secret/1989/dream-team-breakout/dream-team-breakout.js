@@ -1,3 +1,14 @@
+import { initHighScoreBanner } from "../arcade-scores.js";
+import { getScoreConfig } from "../score-config.js";
+
+const scoreConfig = getScoreConfig("dream-team-breakout");
+const highScore = initHighScoreBanner({
+  gameId: "dream-team-breakout",
+  label: scoreConfig.label,
+  format: scoreConfig.format,
+  emptyText: scoreConfig.empty,
+});
+
 const TURN_COUNT = 6;
 const SANITY_MAX = 3;
 const wildcardDeck = ["S", "E", "S", "E", "S", "E"];
@@ -823,6 +834,7 @@ runButton.addEventListener("click", () => {
   statusReadout.textContent = "Simulating the breakout...";
   const result = runSimulation(plan);
   setSanity(result.sanity);
+  highScore.submit(result.sanity);
   applySnapshot(result.timeline);
   result.events.forEach(({ message, type }) => {
     pushEvent(message, type);

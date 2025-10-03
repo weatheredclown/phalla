@@ -1,3 +1,14 @@
+import { initHighScoreBanner } from "../arcade-scores.js";
+import { getScoreConfig } from "../score-config.js";
+
+const scoreConfig = getScoreConfig("captains-echo");
+const highScore = initHighScoreBanner({
+  gameId: "captains-echo",
+  label: scoreConfig.label,
+  format: scoreConfig.format,
+  emptyText: scoreConfig.empty,
+});
+
 const students = [
   {
     id: "neil",
@@ -373,6 +384,7 @@ function evaluatePlan() {
 
   renderContributions(contributions);
   setMeter(score);
+  highScore.submit(score);
 
   targetCallout.classList.remove("warning", "success");
   if (score >= TARGET_SCORE) {

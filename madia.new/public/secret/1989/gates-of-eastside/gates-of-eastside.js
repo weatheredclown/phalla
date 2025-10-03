@@ -17,6 +17,17 @@ const statusBanner = document.getElementById("status-banner");
 const mbstMeter = document.getElementById("mbst-meter");
 const mbstFill = document.getElementById("mbst-fill");
 const mbstLabel = document.getElementById("mbst-label");
+import { initHighScoreBanner } from "../arcade-scores.js";
+import { getScoreConfig } from "../score-config.js";
+
+const scoreConfig = getScoreConfig("gates-of-eastside");
+const highScore = initHighScoreBanner({
+  gameId: "gates-of-eastside",
+  label: scoreConfig.label,
+  format: scoreConfig.format,
+  emptyText: scoreConfig.empty,
+});
+
 const testScoreMeter = document.getElementById("test-score-meter");
 const testScoreFill = document.getElementById("test-score-fill");
 const testScoreLabel = document.getElementById("test-score-label");
@@ -281,6 +292,7 @@ function deliverStudyFlow(row) {
   const spend = Math.min(mbstProgress, DELIVERY_COST);
   mbstProgress = Math.max(0, mbstProgress - spend);
   testScore = Math.min(TEST_SCORE_TARGET, testScore + spend);
+  highScore.submit(Math.round(testScore));
   updateMeters();
   updateStatus(`Lane ${row + 1} cashed in ${spend} MBST for scores.`, "success");
   logEvent(`Lane ${row + 1} converted ${spend} MBST into test score progress.`);
