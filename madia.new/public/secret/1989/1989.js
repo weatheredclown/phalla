@@ -50,6 +50,43 @@ const games = [
     `,
   },
   {
+    id: "three-fugitives",
+    name: "Three Fugitives",
+    description: "Forge filing stones, sever each lock, and body-check patrols while you usher the kid to the safe balcony.",
+    url: "./three-fugitives/index.html",
+    thumbnail: `
+      <svg viewBox="0 0 160 120" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Three Fugitives preview">
+        <defs>
+          <linearGradient id="custodyBg" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0%" stop-color="rgba(15,23,42,0.95)" />
+            <stop offset="100%" stop-color="rgba(6,11,22,0.95)" />
+          </linearGradient>
+          <linearGradient id="safeGlow" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="rgba(74,222,128,0.85)" />
+            <stop offset="100%" stop-color="rgba(59,130,246,0.6)" />
+          </linearGradient>
+        </defs>
+        <rect x="8" y="8" width="144" height="104" rx="18" fill="url(#custodyBg)" stroke="rgba(148,163,184,0.4)" />
+        <rect x="28" y="24" width="104" height="72" rx="14" fill="rgba(12,20,38,0.85)" stroke="rgba(148,163,184,0.35)" />
+        <g stroke="rgba(71,85,105,0.55)" stroke-width="1">
+          ${Array.from({ length: 4 }, (_, i) => `<line x1="${44 + i * 24}" y1="26" x2="${44 + i * 24}" y2="94" />`).join("")}
+          ${Array.from({ length: 3 }, (_, i) => `<line x1="30" y1="${42 + i * 20}" x2="130" y2="${42 + i * 20}" />`).join("")}
+        </g>
+        <rect x="110" y="30" width="20" height="20" rx="6" fill="url(#safeGlow)" stroke="rgba(148,163,184,0.45)" />
+        <rect x="56" y="62" width="20" height="20" rx="6" fill="rgba(56,189,248,0.85)" stroke="rgba(14,116,144,0.9)" />
+        <rect x="80" y="62" width="20" height="20" rx="6" fill="rgba(248,250,252,0.92)" stroke="rgba(148,163,184,0.7)" />
+        <path d="M100 52 L124 40" stroke="rgba(248,250,252,0.6)" stroke-width="3" stroke-dasharray="6 4" stroke-linecap="round" />
+        <g>
+          <rect x="44" y="46" width="18" height="18" rx="5" fill="rgba(239,68,68,0.78)" stroke="rgba(76,29,149,0.8)" />
+          <rect x="74" y="34" width="18" height="18" rx="5" fill="rgba(239,68,68,0.7)" stroke="rgba(76,29,149,0.75)" />
+          <path d="M53 46 L90 38" stroke="rgba(239,68,68,0.4)" stroke-width="2" stroke-dasharray="4 3" />
+        </g>
+        <circle cx="68" cy="84" r="6" fill="rgba(250,204,21,0.6)" stroke="rgba(250,204,21,0.9)" />
+        <circle cx="92" cy="84" r="6" fill="rgba(248,113,113,0.65)" stroke="rgba(76,29,149,0.8)" />
+      </svg>
+    `,
+  },
+  {
     id: "heatwave-block-party",
     name: "Heatwave Block Party",
     description: "Route cooling fans to vent grievances before the block boils over.",

@@ -53,5 +53,6 @@ The thumbnail must be a valid SVG string embedded in the JavaScript file. It sho
 -   Leverage the shared stylesheet at `madia.new/public/secret/1989/common.css` for a consistent look and feel that matches the rest of the arcade.
 -   Link to your game-specific stylesheet for any unique visual elements.
 -   The arcade shell provides UI elements like headers, buttons, and status boards. Refer to existing games to see how to structure your HTML to take advantage of these shared styles.
+-   Particle and celebration effects should reuse `madia.new/public/secret/1989/particles.js` (for example, `mountParticleField`) so ambient animations feel consistent across cabinets such as Augmentum and Speed Zone. Extend its palettes instead of introducing bespoke particle systems unless a level has extraordinary needs.
 
 By following these conventions, your new game will integrate seamlessly into the 1989 Arcade.
