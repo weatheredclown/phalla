@@ -171,6 +171,53 @@ const games = [
     `,
   },
   {
+    id: "flapjack-flip-out",
+    name: "Flapjack Flip-Out",
+    description: "Juggle Uncle Buck's oversized flapjacks and gamble on nudges to keep the stack sky-high.",
+    url: "./flapjack-flip-out/index.html",
+    thumbnail: `
+      <svg viewBox="0 0 160 120" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Flapjack Flip-Out preview">
+        <defs>
+          <linearGradient id="flapjackSky" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="rgba(15,23,42,0.95)" />
+            <stop offset="100%" stop-color="rgba(8,13,28,0.92)" />
+          </linearGradient>
+          <linearGradient id="flapjackPlate" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0%" stop-color="rgba(56,189,248,0.75)" />
+            <stop offset="100%" stop-color="rgba(37,99,235,0.55)" />
+          </linearGradient>
+          <linearGradient id="flapjackStack" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="#fde68a" />
+            <stop offset="100%" stop-color="#f97316" />
+          </linearGradient>
+        </defs>
+        <rect x="10" y="10" width="140" height="100" rx="18" fill="rgba(6,10,22,0.95)" stroke="rgba(148,163,184,0.35)" />
+        <rect x="18" y="18" width="124" height="84" rx="16" fill="url(#flapjackSky)" stroke="rgba(148,163,184,0.28)" />
+        <g transform="translate(0 6)">
+          <rect x="32" y="70" width="96" height="18" rx="9" fill="url(#flapjackPlate)" stroke="rgba(148,163,184,0.4)" />
+          <ellipse cx="80" cy="79" rx="32" ry="6" fill="rgba(14,116,144,0.35)" />
+        </g>
+        <g transform="translate(0 -2)">
+          <g>
+            <rect x="60" y="60" width="40" height="10" rx="4" fill="#f97316" stroke="rgba(148,163,184,0.3)" />
+            <ellipse cx="80" cy="58" rx="32" ry="12" fill="url(#flapjackStack)" stroke="rgba(148,163,184,0.3)" />
+            <ellipse cx="80" cy="50" rx="28" ry="10" fill="#fde68a" stroke="rgba(148,163,184,0.28)" />
+            <ellipse cx="80" cy="42" rx="24" ry="9" fill="#fbbf24" stroke="rgba(148,163,184,0.26)" />
+            <ellipse cx="80" cy="34" rx="20" ry="8" fill="#fb7185" stroke="rgba(148,163,184,0.25)" />
+          </g>
+          <path d="M110 24 L142 16" stroke="rgba(59,130,246,0.65)" stroke-width="4" stroke-linecap="round" />
+          <path d="M112 24 L134 34" stroke="rgba(248,113,113,0.8)" stroke-width="5" stroke-linecap="round" />
+          <circle cx="134" cy="34" r="6" fill="#facc15" stroke="rgba(248,250,252,0.6)" stroke-width="2" />
+        </g>
+        <g>
+          <circle cx="44" cy="90" r="4" fill="#38bdf8" />
+          <circle cx="116" cy="90" r="4" fill="#f97316" />
+          <circle cx="80" cy="22" r="3" fill="#facc15" />
+        </g>
+      </svg>
+    `,
+  },
+  {
     id: "cable-clash",
     name: "The Cable Clash",
     description: "Route the cobalt line across the ring while juking roaming rivals.",
