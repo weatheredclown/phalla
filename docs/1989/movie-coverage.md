@@ -2,7 +2,7 @@
 
 This reference tracks how the 1989 arcade cabinets map to their source films and how far the ladder has progressed up the 1989 domestic box office chart.
 
-Three Fugitives now anchors Level 32, covering the next-highest new release still on the chart while the rest of the ladder continues to backfill the remaining Top 50 slots.
+River of Slime Escape now shocks Level 27 with Ghostbusters II’s river chase while Three Fugitives continues anchoring Level 32, and the ladder keeps backfilling the remaining Top 50 slots.
 
 ## Covered Films
 
@@ -29,6 +29,7 @@ Three Fugitives now anchors Level 32, covering the next-highest new release stil
 | 32 | Three Fugitives | *Three Fugitives* | #31 |
 | 31 | Nose for Trouble | *K-9* | #30 |
 | 30 | Gilded Partition | *The War of the Roses* | #12 |
+| 27 | River of Slime Escape | *Ghostbusters II* | #7 |
 
 Remaining:
 ## Remaining Targets to Reach #1
@@ -57,7 +58,6 @@ Remaining:
 | **30** | The War of the Roses | #29 | Gilded Partition | A destruction/physics game where you try to sabotage a mansion without getting caught by your spouse. |
 | **29** | Rain Man | #5 | The K-Mart Countdown | A memory/timing game where you have to correctly count a pile of matchsticks dropped on the floor as quickly as possible. |
 | **28** | Look Who's Talking | #6 | Voice Box Swap | A puzzle game where you match a baby's actions to the inner monologue voiceover's text or visual cue. |
-| **27** | Ghostbusters II | #7 | River of Slime Escape | A frantic action level where you navigate a maze while avoiding a rising, negative pink slime that reacts to bad vibes. |
 | **26** | Back to the Future Part II | #8 | Hoverboard Pursuit | A time-trial race level using a hoverboard to navigate future (2015) traffic and obstacles. |
 | **25** | Parenthood | #9 | Rollercoaster of Life | A fast-paced decision-making game, quickly choosing the 'right' or 'wrong' answer to various parental/family dilemmas. |
 | **24** | When Harry Met Sally... | #11 | The Diner Debate | A reaction game where you have to perfectly time a very convincing vocal display in a crowded diner (like a rhythm or memory sequence). |

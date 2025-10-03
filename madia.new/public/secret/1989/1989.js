@@ -840,6 +840,51 @@ const games = [
     `,
   },
   {
+    id: "river-of-slime-escape",
+    name: "River of Slime Escape",
+    description: "Climb the mood-slick lattice, gather courage trinkets, and outrun the pink surge.",
+    url: "./river-of-slime-escape/index.html",
+    thumbnail: `
+      <svg viewBox="0 0 160 120" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="River of Slime Escape preview">
+        <defs>
+          <linearGradient id="slimeRiver" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="rgba(255,93,200,0.8)" />
+            <stop offset="100%" stop-color="rgba(35,8,32,0.95)" />
+          </linearGradient>
+          <linearGradient id="mazeGlow" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0%" stop-color="rgba(128,255,234,0.75)" />
+            <stop offset="100%" stop-color="rgba(56,189,248,0.55)" />
+          </linearGradient>
+        </defs>
+        <rect x="10" y="10" width="140" height="100" rx="18" fill="rgba(9,12,24,0.92)" stroke="rgba(148,163,184,0.35)" />
+        <rect x="24" y="18" width="112" height="72" rx="16" fill="rgba(12,18,36,0.92)" stroke="rgba(148,163,184,0.3)" />
+        <g stroke="rgba(37,99,235,0.35)" stroke-width="1">
+          ${Array.from({ length: 5 }, (_, i) => `<line x1="${32 + i * 20}" y1="24" x2="${32 + i * 20}" y2="86" />`).join("")}
+          ${Array.from({ length: 3 }, (_, i) => `<line x1="28" y1="${34 + i * 18}" x2="132" y2="${34 + i * 18}" />`).join("")}
+        </g>
+        <g stroke="url(#mazeGlow)" stroke-width="4" stroke-linecap="round">
+          <path d="M36 84 L48 70 L64 78 L82 60 L100 68 L116 46 L124 52" fill="none" />
+          <path d="M48 54 L66 44 L86 52 L108 36" stroke-dasharray="6 8" />
+        </g>
+        <g>
+          <circle cx="52" cy="68" r="6" fill="rgba(128,255,234,0.9)" stroke="rgba(56,189,248,0.75)" stroke-width="2" />
+          <circle cx="84" cy="56" r="5" fill="rgba(250,204,21,0.9)" stroke="rgba(248,250,252,0.7)" stroke-width="1.5" />
+          <rect x="102" y="48" width="12" height="12" rx="3" fill="rgba(255,93,200,0.2)" stroke="rgba(255,93,200,0.6)" />
+          <rect x="112" y="30" width="10" height="10" rx="3" fill="rgba(56,189,248,0.35)" stroke="rgba(148,163,184,0.3)" />
+        </g>
+        <rect x="24" y="86" width="112" height="18" rx="10" fill="url(#slimeRiver)" stroke="rgba(255,93,200,0.75)" />
+        <g stroke="rgba(255,255,255,0.6)" stroke-width="2" stroke-linecap="round">
+          <path d="M28 90 C44 86 56 92 68 88" />
+          <path d="M86 92 C100 88 112 94 124 90" />
+        </g>
+        <g>
+          <circle cx="68" cy="92" r="5" fill="rgba(56,189,248,0.85)" stroke="rgba(248,250,252,0.7)" stroke-width="1" />
+          <circle cx="92" cy="92" r="5" fill="rgba(255,93,200,0.85)" stroke="rgba(248,250,252,0.7)" stroke-width="1" />
+        </g>
+      </svg>
+    `,
+  },
+  {
     id: "captains-echo",
     name: "Captain's Echo",
     description: "Stage the four-beat desk salute before the dean snuffs the Carpe Diem spark.",
