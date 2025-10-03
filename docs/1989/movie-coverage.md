@@ -2,16 +2,7 @@
 
 This reference tracks how the 1989 arcade cabinets map to their source films and how far the ladder has progressed up the 1989 domestic box office chart.
 
-River of Slime Escape now shocks Level 27 with Ghostbusters II’s river chase while Three Fugitives continues anchoring Level 32, and the ladder keeps backfilling the remaining Top 50 slots.
-Three Fugitives now anchors Level 32 while Hoverboard Pursuit secures Level 26, covering another Top 10 release as the ladder continues to backfill the remaining hits.
-Rollercoaster of Life now anchors Level 25, pushing the ladder deeper into the top 25 while earlier levels keep filling in the remaining Top 50 slots.
-Three Fugitives now anchors Level 32, covering the next-highest new release still on the chart while the rest of the ladder continues to backfill the remaining Top 50 slots. Tailing the Trash joins the catalog at Level 23 to secure the Turner & Hooch slot and escalate the stakeout mechanics.
-Restless Acre Rise now haunts Level 18, drawing the ladder deeper into the domestic Top 20 while earlier cabinets continue to backfill the remaining slots.
-Three Fugitives now anchors Level 32, covering the next-highest new release still on the chart while the rest of the ladder continues to backfill the remaining Top 50 slots. The Personal Ad Trap joins the cabinet lineup at Level 19, translating *Sea of Love*'s classifieds hunt into a noir deduction puzzle.
-Three Fugitives still anchors Level 32 while Twenty-Five Thousand Bulbs now energizes Level 20, covering the next major holiday tentpole as the ladder continues to backfill the remaining Top 50 slots.
-Three Fugitives now anchors Level 32, covering the next-highest new release still on the chart, while Voice Box Swap pulls Level 28 into the top-ten chase. The remaining rungs continue to backfill the unreleased Top 50 slots.
-Whisper's Garden now occupies Level 21, translating *Field of Dreams* into a meditative midnight build while the rest of the ladder continues to backfill the remaining Top 50 slots.
-Three Fugitives now anchors Level 32, covering the next-highest new release still on the chart while the rest of the ladder continues to backfill the remaining Top 50 slots. The Diner Debate locks in Level 24 with a booth-shaking homage to *When Harry Met Sally...*.
+Truvy's Salon Style now anchors Level 12 with a pastel blitz through *Steel Magnolias*, bringing the ladder deeper into the top-25 box office while the remaining rungs keep filling the unreleased Top 50 slots.
 
 ## Covered Films
 
@@ -41,13 +32,14 @@ Three Fugitives now anchors Level 32, covering the next-highest new release stil
 | 27 | River of Slime Escape | *Ghostbusters II* | #7 |
 | 26 | Hoverboard Pursuit | *Back to the Future Part II* | #8 |
 | 25 | Rollercoaster of Life | *Parenthood* | #9 |
+| 24 | The Diner Debate | *When Harry Met Sally...* | #11 |
 | 23 | Tailing the Trash | *Turner & Hooch* | #12 |
 | 18 | Restless Acre Rise | *Pet Sematary* | #17 |
 | 20 | Twenty-Five Thousand Bulbs | *National Lampoon's Christmas Vacation* | #15 |
 | 29 | The K-Mart Countdown | *Rain Man* | #5 |
 | 28 | Voice Box Swap | *Look Who's Talking* | #6 |
-| 24 | The Diner Debate | *When Harry Met Sally...* | #11 |
 | 29 | Flapjack Flip-Out | *Uncle Buck* | #13 |
+| 12 | Truvy's Salon Style | *Steel Magnolias* | #22 |
 
 Remaining:
 ## Remaining Targets to Reach #1
@@ -91,7 +83,6 @@ Remaining:
 | **15** | The Abyss | #20 | Deepcore Descent | A pressure/balance management game, keeping a deep-sea submersible stable and intact under crushing pressure. |
 | **14** | Star Trek V: The Final Frontier | #21 | The Final Barrier | A flying/shooting level piloting the Enterprise through a chaotic and disorienting energy field to reach a mythical planet. |
 | **13** | The Little Mermaid | #22 | Under the Sea Scramble | A hidden object or collection game in a colorful undersea environment, gathering "human gadgets." |
-| **12** | Steel Magnolias | #23 | Truvy's Salon Style | A rapid-fire styling/makeover game where you have to meet multiple clients' specific, complex hairstyle and makeup requests. |
 | **11** | Major League | #24 | Wild Thing Wind-Up | A timing/precision baseball pitching game focusing on a dramatically out-of-control, but fast, fastball. |
 | **10** | See No Evil, Hear No Evil | #25 | The Disorient Express | A cooperative or split-screen minigame where one player uses only visual cues and the other only audio cues to solve a simple puzzle. |
 | **9** | Black Rain | #26 | Osaka Motorcycle Dash | A high-speed chase level through the neon-lit streets of Osaka, avoiding gangs and following a key witness. |

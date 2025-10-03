@@ -320,6 +320,66 @@ const games = [
       </svg>
     `,
   },
+  // Level 12
+  {
+    id: "truvys-salon-style",
+    name: "Truvy's Salon Style",
+    description: "Spin Truvy's chairs, juggle Magnolia-style tickets, and gamble on gossip pauses to keep tips overflowing.",
+    url: "./truvys-salon-style/index.html",
+    thumbnail: `
+      <svg viewBox="0 0 160 120" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Truvy's Salon Style preview">
+        <defs>
+          <linearGradient id="salonBg" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0%" stop-color="rgba(253, 213, 224, 0.95)" />
+            <stop offset="100%" stop-color="rgba(191, 219, 254, 0.9)" />
+          </linearGradient>
+          <linearGradient id="mirrorGlow" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0%" stop-color="rgba(255,255,255,0.9)" />
+            <stop offset="100%" stop-color="rgba(236, 72, 153, 0.4)" />
+          </linearGradient>
+          <linearGradient id="chairSeat" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0%" stop-color="#fbcfe8" />
+            <stop offset="100%" stop-color="#f472b6" />
+          </linearGradient>
+          <linearGradient id="ticketPad" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="#fde68a" />
+            <stop offset="100%" stop-color="#fcd34d" />
+          </linearGradient>
+        </defs>
+        <rect x="8" y="8" width="144" height="104" rx="20" fill="rgba(15,23,42,0.85)" stroke="rgba(148,163,184,0.35)" />
+        <rect x="16" y="16" width="128" height="88" rx="18" fill="url(#salonBg)" />
+        <g transform="translate(28 24)">
+          <rect x="0" y="0" width="56" height="72" rx="16" fill="rgba(255,255,255,0.72)" stroke="rgba(148,163,184,0.4)" />
+          <rect x="6" y="6" width="44" height="38" rx="14" fill="url(#mirrorGlow)" />
+          <rect x="10" y="48" width="36" height="18" rx="9" fill="rgba(15,23,42,0.2)" stroke="rgba(148,163,184,0.4)" />
+          <circle cx="28" cy="58" r="8" fill="rgba(255,255,255,0.9)" stroke="rgba(236,72,153,0.6)" />
+        </g>
+        <g transform="translate(94 28)">
+          <rect x="0" y="16" width="44" height="40" rx="14" fill="url(#chairSeat)" stroke="rgba(236,72,153,0.6)" />
+          <rect x="6" y="0" width="32" height="18" rx="8" fill="rgba(236,72,153,0.55)" stroke="rgba(236,72,153,0.75)" />
+          <rect x="14" y="56" width="20" height="10" rx="5" fill="rgba(79,70,229,0.55)" />
+          <path d="M6 66 L38 66" stroke="rgba(79,70,229,0.6)" stroke-width="4" stroke-linecap="round" />
+        </g>
+        <g transform="translate(84 70)">
+          <rect x="-32" y="0" width="54" height="26" rx="10" fill="url(#ticketPad)" stroke="rgba(249,115,22,0.6)" />
+          <g font-family="'Press Start 2P', monospace" font-size="6" fill="rgba(120,53,15,0.9)">
+            <text x="-26" y="10">Wash</text>
+            <text x="-26" y="18">Tease</text>
+            <text x="-26" y="26">Spray</text>
+          </g>
+        </g>
+        <g transform="translate(34 82)">
+          <rect x="0" y="0" width="32" height="12" rx="6" fill="rgba(59,130,246,0.6)" />
+          <text x="16" y="9" font-size="7" font-family="'Press Start 2P', monospace" fill="#0f172a" text-anchor="middle">TIP</text>
+        </g>
+        <g transform="translate(110 18)">
+          <rect x="0" y="0" width="20" height="20" rx="6" fill="rgba(255,255,255,0.85)" stroke="rgba(236,72,153,0.6)" />
+          <path d="M6 10 H14" stroke="#ec4899" stroke-width="3" stroke-linecap="round" />
+          <path d="M10 6 V14" stroke="#ec4899" stroke-width="3" stroke-linecap="round" />
+        </g>
+      </svg>
+    `,
+  }, // Level 12
   {
     id: "flapjack-flip-out",
     name: "Flapjack Flip-Out",
