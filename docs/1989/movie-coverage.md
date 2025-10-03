@@ -2,6 +2,11 @@
 
 This reference tracks how the 1989 arcade cabinets map to their source films and how far the ladder has progressed up the 1989 domestic box office chart.
 
+Osaka Motorcycle Dash now floods Level 9 with a Black Rain tribute, filling another top-ten slot alongside Hoverboard Pursuit and River of Slime Escape. The focus shifts to the last few tentpoles still missing from the upper rungs while earlier levels continue closing the remaining Top 50 gaps.
+The Disorient Express now stations Level 22 with a See No Evil, Hear No Evil homage, finally pairing the ladder’s split-sense gimmick with the film that inspired it while the remaining gaps continue to collapse toward the top of the chart.
+Wild Thing Wind-Up now rockets into Level 11 with a Major League-inspired closer duel, pushing the ladder deeper into the top 25 while earlier updates below document the run-up.
+Wind Beneath My Wings now elevates Level 16, transforming *Beaches* into a spotlight rhythm showcase that bridges the ladder’s middle stretch between the family dramedies and the Top 15 crowd-pleasers.
+
 River of Slime Escape now shocks Level 27 with Ghostbusters II’s river chase while Three Fugitives continues anchoring Level 32, and the ladder keeps backfilling the remaining Top 50 slots.
 Three Fugitives now anchors Level 32 while Hoverboard Pursuit secures Level 26, covering another Top 10 release as the ladder continues to backfill the remaining hits.
 Rollercoaster of Life now anchors Level 25, pushing the ladder deeper into the top 25 while earlier levels keep filling in the remaining Top 50 slots.
@@ -43,13 +48,17 @@ Merger Madness now occupies Level 22, translating *Working Girl*'s corporate scr
 | 27 | River of Slime Escape | *Ghostbusters II* | #7 |
 | 26 | Hoverboard Pursuit | *Back to the Future Part II* | #8 |
 | 25 | Rollercoaster of Life | *Parenthood* | #9 |
+| 9 | Osaka Motorcycle Dash | *Black Rain* | #26 |
 | 23 | Tailing the Trash | *Turner & Hooch* | #12 |
 | 22 | Merger Madness | *Working Girl* | #27 |
+| 22 | The Disorient Express | *See No Evil, Hear No Evil* | #25 |
 | 18 | Restless Acre Rise | *Pet Sematary* | #17 |
+| 16 | Wind Beneath My Wings | *Beaches* | #19 |
 | 20 | Twenty-Five Thousand Bulbs | *National Lampoon's Christmas Vacation* | #15 |
 | 29 | The K-Mart Countdown | *Rain Man* | #5 |
 | 28 | Voice Box Swap | *Look Who's Talking* | #6 |
 | 24 | The Diner Debate | *When Harry Met Sally...* | #11 |
+| 11 | Wild Thing Wind-Up | *Major League* | #24 |
 | 29 | Flapjack Flip-Out | *Uncle Buck* | #13 |
 
 Remaining:
@@ -90,7 +99,6 @@ Remaining:
 | **20** | National Lampoon's Christmas Vacation | #15 | Twenty-Five Thousand Bulbs | An electrical circuit puzzle where you must connect all the wires in the neighborhood to light up the house. |
 | **19** | Sea of Love | #16 | The Personal Ad Trap | A deductive game where you cross-reference different clues and profiles to find a killer who connects through newspaper personal ads. |
 | **17** | Harlem Nights | #18 | The Sugar Ray Hustle | A quick-draw or reaction game set in a 1930s speakeasy, perhaps a high-stakes, fast-paced dice game. |
-| **16** | Beaches | #19 | Wind Beneath My Wings | A musical rhythm or karaoke-style game hitting the notes of a powerful Bette Midler song. |
 | **15** | The Abyss | #20 | Deepcore Descent | A pressure/balance management game, keeping a deep-sea submersible stable and intact under crushing pressure. |
 | **14** | Star Trek V: The Final Frontier | #21 | The Final Barrier | A flying/shooting level piloting the Enterprise through a chaotic and disorienting energy field to reach a mythical planet. |
 | **13** | The Little Mermaid | #22 | Under the Sea Scramble | A hidden object or collection game in a colorful undersea environment, gathering "human gadgets." |
@@ -98,6 +106,7 @@ Remaining:
 | **11** | Major League | #24 | Wild Thing Wind-Up | A timing/precision baseball pitching game focusing on a dramatically out-of-control, but fast, fastball. |
 | **10** | See No Evil, Hear No Evil | #25 | The Disorient Express | A cooperative or split-screen minigame where one player uses only visual cues and the other only audio cues to solve a simple puzzle. |
 | **9** | Black Rain | #26 | Osaka Motorcycle Dash | A high-speed chase level through the neon-lit streets of Osaka, avoiding gangs and following a key witness. |
+| **8** | Working Girl | #27 | Merger Madness | A quick-typing or paperwork sorting challenge in a high-rise office environment to prepare for a major business meeting. |
 | **7** | Tango & Cash | #48 | Framed Breakout | A prison break level focused on quick puzzle solving and avoiding guards while wearing ridiculous "action hero" disguises. |
 | **6** | The Naked Gun: From the Files of Police Squad! | #49 | Frank Drebin's Follies | A quick-reaction game requiring you to perform perfectly normal tasks while hilariously and accidentally causing massive collateral damage. |
 | **5** | A Nightmare on Elm Street 5: The Dream Child | #50 | Freddy's Dream Maze | A horror-themed maze or escape room game where the environment is constantly changing based on your character's deepest fears. |

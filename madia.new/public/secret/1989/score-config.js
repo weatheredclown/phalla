@@ -150,11 +150,34 @@ export const scoreConfigs = {
     format: ({ value }) =>
       value === 1 ? "1 intercept" : `${value ?? 0} intercepts`,
   },
+  "osaka-motorcycle-dash": {
+    label: "Distance Covered",
+    empty: "No chases logged yet.",
+    format: ({ value, meta }) => {
+      const disabled = Number(meta?.disabled ?? meta?.gangsDisabled ?? 0);
+      const streak = Number(meta?.longestStreak ?? meta?.streak ?? 0);
+      const disableLabel = disabled === 1 ? "1 disable" : `${disabled} disables`;
+      const streakLabel = Number.isFinite(streak) && streak > 0 ? `${streak.toFixed(1)}s streak` : "0.0s streak";
+      return `${value ?? 0} m · ${disableLabel} · ${streakLabel}`;
+    },
+  },
   "river-of-slime-escape": {
     label: "Meters Climbed",
     empty: "No climbs logged yet.",
     format: ({ value }) => `${value ?? 0} m`,
   },
+  // Level 22
+  "deepcore-descent": {
+    label: "Max Depth",
+    empty: "No dives logged yet.",
+    format: ({ value, meta }) => {
+      const bursts = Number(meta?.powerBursts ?? 0);
+      const hull = Number(meta?.hull);
+      const burstLabel = bursts === 1 ? "1 burst" : `${bursts} bursts`;
+      const hullLabel = Number.isFinite(hull) ? `${hull}% hull` : "hull unknown";
+      return `${value ?? 0} m · ${burstLabel} · ${hullLabel}`;
+    },
+  }, // Level 22
   "rollercoaster-of-life": {
     label: "Family Harmony",
     empty: "No harmony runs logged yet.",
@@ -169,7 +192,30 @@ export const scoreConfigs = {
         return `${value ?? 0} logs · ${suspicion}% peak`;
       }
       return `${value ?? 0} logs`;
-    }
+    },
+  },
+  "disorient-express": {
+    label: "Cooperation Time",
+    empty: "No co-op runs logged yet.",
+    format: ({ value, meta }) => {
+      const reportedMs = Number.isFinite(meta?.finalTimeMs)
+        ? Number(meta.finalTimeMs)
+        : Number.isFinite(value)
+          ? Math.max(0, 300000 - Number(value))
+          : null;
+      if (!Number.isFinite(reportedMs)) {
+        return `${value ?? 0}`;
+      }
+      const minutes = Math.floor(reportedMs / 60000);
+      const seconds = Math.floor((reportedMs % 60000) / 1000);
+      const millis = Math.floor(reportedMs % 1000);
+      const mistakes = Number(meta?.miscommunications ?? 0);
+      const rushCount = Number(meta?.rushCount ?? 0);
+      const misLabel = mistakes === 1 ? "1 miscommunication" : `${mistakes} miscommunications`;
+      const rushLabel = rushCount > 0 ? ` · Rush ×${rushCount}` : "";
+      return `${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}.${String(millis).padStart(3, "0")}` +
+        ` · ${misLabel}${rushLabel}`;
+    },
   },
   "restless-acre-rise": {
     label: "Altitude",
@@ -236,8 +282,8 @@ export const scoreConfigs = {
       const comboLabel = combo === 1 ? "1 combo" : `${combo} combo streak`;
       const riskyLabel = risky > 0 ? ` · Risky +${risky}` : "";
       return `${value ?? 0} pts · ${comboLabel}${riskyLabel}`;
-    },
-  },
+    }, // sync score
+  }, // Previous level
   // Level 22
   "merger-madness": {
     label: "Efficiency Rating",
@@ -251,6 +297,31 @@ export const scoreConfigs = {
       return `${value ?? 0} pts · ${accuracy} · ${docs} ${docLabel}`;
     },
   }, // Level 22
+  "wild-thing-wind-up": {
+    label: "Strikeouts",
+    empty: "No strikeouts recorded yet.",
+    format: ({ value, meta }) => {
+      const innings = typeof meta?.innings === "string" && meta.innings.trim()
+        ? meta.innings.trim()
+        : String(meta?.innings ?? "0.0");
+      const runs = Number(meta?.runs ?? 0);
+      const wild = Number(meta?.wildThings ?? 0);
+      const runsLabel = runs === 1 ? "1 run" : `${runs} runs`;
+      const wildLabel = wild === 1 ? "1 Wild Thing" : `${wild} Wild Things`;
+      return `${value ?? 0} Ks · ${innings} IP · ${runsLabel} · ${wildLabel}`;
+    },
+  }, // wild things
+  // Level 16
+  "wind-beneath-my-wings": {
+    label: "Applause Score",
+    empty: "No applause recorded yet.",
+    format: ({ value, meta }) => {
+      const accuracy = Number.isFinite(meta?.accuracy) ? `${meta.accuracy}% accuracy` : "0% accuracy";
+      const crescendos = Number(meta?.crescendos ?? 0);
+      const crescLabel = crescendos === 1 ? "1 crescendo" : `${crescendos} crescendos`;
+      return `${value ?? 0} applause · ${accuracy} · ${crescLabel}`;
+    },
+  }, // Level 16
   "whispers-garden": {
     label: "Field Completion",
     empty: "No whispers answered yet.",

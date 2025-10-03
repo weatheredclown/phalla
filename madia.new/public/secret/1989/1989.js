@@ -257,7 +257,7 @@ const games = [
             <circle cx="6" cy="7" r="4" fill="#38bdf8" stroke="rgba(248,250,252,0.7)" />
             <path d="M-8 4 L8 4" stroke="rgba(248,250,252,0.6)" stroke-width="2" stroke-linecap="round" />
           </g>
-          <g transform="translate(44 32)">
+        <g transform="translate(44 32)">
             <rect x="-10" y="18" width="20" height="14" rx="6" fill="rgba(239,68,68,0.75)" />
             <rect x="30" y="6" width="18" height="12" rx="5" fill="rgba(56,189,248,0.65)" />
             <rect x="54" y="32" width="14" height="10" rx="4" fill="rgba(250,204,21,0.75)" />
@@ -266,6 +266,61 @@ const games = [
       </svg>
     `,
   },
+  // Level 9
+  {
+    id: "osaka-motorcycle-dash",
+    name: "Osaka Motorcycle Dash",
+    description:
+      "Shadow the witness through Osaka's neon arteries, stay locked in the halo, and trade boost for disabler pulses before gangs box you out.",
+    url: "./osaka-motorcycle-dash/index.html",
+    thumbnail: `
+      <svg viewBox="0 0 160 120" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Osaka Motorcycle Dash preview">
+        <defs>
+          <linearGradient id="omdSky" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="rgba(56,189,248,0.4)" />
+            <stop offset="100%" stop-color="rgba(2,6,23,0.95)" />
+          </linearGradient>
+          <linearGradient id="omdLane" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0%" stop-color="rgba(236,72,153,0.65)" />
+            <stop offset="100%" stop-color="rgba(37,99,235,0.55)" />
+          </linearGradient>
+          <radialGradient id="omdHalo" cx="50%" cy="50%" r="50%">
+            <stop offset="0%" stop-color="rgba(250,204,21,0.75)" />
+            <stop offset="100%" stop-color="rgba(250,204,21,0)" />
+          </radialGradient>
+        </defs>
+        <rect x="8" y="10" width="144" height="100" rx="18" fill="rgba(5,8,20,0.92)" stroke="rgba(148,163,184,0.35)" />
+        <rect x="16" y="18" width="128" height="84" rx="16" fill="url(#omdSky)" stroke="rgba(148,163,184,0.32)" />
+        <g opacity="0.45">
+          <path d="M32 102 L54 36 C60 20 100 18 118 34 L140 102" fill="none" stroke="rgba(59,130,246,0.35)" stroke-width="5" stroke-linecap="round" />
+          <path d="M24 94 L48 42 C56 24 106 24 126 46 L144 102" fill="none" stroke="rgba(236,72,153,0.4)" stroke-width="4" stroke-linecap="round" stroke-dasharray="8 10" />
+        </g>
+        <g transform="translate(0 -6)">
+          <ellipse cx="90" cy="68" rx="26" ry="16" fill="url(#omdHalo)" />
+          <rect x="78" y="52" width="24" height="40" rx="10" fill="url(#omdLane)" stroke="rgba(248,250,252,0.35)" />
+          <rect x="84" y="56" width="12" height="20" rx="6" fill="rgba(15,23,42,0.85)" />
+        </g>
+        <g transform="translate(0 -2)">
+          <rect x="58" y="66" width="18" height="34" rx="8" fill="rgba(59,130,246,0.9)" stroke="rgba(248,250,252,0.4)" />
+          <rect x="60" y="70" width="14" height="16" rx="6" fill="rgba(15,23,42,0.85)" />
+          <path d="M67 98 L67 110" stroke="rgba(56,189,248,0.6)" stroke-width="3" stroke-linecap="round" />
+        </g>
+        <g transform="translate(0 -6)" opacity="0.75">
+          <rect x="36" y="40" width="18" height="40" rx="8" fill="rgba(248,113,113,0.85)" stroke="rgba(248,250,252,0.4)" />
+          <rect x="38" y="44" width="14" height="18" rx="6" fill="rgba(15,23,42,0.85)" />
+          <path d="M45 80 L45 94" stroke="rgba(248,113,113,0.6)" stroke-width="3" stroke-linecap="round" />
+        </g>
+        <g>
+          <path d="M24 26 L42 34" stroke="rgba(59,130,246,0.5)" stroke-width="3" stroke-linecap="round" />
+          <path d="M118 26 L102 38" stroke="rgba(236,72,153,0.5)" stroke-width="3" stroke-linecap="round" />
+          <circle cx="118" cy="26" r="6" fill="#facc15" stroke="rgba(248,250,252,0.5)" />
+          <circle cx="24" cy="26" r="6" fill="#38bdf8" stroke="rgba(248,250,252,0.45)" />
+          <circle cx="56" cy="30" r="4" fill="#c084fc" />
+          <circle cx="100" cy="32" r="4" fill="#f472b6" />
+        </g>
+      </svg>
+    `,
+  }, // Level 9
   {
     id: "rollercoaster-of-life",
     name: "Rollercoaster of Life",
@@ -861,6 +916,63 @@ const games = [
       </svg>
     `,
   },
+  // Level 11
+  {
+    id: "wild-thing-wind-up",
+    name: "Wild Thing Wind-Up",
+    description:
+      "Balance searing velocity with pin-point snaps while gambling on the Wild Thing zone to freeze the order.",
+    url: "./wild-thing-wind-up/index.html",
+    thumbnail: `
+      <svg viewBox="0 0 160 120" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Wild Thing Wind-Up preview">
+        <defs>
+          <linearGradient id="wildSky" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="rgba(8,15,36,0.95)" />
+            <stop offset="100%" stop-color="rgba(5,10,24,0.88)" />
+          </linearGradient>
+          <linearGradient id="wildMound" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0%" stop-color="#38bdf8" />
+            <stop offset="100%" stop-color="#f97316" />
+          </linearGradient>
+          <linearGradient id="wildMeter" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="rgba(56,189,248,0.85)" />
+            <stop offset="70%" stop-color="rgba(56,189,248,0.35)" />
+            <stop offset="100%" stop-color="rgba(15,23,42,0.85)" />
+          </linearGradient>
+        </defs>
+        <rect x="8" y="8" width="144" height="104" rx="18" fill="url(#wildSky)" stroke="rgba(148,163,184,0.35)" />
+        <g>
+          <rect x="22" y="20" width="116" height="28" rx="12" fill="rgba(15,23,42,0.75)" stroke="rgba(59,130,246,0.45)" />
+          <text x="30" y="38" font-size="10" fill="#38bdf8" font-family="'Share Tech Mono', monospace">WILD THING</text>
+          <text x="134" y="38" font-size="10" fill="#f97316" font-family="'Share Tech Mono', monospace" text-anchor="end">102 MPH</text>
+        </g>
+        <g transform="translate(28 56)">
+          <rect x="0" y="0" width="32" height="48" rx="14" fill="rgba(15,23,42,0.9)" stroke="rgba(148,163,184,0.35)" />
+          <rect x="6" y="6" width="20" height="36" rx="8" fill="rgba(8,12,28,0.92)" stroke="rgba(56,189,248,0.4)" />
+          <rect x="6" y="6" width="20" height="20" rx="8" fill="url(#wildMeter)" />
+          <rect x="6" y="6" width="20" height="8" rx="4" fill="rgba(249,115,22,0.75)" opacity="0.75" />
+          <text x="16" y="44" font-size="8" fill="#f97316" font-family="'Share Tech Mono', monospace" text-anchor="middle">HEAT</text>
+        </g>
+        <g transform="translate(76 50)">
+          <rect x="0" y="0" width="70" height="60" rx="18" fill="rgba(12,18,42,0.9)" stroke="rgba(148,163,184,0.35)" />
+          <rect x="18" y="8" width="34" height="44" rx="10" fill="rgba(15,23,42,0.9)" stroke="rgba(56,189,248,0.55)" />
+          <rect x="24" y="14" width="22" height="32" rx="6" fill="rgba(15,23,42,0.75)" stroke="rgba(148,163,184,0.45)" />
+          <circle cx="35" cy="30" r="9" fill="rgba(249,115,22,0.35)" stroke="rgba(249,115,22,0.65)" />
+          <circle cx="38" cy="26" r="5" fill="#facc15" stroke="rgba(248,250,252,0.55)" />
+          <circle cx="33" cy="36" r="4" fill="#38bdf8" stroke="rgba(248,250,252,0.4)" />
+          <path d="M6 52 L64 16" stroke="rgba(249,115,22,0.6)" stroke-width="3" stroke-linecap="round" stroke-dasharray="6 4" />
+          <path d="M6 18 L64 44" stroke="rgba(56,189,248,0.4)" stroke-width="3" stroke-linecap="round" stroke-dasharray="4 6" />
+          <circle cx="12" cy="18" r="4" fill="#38bdf8" />
+          <circle cx="62" cy="44" r="4" fill="#f97316" />
+        </g>
+        <g>
+          <path d="M56 98 C72 90 90 90 104 98" fill="none" stroke="rgba(56,189,248,0.4)" stroke-width="6" stroke-linecap="round" />
+          <circle cx="80" cy="92" r="8" fill="#f97316" stroke="rgba(248,250,252,0.6)" stroke-width="1.5" />
+          <path d="M80 84 L92 72" stroke="#facc15" stroke-width="3" stroke-linecap="round" />
+        </g>
+      </svg>
+    `,
+  }, // Level 11
   {
     id: "speed-zone",
     name: "Speed Zone",
@@ -1007,6 +1119,60 @@ const games = [
       </svg>
     `,
   },
+  { // Level 22
+    id: "disorient-express",
+    name: "The Disorient Express",
+    description: "Split the senses, track the ringing cabin phone, and balance rush orders against costly miscommunications.",
+    url: "./disorient-express/index.html",
+    thumbnail: `
+      <svg viewBox="0 0 160 120" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="The Disorient Express preview">
+        <defs>
+          <linearGradient id="cabinGlow" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0%" stop-color="rgba(34,211,238,0.75)" />
+            <stop offset="100%" stop-color="rgba(168,85,247,0.7)" />
+          </linearGradient>
+          <linearGradient id="floorLines" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="rgba(15,23,42,0.92)" />
+            <stop offset="100%" stop-color="rgba(6,10,24,0.92)" />
+          </linearGradient>
+          <linearGradient id="rushArc" x1="0" y1="0" x2="1" y2="0">
+            <stop offset="0%" stop-color="rgba(34,211,238,0.6)" />
+            <stop offset="100%" stop-color="rgba(250,204,21,0.6)" />
+          </linearGradient>
+        </defs>
+        <rect x="8" y="8" width="144" height="104" rx="18" fill="rgba(6,10,24,0.94)" stroke="rgba(148,163,184,0.35)" />
+        <rect x="18" y="18" width="124" height="84" rx="16" fill="url(#floorLines)" stroke="rgba(148,163,184,0.28)" />
+        <g stroke="rgba(56,189,248,0.25)" stroke-width="1">
+          ${Array.from({ length: 4 }, (_, i) => `<line x1="${34 + i * 22}" y1="26" x2="${34 + i * 22}" y2="94" />`).join("")}
+        </g>
+        <g>
+          <rect x="30" y="32" width="44" height="56" rx="10" fill="rgba(15,23,42,0.9)" stroke="rgba(56,189,248,0.45)" />
+          <g stroke="rgba(34,211,238,0.5)" stroke-width="1.4" stroke-dasharray="4 6">
+            <rect x="36" y="42" width="32" height="32" rx="8" fill="rgba(15,23,42,0.85)" />
+            <line x1="36" y1="58" x2="68" y2="58" />
+            <line x1="52" y1="42" x2="52" y2="74" />
+          </g>
+          <circle cx="38" cy="90" r="4" fill="rgba(250,204,21,0.8)" stroke="rgba(255,255,255,0.6)" />
+          <circle cx="66" cy="46" r="3.5" fill="rgba(244,114,182,0.7)" stroke="rgba(255,255,255,0.45)" />
+        </g>
+        <g>
+          <rect x="88" y="30" width="44" height="60" rx="12" fill="rgba(9,13,28,0.92)" stroke="rgba(168,85,247,0.45)" />
+          <circle cx="110" cy="60" r="18" fill="rgba(15,23,42,0.92)" stroke="rgba(168,85,247,0.55)" stroke-width="2" />
+          <path d="M94 60 A16 16 0 0 1 126 60" fill="none" stroke="url(#rushArc)" stroke-width="3" stroke-linecap="round" />
+          <path d="M110 44 L110 76" stroke="rgba(34,211,238,0.35)" stroke-width="2" stroke-dasharray="3 5" />
+          <path d="M98 60 L122 60" stroke="rgba(34,211,238,0.35)" stroke-width="2" stroke-dasharray="3 5" />
+          <circle cx="110" cy="60" r="8" fill="rgba(34,211,238,0.75)" stroke="rgba(255,255,255,0.6)" />
+          <path d="M102 88 C110 94 120 94 128 88" stroke="rgba(168,85,247,0.45)" stroke-width="3" stroke-linecap="round" />
+        </g>
+        <g>
+          <rect x="22" y="22" width="116" height="12" rx="6" fill="rgba(15,23,42,0.88)" stroke="rgba(148,163,184,0.25)" />
+          <rect x="28" y="24" width="36" height="8" rx="4" fill="rgba(34,211,238,0.6)" />
+          <rect x="70" y="24" width="20" height="8" rx="4" fill="rgba(250,204,21,0.6)" />
+          <rect x="96" y="24" width="36" height="8" rx="4" fill="rgba(168,85,247,0.6)" />
+        </g>
+      </svg>
+    `,
+  }, // Level 22
   {
     id: "vendetta-convoy",
     name: "Vendetta Convoy",
@@ -1280,6 +1446,57 @@ const games = [
       </svg>
     `,
   },
+  // Level 22
+  {
+    id: "deepcore-descent",
+    name: "Deepcore Descent",
+    description: "Pilot the Deepcore prototype through a crushing trench, juggling oxygen, hull fractures, and burst thrusters.",
+    url: "./deepcore-descent/index.html",
+    thumbnail: `
+      <svg viewBox="0 0 160 120" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Deepcore Descent preview">
+        <defs>
+          <linearGradient id="abyssBg" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="rgba(12,30,68,0.95)" />
+            <stop offset="100%" stop-color="rgba(2,6,23,0.95)" />
+          </linearGradient>
+          <radialGradient id="glowCone" cx="0.5" cy="0.25" r="0.6">
+            <stop offset="0%" stop-color="rgba(148,233,255,0.75)" />
+            <stop offset="60%" stop-color="rgba(59,130,246,0.25)" />
+            <stop offset="100%" stop-color="rgba(14,23,42,0)" />
+          </radialGradient>
+          <linearGradient id="trenchEdge" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0%" stop-color="rgba(2,132,199,0.45)" />
+            <stop offset="100%" stop-color="rgba(15,23,42,0.4)" />
+          </linearGradient>
+        </defs>
+        <rect x="10" y="10" width="140" height="100" rx="18" fill="url(#abyssBg)" stroke="rgba(148,163,184,0.35)" />
+        <g stroke="rgba(14,165,233,0.4)" stroke-width="2" stroke-linecap="round">
+          <path d="M36 16 C28 42 24 74 28 104" fill="none" />
+          <path d="M124 16 C132 46 136 78 132 104" fill="none" />
+        </g>
+        <path d="M54 18 C70 46 50 76 70 104" fill="none" stroke="url(#trenchEdge)" stroke-width="3" stroke-linecap="round" />
+        <path d="M108 18 C92 44 110 78 90 104" fill="none" stroke="url(#trenchEdge)" stroke-width="3" stroke-linecap="round" />
+        <g transform="translate(80 66)">
+          <ellipse cx="0" cy="0" rx="22" ry="12" fill="rgba(8,47,73,0.85)" stroke="rgba(148,233,255,0.6)" stroke-width="2" />
+          <ellipse cx="0" cy="-2" rx="10" ry="6" fill="rgba(191,219,254,0.8)" />
+          <g fill="rgba(56,189,248,0.7)">
+            <ellipse cx="-14" cy="6" rx="4" ry="8" />
+            <ellipse cx="14" cy="6" rx="4" ry="8" />
+          </g>
+        </g>
+        <path d="M70 34 L64 14" stroke="rgba(148,233,255,0.35)" stroke-width="2" stroke-linecap="round" />
+        <path d="M90 34 L96 14" stroke="rgba(148,233,255,0.35)" stroke-width="2" stroke-linecap="round" />
+        <path d="M60 92 L52 110" stroke="rgba(14,165,233,0.25)" stroke-width="2" stroke-linecap="round" />
+        <path d="M100 92 L108 110" stroke="rgba(14,165,233,0.25)" stroke-width="2" stroke-linecap="round" />
+        <rect x="48" y="46" width="64" height="58" fill="url(#glowCone)" opacity="0.8" />
+        <g>
+          <circle cx="42" cy="42" r="6" fill="rgba(56,189,248,0.6)" />
+          <circle cx="118" cy="56" r="5" fill="rgba(34,197,94,0.35)" />
+          <circle cx="50" cy="80" r="4" fill="rgba(59,130,246,0.4)" />
+        </g>
+      </svg>
+    `,
+  }, // Level 22
   {
     id: "restless-acre-rise",
     name: "Restless Acre Rise",
@@ -1626,6 +1843,51 @@ const games = [
       </svg>
     `,
   },
+  // Level 16
+  {
+    id: "wind-beneath-my-wings",
+    name: "Wind Beneath My Wings",
+    description: "Guide the ballad from rehearsal hush to arena roar with flawless taps and soaring holds.",
+    url: "./wind-beneath-my-wings/index.html",
+    thumbnail: `
+      <svg viewBox="0 0 160 120" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Wind Beneath My Wings preview">
+        <defs>
+          <linearGradient id="wbmwBackdrop" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="rgba(15,23,42,0.95)" />
+            <stop offset="100%" stop-color="rgba(30,41,59,0.92)" />
+          </linearGradient>
+          <radialGradient id="wbmwSpot" cx="0.5" cy="0.28" r="0.7">
+            <stop offset="0%" stop-color="rgba(250,250,250,0.85)" />
+            <stop offset="100%" stop-color="rgba(250,250,250,0)" />
+          </radialGradient>
+          <linearGradient id="wbmwStage" x1="0" y1="0" x2="1" y2="0">
+            <stop offset="0%" stop-color="rgba(76,201,240,0.85)" />
+            <stop offset="100%" stop-color="rgba(249,168,212,0.85)" />
+          </linearGradient>
+        </defs>
+        <rect x="10" y="12" width="140" height="96" rx="20" fill="rgba(9,13,28,0.95)" stroke="rgba(148,163,184,0.35)" />
+        <rect x="22" y="24" width="116" height="72" rx="16" fill="url(#wbmwBackdrop)" stroke="rgba(148,163,184,0.28)" />
+        <circle cx="80" cy="54" r="46" fill="url(#wbmwSpot)" />
+        <g>
+          <rect x="34" y="70" width="92" height="18" rx="9" fill="rgba(15,23,42,0.85)" stroke="rgba(148,163,184,0.4)" />
+          <rect x="42" y="74" width="76" height="10" rx="6" fill="url(#wbmwStage)" />
+        </g>
+        <g>
+          <path d="M46 64 C54 40 106 40 114 64" fill="none" stroke="rgba(236,72,153,0.65)" stroke-width="4" stroke-linecap="round" />
+          <path d="M54 58 C64 48 96 48 106 58" fill="none" stroke="rgba(56,189,248,0.6)" stroke-width="4" stroke-linecap="round" />
+          <circle cx="80" cy="44" r="10" fill="rgba(248,250,252,0.95)" stroke="rgba(148,163,184,0.4)" stroke-width="2" />
+          <path d="M80 34 L70 18" stroke="rgba(251,191,36,0.8)" stroke-width="3" stroke-linecap="round" />
+          <path d="M80 34 L90 18" stroke="rgba(251,191,36,0.6)" stroke-width="3" stroke-linecap="round" />
+        </g>
+        <g fill="rgba(248,250,252,0.85)">
+          <circle cx="32" cy="32" r="4" />
+          <circle cx="128" cy="36" r="3.5" />
+          <circle cx="112" cy="88" r="3.2" />
+          <circle cx="48" cy="90" r="2.8" />
+        </g>
+      </svg>
+    `,
+  }, // Level 16
 ];
 
 const grid = document.getElementById("game-grid");
