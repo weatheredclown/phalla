@@ -861,6 +861,63 @@ const games = [
       </svg>
     `,
   },
+  // Level 11
+  {
+    id: "wild-thing-wind-up",
+    name: "Wild Thing Wind-Up",
+    description:
+      "Balance searing velocity with pin-point snaps while gambling on the Wild Thing zone to freeze the order.",
+    url: "./wild-thing-wind-up/index.html",
+    thumbnail: `
+      <svg viewBox="0 0 160 120" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Wild Thing Wind-Up preview">
+        <defs>
+          <linearGradient id="wildSky" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="rgba(8,15,36,0.95)" />
+            <stop offset="100%" stop-color="rgba(5,10,24,0.88)" />
+          </linearGradient>
+          <linearGradient id="wildMound" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0%" stop-color="#38bdf8" />
+            <stop offset="100%" stop-color="#f97316" />
+          </linearGradient>
+          <linearGradient id="wildMeter" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="rgba(56,189,248,0.85)" />
+            <stop offset="70%" stop-color="rgba(56,189,248,0.35)" />
+            <stop offset="100%" stop-color="rgba(15,23,42,0.85)" />
+          </linearGradient>
+        </defs>
+        <rect x="8" y="8" width="144" height="104" rx="18" fill="url(#wildSky)" stroke="rgba(148,163,184,0.35)" />
+        <g>
+          <rect x="22" y="20" width="116" height="28" rx="12" fill="rgba(15,23,42,0.75)" stroke="rgba(59,130,246,0.45)" />
+          <text x="30" y="38" font-size="10" fill="#38bdf8" font-family="'Share Tech Mono', monospace">WILD THING</text>
+          <text x="134" y="38" font-size="10" fill="#f97316" font-family="'Share Tech Mono', monospace" text-anchor="end">102 MPH</text>
+        </g>
+        <g transform="translate(28 56)">
+          <rect x="0" y="0" width="32" height="48" rx="14" fill="rgba(15,23,42,0.9)" stroke="rgba(148,163,184,0.35)" />
+          <rect x="6" y="6" width="20" height="36" rx="8" fill="rgba(8,12,28,0.92)" stroke="rgba(56,189,248,0.4)" />
+          <rect x="6" y="6" width="20" height="20" rx="8" fill="url(#wildMeter)" />
+          <rect x="6" y="6" width="20" height="8" rx="4" fill="rgba(249,115,22,0.75)" opacity="0.75" />
+          <text x="16" y="44" font-size="8" fill="#f97316" font-family="'Share Tech Mono', monospace" text-anchor="middle">HEAT</text>
+        </g>
+        <g transform="translate(76 50)">
+          <rect x="0" y="0" width="70" height="60" rx="18" fill="rgba(12,18,42,0.9)" stroke="rgba(148,163,184,0.35)" />
+          <rect x="18" y="8" width="34" height="44" rx="10" fill="rgba(15,23,42,0.9)" stroke="rgba(56,189,248,0.55)" />
+          <rect x="24" y="14" width="22" height="32" rx="6" fill="rgba(15,23,42,0.75)" stroke="rgba(148,163,184,0.45)" />
+          <circle cx="35" cy="30" r="9" fill="rgba(249,115,22,0.35)" stroke="rgba(249,115,22,0.65)" />
+          <circle cx="38" cy="26" r="5" fill="#facc15" stroke="rgba(248,250,252,0.55)" />
+          <circle cx="33" cy="36" r="4" fill="#38bdf8" stroke="rgba(248,250,252,0.4)" />
+          <path d="M6 52 L64 16" stroke="rgba(249,115,22,0.6)" stroke-width="3" stroke-linecap="round" stroke-dasharray="6 4" />
+          <path d="M6 18 L64 44" stroke="rgba(56,189,248,0.4)" stroke-width="3" stroke-linecap="round" stroke-dasharray="4 6" />
+          <circle cx="12" cy="18" r="4" fill="#38bdf8" />
+          <circle cx="62" cy="44" r="4" fill="#f97316" />
+        </g>
+        <g>
+          <path d="M56 98 C72 90 90 90 104 98" fill="none" stroke="rgba(56,189,248,0.4)" stroke-width="6" stroke-linecap="round" />
+          <circle cx="80" cy="92" r="8" fill="#f97316" stroke="rgba(248,250,252,0.6)" stroke-width="1.5" />
+          <path d="M80 84 L92 72" stroke="#facc15" stroke-width="3" stroke-linecap="round" />
+        </g>
+      </svg>
+    `,
+  }, // Level 11
   {
     id: "speed-zone",
     name: "Speed Zone",

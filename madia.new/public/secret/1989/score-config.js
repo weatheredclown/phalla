@@ -238,6 +238,20 @@ export const scoreConfigs = {
       return `${value ?? 0} pts · ${comboLabel}${riskyLabel}`;
     },
   },
+  "wild-thing-wind-up": {
+    label: "Strikeouts",
+    empty: "No strikeouts recorded yet.",
+    format: ({ value, meta }) => {
+      const innings = typeof meta?.innings === "string" && meta.innings.trim()
+        ? meta.innings.trim()
+        : String(meta?.innings ?? "0.0");
+      const runs = Number(meta?.runs ?? 0);
+      const wild = Number(meta?.wildThings ?? 0);
+      const runsLabel = runs === 1 ? "1 run" : `${runs} runs`;
+      const wildLabel = wild === 1 ? "1 Wild Thing" : `${wild} Wild Things`;
+      return `${value ?? 0} Ks · ${innings} IP · ${runsLabel} · ${wildLabel}`;
+    },
+  },
   "whispers-garden": {
     label: "Field Completion",
     empty: "No whispers answered yet.",
