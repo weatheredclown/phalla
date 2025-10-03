@@ -28,7 +28,7 @@
 - **Core mechanic:** Streamed "Pizza Order" tiles queue up at the shop; players draw non-intersecting delivery trails that must reach each customer within a tight timer while preserving unique path segments.
 - **Escalating challenge:** Juggling simultaneous orders requires threading routes around earlier deliveries—any overlap or crossing triggers a traffic-jam failure and wipes the entire queue.
 - **Actuation twist:** A single-charge "Bike Jump" lets players vault one existing trail segment, temporarily ghosting through it to rescue an otherwise blocked order.
-## Level 49: The Dream Team
+## Level 49: Wardline Breakout
 - **Inspirational roots:** A fish-out-of-water caper about four psychiatric patients accidentally turned loose in New York City, leaning on ensemble comedy beats without calling out the source directly.
 - **Anchor pieces:** A fold-out straightjacket city map that shows the hospital launch point, subway nodes, and the stadium finish.
 - **Core mechanic:** Players queue actions for each patient according to their quirk—``Stepper`` (exactly one tile per turn), ``Liner`` (only straight paths until an obstacle forces a stop), ``Looper`` (must repeat its last move direction), and ``Wildcard`` (executes a pre-shuffled list of turns). Orders resolve simultaneously, so sequencing becomes an order-of-operations brainteaser.
@@ -43,7 +43,7 @@
 - **Escalating threats:** Rival crews leak false traffic reports, shifting hazard tiles mid-turn, and patrol markers sweep ahead of the player whenever consecutive high-risk icons appear.
 - **Actuation twist:** Earning a rare ``Bypass`` actuation cancels one checkpoint requirement, but forces an immediate reroute that consumes the current movement roll and shifts the risk icons for the next throw.
 
-## Level 44: Say Anything...
+## Level 44: Boombox Serenade
 - **Inspirational roots:** Channels the heartfelt late-night driveway scene where a trench-coated romantic hoists a boombox skyward to keep the conversation alive.
 - **Anchor pieces:** Dual emotional frequency tracks for Lloyd and Diane, a central Communication Flow meter, and a rechargeable Boombox Charge that bridges threatening silences.
 - **Core mechanic:** Harmonic Frequency Matching—pairs of thought blocks slide down each lane and must be answered in near-unison to sustain the shared dialogue.
