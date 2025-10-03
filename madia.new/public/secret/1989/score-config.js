@@ -122,11 +122,56 @@ export const scoreConfigs = {
       return `${value ?? 0} pts`;
     },
   },
+  "freddys-dream-maze": {
+    label: "Sanity Retained",
+    empty: "No dream escapes logged yet.",
+    format: ({ value, meta }) => {
+      const confronted = Number(meta?.confronted ?? 0);
+      const safeZones = Number(meta?.safeZones ?? 0);
+      const timeMs = Number(meta?.timeMs ?? 0);
+      const minutes = Math.floor(Math.max(0, timeMs) / 60000);
+      const seconds = Math.floor((Math.max(0, timeMs) % 60000) / 1000);
+      const timeLabel = `${minutes}:${String(seconds).padStart(2, "0")}`;
+      const confrontedLabel = confronted === 1 ? "1 fear" : `${confronted} fears`;
+      const safeLabel = safeZones === 1 ? "1 safe" : `${safeZones} safes`;
+      return `${value ?? 0}% · ${confrontedLabel} · ${safeLabel} · ${timeLabel}`;
+    },
+  },
   "flapjack-flip-out": {
     label: "Stack Height",
     empty: "No stacks flipped yet.",
     format: ({ value }) => `${value ?? 0} cm`,
   },
+  "frank-drebins-follies": {
+    label: "Chaos Rating",
+    empty: "No chaos logged yet.",
+    format: ({ value, meta }) => {
+      const chaos = value ?? 0;
+      const damageValue = Number.isFinite(meta?.propertyDamage) ? Number(meta.propertyDamage) : null;
+      const highlightCount = Number(meta?.highlights ?? meta?.highlightCount ?? 0);
+      const highlightLabel = highlightCount === 1 ? "highlight" : "highlights";
+      if (damageValue && damageValue > 0) {
+        const formatter = new Intl.NumberFormat("en-US", {
+          style: "currency",
+          currency: "USD",
+          maximumFractionDigits: 0,
+        });
+        return `${chaos} chaos · ${formatter.format(damageValue)} damage · ${highlightCount} ${highlightLabel}`;
+      }
+      return `${chaos} chaos · ${highlightCount} ${highlightLabel}`;
+    },
+  },
+  // Level 7
+  "framed-breakout": {
+    label: "Escape Prowess",
+    empty: "No breakout runs logged yet.",
+    format: ({ value, meta }) => {
+      const evaded = Number(meta?.evaded ?? 0);
+      const disguise = typeof meta?.disguise === "string" && meta.disguise ? ` · ${meta.disguise}` : "";
+      const guardLabel = evaded === 1 ? "guard" : "guards";
+      return `${value ?? 0} pts · ${evaded} ${guardLabel}${disguise}`;
+    },
+  }, // Level 7
   "kodiak-covenant": {
     label: "Traps Cleared",
     empty: "No traps cleared yet.",
@@ -150,6 +195,17 @@ export const scoreConfigs = {
     format: ({ value }) =>
       value === 1 ? "1 intercept" : `${value ?? 0} intercepts`,
   },
+  "osaka-motorcycle-dash": {
+    label: "Distance Covered",
+    empty: "No chases logged yet.",
+    format: ({ value, meta }) => {
+      const disabled = Number(meta?.disabled ?? meta?.gangsDisabled ?? 0);
+      const streak = Number(meta?.longestStreak ?? meta?.streak ?? 0);
+      const disableLabel = disabled === 1 ? "1 disable" : `${disabled} disables`;
+      const streakLabel = Number.isFinite(streak) && streak > 0 ? `${streak.toFixed(1)}s streak` : "0.0s streak";
+      return `${value ?? 0} m · ${disableLabel} · ${streakLabel}`;
+    },
+  },
   "river-of-slime-escape": {
     label: "Meters Climbed",
     empty: "No climbs logged yet.",
@@ -171,7 +227,7 @@ export const scoreConfigs = {
     label: "Family Harmony",
     empty: "No harmony runs logged yet.",
     format: ({ value }) => `Harmony ${value ?? 0}`,
-  },
+  }, // rollercoaster
   "truvys-salon-style": {
     label: "Tip Jar",
     empty: "No tips counted yet.",
@@ -187,6 +243,16 @@ export const scoreConfigs = {
       return `$${value ?? 0}`;
     },
   },
+  // Level 14
+  "the-final-barrier": {
+    label: "Exploration Score",
+    empty: "No barrier runs logged yet.",
+    format: ({ value, meta }) => {
+      const accuracy = Number.isFinite(meta?.accuracy) ? `${Math.round(meta.accuracy)}% accuracy` : "Accuracy unknown";
+      const shields = Number.isFinite(meta?.shields) ? `${Math.round(meta.shields)}% shields` : "Shields unknown";
+      return `${value ?? 0} pts · ${accuracy} · ${shields}`;
+    },
+  }, // Level 14
   "tailing-the-trash": {
     label: "Evidence Logged",
     empty: "No stakeouts logged yet.",
@@ -196,6 +262,29 @@ export const scoreConfigs = {
         return `${value ?? 0} logs · ${suspicion}% peak`;
       }
       return `${value ?? 0} logs`;
+    },
+  },
+  "disorient-express": {
+    label: "Cooperation Time",
+    empty: "No co-op runs logged yet.",
+    format: ({ value, meta }) => {
+      const reportedMs = Number.isFinite(meta?.finalTimeMs)
+        ? Number(meta.finalTimeMs)
+        : Number.isFinite(value)
+          ? Math.max(0, 300000 - Number(value))
+          : null;
+      if (!Number.isFinite(reportedMs)) {
+        return `${value ?? 0}`;
+      }
+      const minutes = Math.floor(reportedMs / 60000);
+      const seconds = Math.floor((reportedMs % 60000) / 1000);
+      const millis = Math.floor(reportedMs % 1000);
+      const mistakes = Number(meta?.miscommunications ?? 0);
+      const rushCount = Number(meta?.rushCount ?? 0);
+      const misLabel = mistakes === 1 ? "1 miscommunication" : `${mistakes} miscommunications`;
+      const rushLabel = rushCount > 0 ? ` · Rush ×${rushCount}` : "";
+      return `${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}.${String(millis).padStart(3, "0")}` +
+        ` · ${misLabel}${rushLabel}`;
     },
   },
   "restless-acre-rise": {
@@ -221,6 +310,26 @@ export const scoreConfigs = {
     label: "Checkpoints Cleared",
     empty: "No checkpoints cleared yet.",
     format: ({ value }) => `${value ?? 0} / 4`,
+  },
+  "sugar-ray-hustle": {
+    label: "Career Take",
+    empty: "No winnings recorded yet.",
+    format: ({ value, meta }) => {
+      const amount = Number(value ?? 0);
+      const formatter = new Intl.NumberFormat("en-US", {
+        style: "currency",
+        currency: "USD",
+        maximumFractionDigits: 0,
+      });
+      const take = formatter.format(amount);
+      const streak = Number(meta?.longestStreak ?? 0);
+      const foes = Number(meta?.opponents ?? 0);
+      const swagger = Number(meta?.swaggerActivations ?? 0);
+      const streakLabel = streak === 1 ? "1 perfect" : `${streak} perfects`;
+      const foeLabel = foes === 1 ? "1 foe" : `${foes} foes`;
+      const swaggerLabel = swagger === 1 ? "1 slow-mo" : `${swagger} slow-mo`;
+      return `${take} · ${streakLabel} · ${foeLabel} · ${swaggerLabel}`;
+    },
   },
   "three-fugitives": {
     label: "Tempo Buffer",
@@ -263,8 +372,52 @@ export const scoreConfigs = {
       const comboLabel = combo === 1 ? "1 combo" : `${combo} combo streak`;
       const riskyLabel = risky > 0 ? ` · Risky +${risky}` : "";
       return `${value ?? 0} pts · ${comboLabel}${riskyLabel}`;
+    }, // sync score
+  }, // Previous level
+  // Level 22
+  "merger-madness": {
+    label: "Efficiency Rating",
+    empty: "No desk shifts logged yet.",
+    format: ({ value, meta }) => {
+      const accuracy = Number.isFinite(meta?.accuracy)
+        ? `${meta.accuracy}% accuracy`
+        : "0% accuracy";
+      const docs = Number(meta?.documents ?? 0);
+      const docLabel = docs === 1 ? "doc" : "docs";
+      return `${value ?? 0} pts · ${accuracy} · ${docs} ${docLabel}`;
     },
-  },
+  }, // Level 22
+  // Level 13
+  "under-the-sea-scramble": {
+    label: "Treasure Trove Score",
+    empty: "No treasures cataloged yet.",
+    format: ({ value, meta }) => {
+      const accuracy = Number.isFinite(meta?.accuracy) ? Math.round(meta.accuracy) : null;
+      const accuracyText = accuracy !== null ? `${accuracy}% accuracy` : "accuracy unknown";
+      const helpCalls = Number(meta?.helpCalls ?? 0);
+      const helpLabel =
+        helpCalls === 0
+          ? "no Scuttle calls"
+          : `${helpCalls} Scuttle ${helpCalls === 1 ? "call" : "calls"}`;
+      const timeBonus = Number(meta?.timeBonus ?? 0);
+      const bonusLabel = timeBonus > 0 ? `+${timeBonus} bonus` : "no bonus";
+      return `${value ?? 0} pts · ${accuracyText} · ${helpLabel} · ${bonusLabel}`;
+    },
+  }, // Level 13
+  "wild-thing-wind-up": {
+    label: "Strikeouts",
+    empty: "No strikeouts recorded yet.",
+    format: ({ value, meta }) => {
+      const innings = typeof meta?.innings === "string" && meta.innings.trim()
+        ? meta.innings.trim()
+        : String(meta?.innings ?? "0.0");
+      const runs = Number(meta?.runs ?? 0);
+      const wild = Number(meta?.wildThings ?? 0);
+      const runsLabel = runs === 1 ? "1 run" : `${runs} runs`;
+      const wildLabel = wild === 1 ? "1 Wild Thing" : `${wild} Wild Things`;
+      return `${value ?? 0} Ks · ${innings} IP · ${runsLabel} · ${wildLabel}`;
+    },
+  }, // wild things
   // Level 16
   "wind-beneath-my-wings": {
     label: "Applause Score",

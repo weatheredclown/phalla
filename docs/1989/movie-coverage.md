@@ -1,8 +1,16 @@
 # 1989 Arcade Film Coverage
 
 This reference tracks how the 1989 arcade cabinets map to their source films and how far the ladder has progressed up the 1989 domestic box office chart.
+Freddy's Dream Maze now seals Level 5 with an Elm Street sanity sprint while the ladder keeps stitching in the remaining Top 50 nightmares.
 
 Truvy's Salon Style now anchors Level 12 with a pastel blitz through *Steel Magnolias*, bringing the ladder deeper into the top-25 box office while the remaining rungs keep filling the unreleased Top 50 slots.
+Frank Drebin's Follies now detonates Level 6 with a rapid-reaction tribute to *The Naked Gun: From the Files of Police Squad!*, weaving slapstick decision pressure into the home stretch of the ladder. River of Slime Escape still shocks Level 27 with Ghostbusters II’s river chase while Three Fugitives continues anchoring Level 32, and the remaining rungs keep backfilling the Top 50 slots.
+Under the Sea Scramble now glitters at Level 13, turning Ariel's curiosity into a timed hidden-object sprint that punishes sloppy clicks while rewarding precise treasure hunts.
+The Final Barrier now electrifies Level 14 with a neon on-rails gauntlet through Star Trek V’s Great Barrier, layering power-diversion gambles atop the arcade’s late-game ladder while earlier cabinets continue filling the remaining Top 50 slots.
+Framed Breakout now secures Level 7 with *Tango & Cash*'s overcranked prison gauntlet, giving the ladder its first single-digit cabinet while the rest of the roster continues filling in the remaining Top 50 slots.
+Osaka Motorcycle Dash now floods Level 9 with a Black Rain tribute, filling another top-ten slot alongside Hoverboard Pursuit and River of Slime Escape. The focus shifts to the last few tentpoles still missing from the upper rungs while earlier levels continue closing the remaining Top 50 gaps.
+The Disorient Express now stations Level 22 with a See No Evil, Hear No Evil homage, finally pairing the ladder’s split-sense gimmick with the film that inspired it while the remaining gaps continue to collapse toward the top of the chart.
+Wild Thing Wind-Up now rockets into Level 11 with a Major League-inspired closer duel, pushing the ladder deeper into the top 25 while earlier updates below document the run-up.
 Wind Beneath My Wings now elevates Level 16, transforming *Beaches* into a spotlight rhythm showcase that bridges the ladder’s middle stretch between the family dramedies and the Top 15 crowd-pleasers.
 
 River of Slime Escape now shocks Level 27 with Ghostbusters II’s river chase while Three Fugitives continues anchoring Level 32, and the ladder keeps backfilling the remaining Top 50 slots.
@@ -15,6 +23,8 @@ Three Fugitives still anchors Level 32 while Twenty-Five Thousand Bulbs now ener
 Three Fugitives now anchors Level 32, covering the next-highest new release still on the chart, while Voice Box Swap pulls Level 28 into the top-ten chase. The remaining rungs continue to backfill the unreleased Top 50 slots.
 Whisper's Garden now occupies Level 21, translating *Field of Dreams* into a meditative midnight build while the rest of the ladder continues to backfill the remaining Top 50 slots.
 Three Fugitives now anchors Level 32, covering the next-highest new release still on the chart while the rest of the ladder continues to backfill the remaining Top 50 slots. The Diner Debate locks in Level 24 with a booth-shaking homage to *When Harry Met Sally...*.
+
+Merger Madness now occupies Level 22, translating *Working Girl*'s corporate scramble into a rapid-fire desk gauntlet between the stakeout circuit and the whispering cornfield.
 
 ## Covered Films
 
@@ -45,14 +55,25 @@ Three Fugitives now anchors Level 32, covering the next-highest new release stil
 | 26 | Hoverboard Pursuit | *Back to the Future Part II* | #8 |
 | 25 | Rollercoaster of Life | *Parenthood* | #9 |
 | 24 | The Diner Debate | *When Harry Met Sally...* | #11 |
+| 9 | Osaka Motorcycle Dash | *Black Rain* | #26 |
 | 23 | Tailing the Trash | *Turner & Hooch* | #12 |
+| 22 | Merger Madness | *Working Girl* | #27 |
+| 22 | The Disorient Express | *See No Evil, Hear No Evil* | #25 |
 | 18 | Restless Acre Rise | *Pet Sematary* | #17 |
+| 14 | The Final Barrier | *Star Trek V: The Final Frontier* | #21 |
 | 16 | Wind Beneath My Wings | *Beaches* | #19 |
 | 20 | Twenty-Five Thousand Bulbs | *National Lampoon's Christmas Vacation* | #15 |
 | 29 | The K-Mart Countdown | *Rain Man* | #5 |
 | 28 | Voice Box Swap | *Look Who's Talking* | #6 |
 | 29 | Flapjack Flip-Out | *Uncle Buck* | #13 |
 | 12 | Truvy's Salon Style | *Steel Magnolias* | #22 |
+| 24 | The Diner Debate | *When Harry Met Sally...* | #11 |
+| 11 | Wild Thing Wind-Up | *Major League* | #24 |
+| 29 | Flapjack Flip-Out | *Uncle Buck* | #13 |
+| 5 | Freddy's Dream Maze | *A Nightmare on Elm Street 5: The Dream Child* | #50 |
+| 6 | Frank Drebin's Follies | *The Naked Gun: From the Files of Police Squad!* | #49 |
+| 13 | Under the Sea Scramble | *The Little Mermaid* | #22 |
+| 7 | Framed Breakout | *Tango & Cash* | #48 |
 
 Remaining:
 ## Remaining Targets to Reach #1
@@ -101,7 +122,6 @@ Remaining:
 | **8** | Working Girl | #27 | Merger Madness | A quick-typing or paperwork sorting challenge in a high-rise office environment to prepare for a major business meeting. |
 | **7** | Tango & Cash | #48 | Framed Breakout | A prison break level focused on quick puzzle solving and avoiding guards while wearing ridiculous "action hero" disguises. |
 | **6** | The Naked Gun: From the Files of Police Squad! | #49 | Frank Drebin's Follies | A quick-reaction game requiring you to perform perfectly normal tasks while hilariously and accidentally causing massive collateral damage. |
-| **5** | A Nightmare on Elm Street 5: The Dream Child | #50 | Freddy's Dream Maze | A horror-themed maze or escape room game where the environment is constantly changing based on your character's deepest fears. |
 | **4** | Batman | #1 | The Bat-Signal Scramble | A fast-paced driving/grappling sequence across Gotham City rooftops to answer the Bat-Signal before the Joker strikes. |
 | **3** | Indiana Jones and the Last Crusade | #2 | The Grail Trial | A trio of physical and mental challenge puzzles based on the three final tests to prove worthiness for the Holy Grail. |
 | **2** | Lethal Weapon 2 | #3 | Toilet Bomb Disposal | A tense, timed puzzle game to disarm a bomb, with the added pressure of Rigg's reckless attitude. |
