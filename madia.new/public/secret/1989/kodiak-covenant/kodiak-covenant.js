@@ -1,6 +1,16 @@
+import { initHighScoreBanner } from "../arcade-scores.js";
+import { getScoreConfig } from "../score-config.js";
 import { mountParticleField } from "../particles.js";
 
 mountParticleField();
+
+const scoreConfig = getScoreConfig("kodiak-covenant");
+const highScore = initHighScoreBanner({
+  gameId: "kodiak-covenant",
+  label: scoreConfig.label,
+  format: scoreConfig.format,
+  emptyText: scoreConfig.empty,
+});
 
 const TURN_COUNT = 9;
 const PROTECTION_WINDOW = 2;
@@ -356,6 +366,7 @@ function simulatePlan(plan) {
 
     if (kodiakTile === "trap") {
       clearedTraps.add(posKey(kodiak));
+      highScore.submit(clearedTraps.size);
     }
 
     const cubTarget = {

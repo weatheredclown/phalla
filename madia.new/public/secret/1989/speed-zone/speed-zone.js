@@ -1,6 +1,16 @@
+import { initHighScoreBanner } from "../arcade-scores.js";
+import { getScoreConfig } from "../score-config.js";
 import { mountParticleField } from "../particles.js";
 
 mountParticleField();
+
+const scoreConfig = getScoreConfig("speed-zone");
+const highScore = initHighScoreBanner({
+  gameId: "speed-zone",
+  label: scoreConfig.label,
+  format: scoreConfig.format,
+  emptyText: scoreConfig.empty,
+});
 
 const svgNS = "http://www.w3.org/2000/svg";
 
@@ -444,6 +454,7 @@ function resolveRoute() {
     const clearedId = checkpoints[checkpointIndex];
     const clearedName = nodesById.get(clearedId).name;
     checkpointIndex += 1;
+    highScore.submit(checkpointIndex);
     adjustHeat(-4);
     logEvent(`🏁 Cleared ${clearedName}. Heat -4.`);
   }
@@ -481,6 +492,7 @@ function triggerBypass() {
   if (checkpointIndex < checkpoints.length) {
     const skipped = nodesById.get(checkpoints[checkpointIndex]).name;
     checkpointIndex += 1;
+    highScore.submit(checkpointIndex);
     logEvent(`🪄 Bypass actuation burns ${skipped}. Next checkpoint auto-cleared.`);
     updateCheckpointReadout();
   }

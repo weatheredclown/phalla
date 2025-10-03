@@ -1,6 +1,16 @@
+import { initHighScoreBanner } from "../arcade-scores.js";
+import { getScoreConfig } from "../score-config.js";
 import { mountParticleField } from "../particles.js";
 
 mountParticleField();
+
+const scoreConfig = getScoreConfig("heatwave-block-party");
+const highScore = initHighScoreBanner({
+  gameId: "heatwave-block-party",
+  label: scoreConfig.label,
+  format: scoreConfig.format,
+  emptyText: scoreConfig.empty,
+});
 
 const GRID_SIZE = 5;
 const LEVEL_DURATION_MS = 90_000;
@@ -81,6 +91,8 @@ const state = {
   cells: [],
 };
 
+let totalCooling = 0;
+
 initializeBoard();
 resetState();
 
@@ -142,6 +154,7 @@ function resetState() {
     ...cell,
     grievance: cell.initialGrievance,
   }));
+  totalCooling = 0;
   logEntries.innerHTML = "";
   updateBoard();
   updateGauges();
@@ -378,6 +391,10 @@ function totalGrievances() {
 
 function changeTemperature(delta) {
   state.temperature = Math.max(0, Math.min(TEMPERATURE_MAX, state.temperature + delta));
+  if (delta < 0) {
+    totalCooling += -delta;
+    highScore.submit(Math.round(totalCooling));
+  }
 }
 
 function adjustOutburst(amount) {
