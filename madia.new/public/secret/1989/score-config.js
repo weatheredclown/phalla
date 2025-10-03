@@ -127,6 +127,17 @@ export const scoreConfigs = {
     empty: "No stacks flipped yet.",
     format: ({ value }) => `${value ?? 0} cm`,
   },
+  // Level 7
+  "framed-breakout": {
+    label: "Escape Prowess",
+    empty: "No breakout runs logged yet.",
+    format: ({ value, meta }) => {
+      const evaded = Number(meta?.evaded ?? 0);
+      const disguise = typeof meta?.disguise === "string" && meta.disguise ? ` · ${meta.disguise}` : "";
+      const guardLabel = evaded === 1 ? "guard" : "guards";
+      return `${value ?? 0} pts · ${evaded} ${guardLabel}${disguise}`;
+    },
+  }, // Level 7
   "kodiak-covenant": {
     label: "Traps Cleared",
     empty: "No traps cleared yet.",

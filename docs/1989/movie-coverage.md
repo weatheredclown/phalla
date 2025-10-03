@@ -2,6 +2,7 @@
 
 This reference tracks how the 1989 arcade cabinets map to their source films and how far the ladder has progressed up the 1989 domestic box office chart.
 
+Framed Breakout now secures Level 7 with *Tango & Cash*'s overcranked prison gauntlet, giving the ladder its first single-digit cabinet while the rest of the roster continues filling in the remaining Top 50 slots.
 Osaka Motorcycle Dash now floods Level 9 with a Black Rain tribute, filling another top-ten slot alongside Hoverboard Pursuit and River of Slime Escape. The focus shifts to the last few tentpoles still missing from the upper rungs while earlier levels continue closing the remaining Top 50 gaps.
 The Disorient Express now stations Level 22 with a See No Evil, Hear No Evil homage, finally pairing the ladder’s split-sense gimmick with the film that inspired it while the remaining gaps continue to collapse toward the top of the chart.
 Wild Thing Wind-Up now rockets into Level 11 with a Major League-inspired closer duel, pushing the ladder deeper into the top 25 while earlier updates below document the run-up.
@@ -60,6 +61,7 @@ Merger Madness now occupies Level 22, translating *Working Girl*'s corporate scr
 | 24 | The Diner Debate | *When Harry Met Sally...* | #11 |
 | 11 | Wild Thing Wind-Up | *Major League* | #24 |
 | 29 | Flapjack Flip-Out | *Uncle Buck* | #13 |
+| 7 | Framed Breakout | *Tango & Cash* | #48 |
 
 Remaining:
 ## Remaining Targets to Reach #1
@@ -107,7 +109,6 @@ Remaining:
 | **10** | See No Evil, Hear No Evil | #25 | The Disorient Express | A cooperative or split-screen minigame where one player uses only visual cues and the other only audio cues to solve a simple puzzle. |
 | **9** | Black Rain | #26 | Osaka Motorcycle Dash | A high-speed chase level through the neon-lit streets of Osaka, avoiding gangs and following a key witness. |
 | **8** | Working Girl | #27 | Merger Madness | A quick-typing or paperwork sorting challenge in a high-rise office environment to prepare for a major business meeting. |
-| **7** | Tango & Cash | #48 | Framed Breakout | A prison break level focused on quick puzzle solving and avoiding guards while wearing ridiculous "action hero" disguises. |
 | **6** | The Naked Gun: From the Files of Police Squad! | #49 | Frank Drebin's Follies | A quick-reaction game requiring you to perform perfectly normal tasks while hilariously and accidentally causing massive collateral damage. |
 | **5** | A Nightmare on Elm Street 5: The Dream Child | #50 | Freddy's Dream Maze | A horror-themed maze or escape room game where the environment is constantly changing based on your character's deepest fears. |
 | **4** | Batman | #1 | The Bat-Signal Scramble | A fast-paced driving/grappling sequence across Gotham City rooftops to answer the Bat-Signal before the Joker strikes. |
