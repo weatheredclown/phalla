@@ -3,6 +3,9 @@
 This reference tracks how the 1989 arcade cabinets map to their source films and how far the ladder has progressed up the 1989 domestic box office chart.
 Freddy's Dream Maze now seals Level 5 with an Elm Street sanity sprint while the ladder keeps stitching in the remaining Top 50 nightmares.
 
+Frank Drebin's Follies now detonates Level 6 with a rapid-reaction tribute to *The Naked Gun: From the Files of Police Squad!*, weaving slapstick decision pressure into the home stretch of the ladder. River of Slime Escape still shocks Level 27 with Ghostbusters II’s river chase while Three Fugitives continues anchoring Level 32, and the remaining rungs keep backfilling the Top 50 slots.
+Under the Sea Scramble now glitters at Level 13, turning Ariel's curiosity into a timed hidden-object sprint that punishes sloppy clicks while rewarding precise treasure hunts.
+The Final Barrier now electrifies Level 14 with a neon on-rails gauntlet through Star Trek V’s Great Barrier, layering power-diversion gambles atop the arcade’s late-game ladder while earlier cabinets continue filling the remaining Top 50 slots.
 Framed Breakout now secures Level 7 with *Tango & Cash*'s overcranked prison gauntlet, giving the ladder its first single-digit cabinet while the rest of the roster continues filling in the remaining Top 50 slots.
 Osaka Motorcycle Dash now floods Level 9 with a Black Rain tribute, filling another top-ten slot alongside Hoverboard Pursuit and River of Slime Escape. The focus shifts to the last few tentpoles still missing from the upper rungs while earlier levels continue closing the remaining Top 50 gaps.
 The Disorient Express now stations Level 22 with a See No Evil, Hear No Evil homage, finally pairing the ladder’s split-sense gimmick with the film that inspired it while the remaining gaps continue to collapse toward the top of the chart.
@@ -55,6 +58,7 @@ Merger Madness now occupies Level 22, translating *Working Girl*'s corporate scr
 | 22 | Merger Madness | *Working Girl* | #27 |
 | 22 | The Disorient Express | *See No Evil, Hear No Evil* | #25 |
 | 18 | Restless Acre Rise | *Pet Sematary* | #17 |
+| 14 | The Final Barrier | *Star Trek V: The Final Frontier* | #21 |
 | 16 | Wind Beneath My Wings | *Beaches* | #19 |
 | 20 | Twenty-Five Thousand Bulbs | *National Lampoon's Christmas Vacation* | #15 |
 | 29 | The K-Mart Countdown | *Rain Man* | #5 |
@@ -63,6 +67,8 @@ Merger Madness now occupies Level 22, translating *Working Girl*'s corporate scr
 | 11 | Wild Thing Wind-Up | *Major League* | #24 |
 | 29 | Flapjack Flip-Out | *Uncle Buck* | #13 |
 | 5 | Freddy's Dream Maze | *A Nightmare on Elm Street 5: The Dream Child* | #50 |
+| 6 | Frank Drebin's Follies | *The Naked Gun: From the Files of Police Squad!* | #49 |
+| 13 | Under the Sea Scramble | *The Little Mermaid* | #22 |
 | 7 | Framed Breakout | *Tango & Cash* | #48 |
 
 Remaining:
@@ -111,6 +117,7 @@ Remaining:
 | **10** | See No Evil, Hear No Evil | #25 | The Disorient Express | A cooperative or split-screen minigame where one player uses only visual cues and the other only audio cues to solve a simple puzzle. |
 | **9** | Black Rain | #26 | Osaka Motorcycle Dash | A high-speed chase level through the neon-lit streets of Osaka, avoiding gangs and following a key witness. |
 | **8** | Working Girl | #27 | Merger Madness | A quick-typing or paperwork sorting challenge in a high-rise office environment to prepare for a major business meeting. |
+| **7** | Tango & Cash | #48 | Framed Breakout | A prison break level focused on quick puzzle solving and avoiding guards while wearing ridiculous "action hero" disguises. |
 | **6** | The Naked Gun: From the Files of Police Squad! | #49 | Frank Drebin's Follies | A quick-reaction game requiring you to perform perfectly normal tasks while hilariously and accidentally causing massive collateral damage. |
 | **4** | Batman | #1 | The Bat-Signal Scramble | A fast-paced driving/grappling sequence across Gotham City rooftops to answer the Bat-Signal before the Joker strikes. |
 | **3** | Indiana Jones and the Last Crusade | #2 | The Grail Trial | A trio of physical and mental challenge puzzles based on the three final tests to prove worthiness for the Holy Grail. |

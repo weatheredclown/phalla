@@ -142,6 +142,25 @@ export const scoreConfigs = {
     empty: "No stacks flipped yet.",
     format: ({ value }) => `${value ?? 0} cm`,
   },
+  "frank-drebins-follies": {
+    label: "Chaos Rating",
+    empty: "No chaos logged yet.",
+    format: ({ value, meta }) => {
+      const chaos = value ?? 0;
+      const damageValue = Number.isFinite(meta?.propertyDamage) ? Number(meta.propertyDamage) : null;
+      const highlightCount = Number(meta?.highlights ?? meta?.highlightCount ?? 0);
+      const highlightLabel = highlightCount === 1 ? "highlight" : "highlights";
+      if (damageValue && damageValue > 0) {
+        const formatter = new Intl.NumberFormat("en-US", {
+          style: "currency",
+          currency: "USD",
+          maximumFractionDigits: 0,
+        });
+        return `${chaos} chaos · ${formatter.format(damageValue)} damage · ${highlightCount} ${highlightLabel}`;
+      }
+      return `${chaos} chaos · ${highlightCount} ${highlightLabel}`;
+    },
+  },
   // Level 7
   "framed-breakout": {
     label: "Escape Prowess",
@@ -209,6 +228,16 @@ export const scoreConfigs = {
     empty: "No harmony runs logged yet.",
     format: ({ value }) => `Harmony ${value ?? 0}`,
   },
+  // Level 14
+  "the-final-barrier": {
+    label: "Exploration Score",
+    empty: "No barrier runs logged yet.",
+    format: ({ value, meta }) => {
+      const accuracy = Number.isFinite(meta?.accuracy) ? `${Math.round(meta.accuracy)}% accuracy` : "Accuracy unknown";
+      const shields = Number.isFinite(meta?.shields) ? `${Math.round(meta.shields)}% shields` : "Shields unknown";
+      return `${value ?? 0} pts · ${accuracy} · ${shields}`;
+    },
+  }, // Level 14
   "tailing-the-trash": {
     label: "Evidence Logged",
     empty: "No stakeouts logged yet.",
@@ -343,6 +372,23 @@ export const scoreConfigs = {
       return `${value ?? 0} pts · ${accuracy} · ${docs} ${docLabel}`;
     },
   }, // Level 22
+  // Level 13
+  "under-the-sea-scramble": {
+    label: "Treasure Trove Score",
+    empty: "No treasures cataloged yet.",
+    format: ({ value, meta }) => {
+      const accuracy = Number.isFinite(meta?.accuracy) ? Math.round(meta.accuracy) : null;
+      const accuracyText = accuracy !== null ? `${accuracy}% accuracy` : "accuracy unknown";
+      const helpCalls = Number(meta?.helpCalls ?? 0);
+      const helpLabel =
+        helpCalls === 0
+          ? "no Scuttle calls"
+          : `${helpCalls} Scuttle ${helpCalls === 1 ? "call" : "calls"}`;
+      const timeBonus = Number(meta?.timeBonus ?? 0);
+      const bonusLabel = timeBonus > 0 ? `+${timeBonus} bonus` : "no bonus";
+      return `${value ?? 0} pts · ${accuracyText} · ${helpLabel} · ${bonusLabel}`;
+    },
+  }, // Level 13
   "wild-thing-wind-up": {
     label: "Strikeouts",
     empty: "No strikeouts recorded yet.",

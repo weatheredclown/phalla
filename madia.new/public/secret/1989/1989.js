@@ -422,6 +422,62 @@ const games = [
       </svg>
     `,
   },
+  // Level 6
+  {
+    id: "frank-drebins-follies",
+    name: "Frank Drebin's Follies",
+    description:
+      "Sprint through slapstick desk duty. Time every prompt, choose when to intervene, and weaponize the collateral damage.",
+    url: "./frank-drebins-follies/index.html",
+    thumbnail: `
+      <svg viewBox="0 0 160 120" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Frank Drebin's Follies preview">
+        <defs>
+          <linearGradient id="folliesBg" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0%" stop-color="rgba(15,23,42,0.95)" />
+            <stop offset="100%" stop-color="rgba(30,41,59,0.9)" />
+          </linearGradient>
+          <linearGradient id="folliesBurst" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0%" stop-color="#38bdf8" />
+            <stop offset="100%" stop-color="#f472b6" />
+          </linearGradient>
+          <linearGradient id="folliesTape" x1="0" y1="0" x2="1" y2="0">
+            <stop offset="0%" stop-color="#facc15" />
+            <stop offset="100%" stop-color="#fb923c" />
+          </linearGradient>
+        </defs>
+        <rect x="10" y="10" width="140" height="100" rx="20" fill="url(#folliesBg)" stroke="rgba(148,163,184,0.4)" />
+        <g transform="translate(18 18)">
+          <rect x="0" y="0" width="124" height="84" rx="18" fill="rgba(6,11,22,0.7)" stroke="rgba(148,163,184,0.35)" />
+          <g transform="translate(10 12)">
+            <rect x="0" y="36" width="56" height="32" rx="10" fill="rgba(15,23,42,0.9)" stroke="rgba(148,163,184,0.4)" />
+            <rect x="64" y="0" width="40" height="20" rx="8" fill="rgba(56,189,248,0.65)" />
+            <rect x="66" y="22" width="36" height="18" rx="8" fill="rgba(244,114,182,0.75)" />
+            <rect x="64" y="44" width="44" height="20" rx="10" fill="rgba(15,23,42,0.85)" stroke="rgba(148,163,184,0.3)" />
+            <text x="86" y="14" text-anchor="middle" font-size="9" fill="#0f172a" font-family="'Press Start 2P', monospace">CHAOS</text>
+            <text x="86" y="58" text-anchor="middle" font-size="10" fill="#38bdf8" font-family="'Press Start 2P', monospace">9999</text>
+          </g>
+          <g transform="translate(14 14)">
+            <rect x="0" y="0" width="42" height="62" rx="16" fill="rgba(37,99,235,0.42)" stroke="rgba(148,163,184,0.35)" />
+            <path d="M12 14 L30 14" stroke="rgba(248,250,252,0.7)" stroke-width="3" stroke-linecap="round" />
+            <path d="M10 28 C20 22 28 34 34 28" stroke="rgba(244,114,182,0.7)" stroke-width="3" stroke-linecap="round" />
+            <circle cx="21" cy="44" r="10" fill="rgba(248,250,252,0.88)" stroke="rgba(148,163,184,0.4)" />
+            <circle cx="21" cy="44" r="4" fill="#1e293b" />
+          </g>
+          <g transform="translate(4 4)">
+            <path d="M8 68 L108 22" stroke="url(#folliesTape)" stroke-width="6" stroke-linecap="round" stroke-dasharray="10 6" />
+            <path d="M18 78 L118 32" stroke="url(#folliesTape)" stroke-width="6" stroke-linecap="round" stroke-dasharray="10 6" />
+          </g>
+          <g transform="translate(26 18)">
+            <circle cx="70" cy="28" r="16" fill="rgba(15,23,42,0.85)" stroke="rgba(148,163,184,0.4)" />
+            <circle cx="70" cy="28" r="12" fill="url(#folliesBurst)" opacity="0.75" />
+            <path d="M62 20 L78 36" stroke="rgba(248,250,252,0.8)" stroke-width="2" stroke-linecap="round" />
+            <path d="M78 20 L62 36" stroke="rgba(248,250,252,0.8)" stroke-width="2" stroke-linecap="round" />
+            <circle cx="70" cy="28" r="4" fill="#facc15" />
+          </g>
+        </g>
+      </svg>
+    `,
+  }, // Level 6
   {
     id: "cable-clash",
     name: "The Cable Clash",
@@ -693,6 +749,51 @@ const games = [
       </svg>
     `,
   },
+  // Level 14
+  {
+    id: "the-final-barrier",
+    name: "The Final Barrier",
+    description: "Pilot the Enterprise through the Great Barrier, juggle power diversion, and shatter the sentinel beyond the veil.",
+    url: "./the-final-barrier/index.html",
+    thumbnail: `
+      <svg viewBox="0 0 160 120" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="The Final Barrier preview">
+        <defs>
+          <radialGradient id="barrierCore" cx="50%" cy="40%" r="70%">
+            <stop offset="0%" stop-color="#facc15" />
+            <stop offset="45%" stop-color="rgba(236,72,153,0.65)" />
+            <stop offset="80%" stop-color="rgba(37,99,235,0.4)" />
+            <stop offset="100%" stop-color="rgba(15,23,42,0.9)" />
+          </radialGradient>
+          <linearGradient id="warpRings" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0%" stop-color="#38bdf8" />
+            <stop offset="100%" stop-color="#c084fc" />
+          </linearGradient>
+        </defs>
+        <rect x="8" y="8" width="144" height="104" rx="18" fill="rgba(6,10,24,0.95)" stroke="rgba(148,163,184,0.35)" />
+        <rect x="18" y="18" width="124" height="84" rx="16" fill="url(#barrierCore)" stroke="rgba(56,189,248,0.35)" />
+        <g stroke="rgba(148,163,184,0.35)" stroke-width="1" opacity="0.6">
+          <path d="M30 60 C60 36 100 36 130 60" fill="none" />
+          <path d="M30 68 C60 44 100 44 130 68" fill="none" />
+          <path d="M30 76 C60 52 100 52 130 76" fill="none" />
+        </g>
+        <g stroke="url(#warpRings)" stroke-width="3" stroke-linecap="round" opacity="0.75">
+          <path d="M40 86 C66 70 94 70 120 86" fill="none" />
+          <path d="M46 92 C72 78 88 78 114 92" fill="none" />
+        </g>
+        <g fill="rgba(56,189,248,0.9)" opacity="0.85">
+          <circle cx="56" cy="44" r="6" />
+          <circle cx="104" cy="40" r="5" />
+          <circle cx="86" cy="54" r="4" />
+          <circle cx="72" cy="32" r="3" />
+        </g>
+        <g transform="translate(40 74)">
+          <path d="M32 18 L52 8 L72 18 L52 28 Z" fill="rgba(15,23,42,0.9)" stroke="rgba(148,163,184,0.45)" stroke-width="1.4" />
+          <path d="M40 18 L52 4 L64 18" fill="none" stroke="rgba(248,250,252,0.8)" stroke-width="2" stroke-linecap="round" />
+          <path d="M38 18 L52 24 L66 18" fill="none" stroke="rgba(236,72,153,0.7)" stroke-width="2" stroke-linecap="round" />
+        </g>
+      </svg>
+    `,
+  }, // Level 14
   {
     id: "wardline-breakout",
     name: "Wardline Breakout",
@@ -1741,6 +1842,74 @@ const games = [
       </svg>
     `,
   },
+  { // Level 13
+    id: "under-the-sea-scramble",
+    name: "Under the Sea Scramble",
+    description: "Scan Ariel's hideouts for human gadgets before the sandglass empties and Flounder clouds the view.",
+    url: "./under-the-sea-scramble/index.html",
+    thumbnail: `
+      <svg viewBox="0 0 160 120" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Under the Sea Scramble preview">
+        <defs>
+          <linearGradient id="utsBackdrop" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="rgba(59,130,246,0.85)" />
+            <stop offset="100%" stop-color="rgba(15,23,42,0.95)" />
+          </linearGradient>
+          <linearGradient id="utsReef" x1="0" y1="1" x2="1" y2="0">
+            <stop offset="0%" stop-color="rgba(34,197,94,0.65)" />
+            <stop offset="100%" stop-color="rgba(56,189,248,0.5)" />
+          </linearGradient>
+          <linearGradient id="utsParchment" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0%" stop-color="rgba(254,240,138,0.95)" />
+            <stop offset="100%" stop-color="rgba(250,204,21,0.7)" />
+          </linearGradient>
+          <radialGradient id="utsGlow" cx="0.5" cy="0.3" r="0.6">
+            <stop offset="0%" stop-color="rgba(252,211,77,0.85)" />
+            <stop offset="100%" stop-color="rgba(252,211,77,0)" />
+          </radialGradient>
+        </defs>
+        <rect x="8" y="8" width="144" height="104" rx="18" fill="rgba(6,12,26,0.92)" stroke="rgba(148,163,184,0.35)" />
+        <rect x="18" y="18" width="124" height="88" rx="16" fill="url(#utsBackdrop)" stroke="rgba(56,189,248,0.35)" />
+        <g opacity="0.75">
+          <path d="M24 96 C30 74 44 56 58 44 C72 32 88 24 104 20" fill="none" stroke="rgba(16,185,129,0.5)" stroke-width="6" stroke-linecap="round" />
+          <path d="M40 96 C46 76 60 60 78 50" fill="none" stroke="rgba(45,212,191,0.45)" stroke-width="5" stroke-linecap="round" />
+          <path d="M120 96 C112 78 100 60 86 50" fill="none" stroke="rgba(56,189,248,0.4)" stroke-width="5" stroke-linecap="round" />
+        </g>
+        <g opacity="0.65">
+          ${Array.from({ length: 4 }, (_, i) => `<circle cx="${32 + i * 26}" cy="${34 + (i % 2) * 12}" r="${2 + (i % 3)}" fill="rgba(224,242,254,0.5)" />`).join("")}
+        </g>
+        <g transform="translate(24 48)">
+          <path d="M0 40 C10 22 22 10 40 0" fill="none" stroke="rgba(34,197,94,0.6)" stroke-width="4" stroke-linecap="round" />
+          <path d="M12 40 C22 26 34 14 52 6" fill="none" stroke="rgba(6,182,212,0.55)" stroke-width="4" stroke-linecap="round" />
+        </g>
+        <rect x="92" y="26" width="44" height="32" rx="9" fill="url(#utsParchment)" stroke="rgba(120,53,15,0.4)" />
+        <g font-family="'Press Start 2P', monospace" font-size="6" fill="#7f1d1d" transform="translate(98 34)">
+          <text x="0" y="6">LIST</text>
+          <text x="0" y="16">🍴</text>
+          <text x="14" y="16">🪈</text>
+          <text x="28" y="16">🎩</text>
+        </g>
+        <g>
+          <circle cx="58" cy="62" r="20" fill="rgba(14,165,233,0.3)" stroke="rgba(14,165,233,0.6)" stroke-width="2" />
+          <circle cx="58" cy="62" r="12" fill="url(#utsGlow)" />
+          <text x="58" y="66" text-anchor="middle" font-size="14" aria-hidden="true">⌛</text>
+        </g>
+        <g font-size="14" text-anchor="middle">
+          <text x="52" y="86">🍴</text>
+          <text x="78" y="90">🪈</text>
+          <text x="104" y="88">🌐</text>
+        </g>
+        <g stroke="url(#utsReef)" stroke-width="4" stroke-linecap="round" opacity="0.7">
+          <path d="M28 86 L52 76" />
+          <path d="M118 86 L94 74" />
+        </g>
+        <g transform="translate(32 92)">
+          <rect x="0" y="0" width="96" height="14" rx="7" fill="rgba(15,23,42,0.8)" stroke="rgba(56,189,248,0.45)" />
+          <rect x="6" y="4" width="56" height="6" rx="3" fill="rgba(56,189,248,0.65)" />
+          <rect x="64" y="4" width="24" height="6" rx="3" fill="rgba(234,179,8,0.7)" />
+        </g>
+      </svg>
+    `,
+  }, // Level 13
   {
     id: "prototype",
     name: "Prototype Cabinet",
