@@ -257,7 +257,7 @@ const games = [
             <circle cx="6" cy="7" r="4" fill="#38bdf8" stroke="rgba(248,250,252,0.7)" />
             <path d="M-8 4 L8 4" stroke="rgba(248,250,252,0.6)" stroke-width="2" stroke-linecap="round" />
           </g>
-          <g transform="translate(44 32)">
+        <g transform="translate(44 32)">
             <rect x="-10" y="18" width="20" height="14" rx="6" fill="rgba(239,68,68,0.75)" />
             <rect x="30" y="6" width="18" height="12" rx="5" fill="rgba(56,189,248,0.65)" />
             <rect x="54" y="32" width="14" height="10" rx="4" fill="rgba(250,204,21,0.75)" />
@@ -266,6 +266,61 @@ const games = [
       </svg>
     `,
   },
+  // Level 9
+  {
+    id: "osaka-motorcycle-dash",
+    name: "Osaka Motorcycle Dash",
+    description:
+      "Shadow the witness through Osaka's neon arteries, stay locked in the halo, and trade boost for disabler pulses before gangs box you out.",
+    url: "./osaka-motorcycle-dash/index.html",
+    thumbnail: `
+      <svg viewBox="0 0 160 120" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Osaka Motorcycle Dash preview">
+        <defs>
+          <linearGradient id="omdSky" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="rgba(56,189,248,0.4)" />
+            <stop offset="100%" stop-color="rgba(2,6,23,0.95)" />
+          </linearGradient>
+          <linearGradient id="omdLane" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0%" stop-color="rgba(236,72,153,0.65)" />
+            <stop offset="100%" stop-color="rgba(37,99,235,0.55)" />
+          </linearGradient>
+          <radialGradient id="omdHalo" cx="50%" cy="50%" r="50%">
+            <stop offset="0%" stop-color="rgba(250,204,21,0.75)" />
+            <stop offset="100%" stop-color="rgba(250,204,21,0)" />
+          </radialGradient>
+        </defs>
+        <rect x="8" y="10" width="144" height="100" rx="18" fill="rgba(5,8,20,0.92)" stroke="rgba(148,163,184,0.35)" />
+        <rect x="16" y="18" width="128" height="84" rx="16" fill="url(#omdSky)" stroke="rgba(148,163,184,0.32)" />
+        <g opacity="0.45">
+          <path d="M32 102 L54 36 C60 20 100 18 118 34 L140 102" fill="none" stroke="rgba(59,130,246,0.35)" stroke-width="5" stroke-linecap="round" />
+          <path d="M24 94 L48 42 C56 24 106 24 126 46 L144 102" fill="none" stroke="rgba(236,72,153,0.4)" stroke-width="4" stroke-linecap="round" stroke-dasharray="8 10" />
+        </g>
+        <g transform="translate(0 -6)">
+          <ellipse cx="90" cy="68" rx="26" ry="16" fill="url(#omdHalo)" />
+          <rect x="78" y="52" width="24" height="40" rx="10" fill="url(#omdLane)" stroke="rgba(248,250,252,0.35)" />
+          <rect x="84" y="56" width="12" height="20" rx="6" fill="rgba(15,23,42,0.85)" />
+        </g>
+        <g transform="translate(0 -2)">
+          <rect x="58" y="66" width="18" height="34" rx="8" fill="rgba(59,130,246,0.9)" stroke="rgba(248,250,252,0.4)" />
+          <rect x="60" y="70" width="14" height="16" rx="6" fill="rgba(15,23,42,0.85)" />
+          <path d="M67 98 L67 110" stroke="rgba(56,189,248,0.6)" stroke-width="3" stroke-linecap="round" />
+        </g>
+        <g transform="translate(0 -6)" opacity="0.75">
+          <rect x="36" y="40" width="18" height="40" rx="8" fill="rgba(248,113,113,0.85)" stroke="rgba(248,250,252,0.4)" />
+          <rect x="38" y="44" width="14" height="18" rx="6" fill="rgba(15,23,42,0.85)" />
+          <path d="M45 80 L45 94" stroke="rgba(248,113,113,0.6)" stroke-width="3" stroke-linecap="round" />
+        </g>
+        <g>
+          <path d="M24 26 L42 34" stroke="rgba(59,130,246,0.5)" stroke-width="3" stroke-linecap="round" />
+          <path d="M118 26 L102 38" stroke="rgba(236,72,153,0.5)" stroke-width="3" stroke-linecap="round" />
+          <circle cx="118" cy="26" r="6" fill="#facc15" stroke="rgba(248,250,252,0.5)" />
+          <circle cx="24" cy="26" r="6" fill="#38bdf8" stroke="rgba(248,250,252,0.45)" />
+          <circle cx="56" cy="30" r="4" fill="#c084fc" />
+          <circle cx="100" cy="32" r="4" fill="#f472b6" />
+        </g>
+      </svg>
+    `,
+  }, // Level 9
   {
     id: "rollercoaster-of-life",
     name: "Rollercoaster of Life",

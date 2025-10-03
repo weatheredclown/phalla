@@ -150,6 +150,17 @@ export const scoreConfigs = {
     format: ({ value }) =>
       value === 1 ? "1 intercept" : `${value ?? 0} intercepts`,
   },
+  "osaka-motorcycle-dash": {
+    label: "Distance Covered",
+    empty: "No chases logged yet.",
+    format: ({ value, meta }) => {
+      const disabled = Number(meta?.disabled ?? meta?.gangsDisabled ?? 0);
+      const streak = Number(meta?.longestStreak ?? meta?.streak ?? 0);
+      const disableLabel = disabled === 1 ? "1 disable" : `${disabled} disables`;
+      const streakLabel = Number.isFinite(streak) && streak > 0 ? `${streak.toFixed(1)}s streak` : "0.0s streak";
+      return `${value ?? 0} m · ${disableLabel} · ${streakLabel}`;
+    },
+  },
   "river-of-slime-escape": {
     label: "Meters Climbed",
     empty: "No climbs logged yet.",
