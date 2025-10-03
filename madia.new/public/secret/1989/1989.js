@@ -776,6 +776,29 @@ function pulseScore(gameId) {
   scorePulseTimers.set(gameId, timer);
 }
 
+function createGameCard(game) {
+  const card = template.content.cloneNode(true);
+  const tile = card.querySelector(".game-card");
+  tile.dataset.gameId = game.id;
+  tile.tabIndex = 0;
+  tile.setAttribute("role", "button");
+  tile.setAttribute("aria-label", `Play ${game.name}`);
+  const thumb = card.querySelector(".game-thumb");
+  thumb.innerHTML = game.thumbnail;
+  card.querySelector(".game-title").textContent = game.name;
+  card.querySelector(".game-meta").textContent = game.description;
+  const scoreElement = card.querySelector("[data-high-score]");
+  if (scoreElement) {
+    const config = getScoreConfig(game.id);
+    scoreSlots.set(game.id, { element: scoreElement, config });
+    renderScore(game.id);
+  }
+  const playButton = card.querySelector(".play-button");
+  playButton.dataset.gameId = game.id;
+  playButton.setAttribute("aria-label", `Play ${game.name}`);
+  return card;
+}
+
 function isOverlayFullscreen() {
   return document.fullscreenElement === overlayFrame;
 }
@@ -821,21 +844,7 @@ async function toggleFullscreen() {
 function renderGames() {
   const fragment = document.createDocumentFragment();
   games.forEach((game) => {
-    const card = template.content.cloneNode(true);
-    const tile = card.querySelector(".game-card");
-    tile.dataset.gameId = game.id;
-    const thumb = card.querySelector(".game-thumb");
-    thumb.innerHTML = game.thumbnail;
-    card.querySelector(".game-title").textContent = game.name;
-    card.querySelector(".game-meta").textContent = game.description;
-    const scoreElement = card.querySelector("[data-high-score]");
-    if (scoreElement) {
-      const config = getScoreConfig(game.id);
-      scoreSlots.set(game.id, { element: scoreElement, config });
-      renderScore(game.id);
-    }
-    card.querySelector(".play-button").dataset.gameId = game.id;
-    fragment.appendChild(card);
+    fragment.appendChild(createGameCard(game));
   });
   grid.appendChild(fragment);
 }
@@ -882,16 +891,38 @@ onHighScoreChange(({ gameId, entry }) => {
 
 grid.addEventListener("click", (event) => {
   const button = event.target.closest(".play-button");
-  if (!button) {
+  const card = button ? null : event.target.closest(".game-card");
+  const sourceElement = button ?? card;
+  if (!sourceElement) {
     return;
   }
-  const game = gameLookup.get(button.dataset.gameId);
+  const game = gameLookup.get(sourceElement.dataset.gameId);
   if (!game) {
-    console.warn("No game registered for", button.dataset.gameId);
+    console.warn("No game registered for", sourceElement.dataset.gameId);
     return;
   }
-  lastFocusElement = button;
+  lastFocusElement = sourceElement;
   openGame(game);
+});
+
+grid.addEventListener("keydown", (event) => {
+  if (event.defaultPrevented) {
+    return;
+  }
+  const card = event.target.closest(".game-card");
+  if (!card) {
+    return;
+  }
+  if (event.key === "Enter" || event.key === " ") {
+    event.preventDefault();
+    const game = gameLookup.get(card.dataset.gameId);
+    if (!game) {
+      console.warn("No game registered for", card.dataset.gameId);
+      return;
+    }
+    lastFocusElement = card;
+    openGame(game);
+  }
 });
 
 closeButton.addEventListener("click", closeGame);
@@ -936,11 +967,5 @@ export function registerGame(gameConfig) {
   };
   gameLookup.set(id, game);
   games.push(game);
-  const card = template.content.cloneNode(true);
-  card.querySelector(".game-thumb").innerHTML = game.thumbnail;
-  card.querySelector(".game-title").textContent = game.name;
-  card.querySelector(".game-meta").textContent = game.description;
-  const playButton = card.querySelector(".play-button");
-  playButton.dataset.gameId = game.id;
-  grid.appendChild(card);
+  grid.appendChild(createGameCard(game));
 }
