@@ -1,7 +1,3 @@
-import { mountParticleField } from "./particles.js";
-
-mountParticleField({ density: 0.0001 });
-
 /**
  * Register launchable cabinets here. You can also import { registerGame }
  * elsewhere and call it at runtime for dynamic catalogs.
@@ -178,8 +174,8 @@ const games = [
     `,
   },
   {
-    id: "augmentum",
-    name: "Augmentum",
+    id: "argumentum",
+    name: "Argumentum",
 
     description: "Synth-grid puzzle fusion hidden deep in the archives.",
     url: "../augmentum/index.html",
@@ -742,14 +738,9 @@ const frame = document.getElementById("game-frame");
 const title = document.getElementById("player-title");
 const description = document.getElementById("player-description");
 const fullscreenButton = document.getElementById("fullscreen-toggle");
-const reduceMotionQuery =
-  typeof window.matchMedia === "function"
-    ? window.matchMedia("(prefers-reduced-motion: reduce)")
-    : { matches: false };
 
 const gameLookup = new Map(games.map((game) => [game.id, game]));
 let lastFocusElement = null;
-let pendingCloseHandler = null;
 
 function isOverlayFullscreen() {
   return document.fullscreenElement === overlayFrame;
@@ -760,8 +751,16 @@ function setFullscreenButtonState(active) {
     return;
   }
   fullscreenButton.setAttribute("aria-pressed", active ? "true" : "false");
-  fullscreenButton.textContent = active ? "🗗 Windowed" : "⛶ Fullscreen";
-  fullscreenButton.title = active ? "Exit fullscreen" : "Enter fullscreen";
+  fullscreenButton.innerHTML = "";
+  const label = document.createElement("span");
+  label.className = "button-label";
+  label.textContent = active ? "Mode 7 Off" : "Mode 7 On";
+  const hint = document.createElement("span");
+  hint.className = "button-hint";
+  hint.setAttribute("aria-hidden", "true");
+  hint.textContent = active ? "⏏" : "▶";
+  fullscreenButton.append(label, hint);
+  fullscreenButton.title = active ? "Exit fullscreen (Mode 7)" : "Enter fullscreen (Mode 7)";
 }
 
 async function toggleFullscreen() {
@@ -787,11 +786,10 @@ async function toggleFullscreen() {
 
 function renderGames() {
   const fragment = document.createDocumentFragment();
-  games.forEach((game, index) => {
+  games.forEach((game) => {
     const card = template.content.cloneNode(true);
     const tile = card.querySelector(".game-card");
     tile.dataset.gameId = game.id;
-    tile.style.setProperty("--card-index", index);
     const thumb = card.querySelector(".game-thumb");
     thumb.innerHTML = game.thumbnail;
     card.querySelector(".game-title").textContent = game.name;
@@ -806,65 +804,30 @@ function openGame(game) {
   title.textContent = game.name;
   description.textContent = game.description;
   frame.src = game.url;
-  if (pendingCloseHandler) {
-    overlayFrame.removeEventListener("animationend", pendingCloseHandler);
-    pendingCloseHandler = null;
-  }
-  overlay.classList.remove("is-closing");
   overlay.hidden = false;
   overlay.dataset.activeGame = game.id;
   setFullscreenButtonState(isOverlayFullscreen());
   requestAnimationFrame(() => {
-    overlay.classList.add("is-visible");
     overlayFrame.focus({ preventScroll: true });
   });
 }
 
 function closeGame() {
-  if (overlay.hidden || overlay.classList.contains("is-closing")) {
-    return;
-  }
   if (isOverlayFullscreen()) {
     document.exitFullscreen().catch((error) => {
       console.warn("Unable to exit fullscreen", error);
     });
   }
-  overlay.classList.remove("is-visible");
-  overlay.classList.add("is-closing");
+  overlay.hidden = true;
   overlay.dataset.activeGame = "";
   frame.src = "";
   setFullscreenButtonState(false);
-
-  const restoreFocus = () => {
-    if (lastFocusElement && document.body.contains(lastFocusElement)) {
-      lastFocusElement.focus({ preventScroll: true });
-    } else {
-      const fallbackButton = grid.querySelector(".play-button");
-      fallbackButton?.focus({ preventScroll: true });
-    }
-  };
-
-  const finalizeClose = () => {
-    overlay.hidden = true;
-    overlay.classList.remove("is-closing");
-    restoreFocus();
-  };
-
-  if (reduceMotionQuery.matches) {
-    finalizeClose();
-    return;
+  if (lastFocusElement && document.body.contains(lastFocusElement)) {
+    lastFocusElement.focus({ preventScroll: true });
+  } else {
+    const fallbackButton = grid.querySelector(".play-button");
+    fallbackButton?.focus({ preventScroll: true });
   }
-
-  pendingCloseHandler = (event) => {
-    if (event.animationName !== "overlay-out") {
-      return;
-    }
-    overlayFrame.removeEventListener("animationend", pendingCloseHandler);
-    pendingCloseHandler = null;
-    finalizeClose();
-  };
-
-  overlayFrame.addEventListener("animationend", pendingCloseHandler);
 }
 
 renderGames();
@@ -879,19 +842,14 @@ grid.addEventListener("click", (event) => {
     console.warn("No game registered for", button.dataset.gameId);
     return;
   }
-  animateButtonPress(button);
   lastFocusElement = button;
   openGame(game);
 });
 
-closeButton.addEventListener("click", () => {
-  animateButtonPress(closeButton);
-  closeGame();
-});
+closeButton.addEventListener("click", closeGame);
 overlayBackdrop.addEventListener("click", closeGame);
 
 fullscreenButton?.addEventListener("click", () => {
-  animateButtonPress(fullscreenButton);
   toggleFullscreen();
 });
 
@@ -931,28 +889,10 @@ export function registerGame(gameConfig) {
   gameLookup.set(id, game);
   games.push(game);
   const card = template.content.cloneNode(true);
-  const tile = card.querySelector(".game-card");
-  const cardIndex = games.length - 1;
-  tile.style.setProperty("--card-index", cardIndex);
   card.querySelector(".game-thumb").innerHTML = game.thumbnail;
   card.querySelector(".game-title").textContent = game.name;
   card.querySelector(".game-meta").textContent = game.description;
   const playButton = card.querySelector(".play-button");
   playButton.dataset.gameId = game.id;
   grid.appendChild(card);
-}
-
-function animateButtonPress(button) {
-  if (!button) {
-    return;
-  }
-  button.classList.remove("is-pressed");
-  // Force a reflow so the animation can replay when rapidly triggered.
-  void button.offsetWidth;
-  button.classList.add("is-pressed");
-  const handleAnimationEnd = () => {
-    button.classList.remove("is-pressed");
-    button.removeEventListener("animationend", handleAnimationEnd);
-  };
-  button.addEventListener("animationend", handleAnimationEnd);
 }
