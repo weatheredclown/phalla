@@ -2,6 +2,8 @@ import { initHighScoreBanner } from "../arcade-scores.js";
 import { getScoreConfig } from "../score-config.js";
 import { mountParticleField } from "../particles.js";
 
+import { autoEnhanceFeedback } from "../feedback.js";
+
 const particleSystem = mountParticleField({
   effects: {
     palette: ["#38bdf8", "#f472b6", "#facc15", "#fb7185"],
@@ -445,3 +447,5 @@ resetButton.addEventListener("click", () => {
   logEvent("Board cleared. Ready for a new attempt.");
 });
 loadButton.addEventListener("click", loadFacultyPlan);
+
+autoEnhanceFeedback();
