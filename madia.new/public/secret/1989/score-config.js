@@ -150,6 +150,11 @@ export const scoreConfigs = {
     format: ({ value }) =>
       value === 1 ? "1 intercept" : `${value ?? 0} intercepts`,
   },
+  "river-of-slime-escape": {
+    label: "Meters Climbed",
+    empty: "No climbs logged yet.",
+    format: ({ value }) => `${value ?? 0} m`,
+  },
   "rollercoaster-of-life": {
     label: "Family Harmony",
     empty: "No harmony runs logged yet.",
