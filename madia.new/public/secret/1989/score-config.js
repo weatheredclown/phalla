@@ -49,6 +49,15 @@ export const scoreConfigs = {
     empty: "No study sessions yet.",
     format: ({ value }) => `${value ?? 0} / 120`,
   },
+  "gilded-partition": {
+    label: "Estate Claim",
+    empty: "No estate claim recorded yet.",
+    format: ({ value, meta }) => {
+      const ruins = Number(meta?.destruction ?? 0);
+      const ruinLabel = ruins === 1 ? "ruin" : "ruins";
+      return `${value ?? 0}% estate · ${ruins} ${ruinLabel}`;
+    },
+  },
   "halo-hustle": {
     label: "Life Chips Banked",
     empty: "No life chips deposited yet.",
