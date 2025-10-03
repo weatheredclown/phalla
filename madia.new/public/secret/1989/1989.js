@@ -840,6 +840,58 @@ const games = [
     `,
   },
   {
+    id: "twenty-five-thousand-bulbs",
+    name: "Twenty-Five Thousand Bulbs",
+    description:
+      "Thread the Griswold blueprint from panel to roofline before the overloaded attic taps torch your holiday score.",
+    url: "./twenty-five-thousand-bulbs/index.html",
+    thumbnail: `
+      <svg viewBox="0 0 160 120" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Twenty-Five Thousand Bulbs preview">
+        <defs>
+          <linearGradient id="bulbBlueprint" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0%" stop-color="rgba(15,23,42,0.92)" />
+            <stop offset="100%" stop-color="rgba(12,20,40,0.85)" />
+          </linearGradient>
+          <linearGradient id="wireGlow" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0%" stop-color="#38bdf8" />
+            <stop offset="100%" stop-color="#facc15" />
+          </linearGradient>
+          <linearGradient id="overloadPulse" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="rgba(244,114,182,0.8)" />
+            <stop offset="100%" stop-color="rgba(244,114,182,0.35)" />
+          </linearGradient>
+        </defs>
+        <rect x="6" y="8" width="148" height="104" rx="20" fill="rgba(8,12,24,0.95)" stroke="rgba(56,189,248,0.35)" />
+        <rect x="18" y="20" width="124" height="80" rx="16" fill="url(#bulbBlueprint)" stroke="rgba(56,189,248,0.25)" />
+        <g stroke="rgba(56,189,248,0.16)" stroke-width="1">
+          ${Array.from({ length: 6 }, (_, i) => `<line x1="${30 + i * 18}" y1="24" x2="${30 + i * 18}" y2="100" />`).join("")}
+          ${Array.from({ length: 4 }, (_, i) => `<line x1="24" y1="${36 + i * 18}" x2="136" y2="${36 + i * 18}" />`).join("")}
+        </g>
+        <path d="M40 94 L40 78 L60 58 L60 44 L80 32 L104 44 L124 32" fill="none" stroke="rgba(148,163,184,0.4)" stroke-width="2"
+          stroke-dasharray="6 6" stroke-linecap="round" stroke-linejoin="round" />
+        <path d="M36 96 L68 68 L88 68 L108 52 L130 60" fill="none" stroke="url(#wireGlow)" stroke-width="4" stroke-linecap="round"
+          stroke-linejoin="round" />
+        <path d="M68 68 L68 48 L92 40 L92 28" fill="none" stroke="rgba(250,204,21,0.6)" stroke-width="3" stroke-linecap="round"
+          stroke-linejoin="round" />
+        <g>
+          <circle cx="36" cy="96" r="6" fill="rgba(59,130,246,0.85)" stroke="rgba(148,163,184,0.45)" stroke-width="1.5" />
+          <circle cx="68" cy="68" r="6" fill="rgba(250,204,21,0.85)" stroke="rgba(148,163,184,0.45)" stroke-width="1.5" />
+          <circle cx="92" cy="40" r="8" fill="url(#overloadPulse)" stroke="rgba(244,114,182,0.6)" stroke-width="2" />
+          <circle cx="130" cy="60" r="6" fill="rgba(59,214,164,0.85)" stroke="rgba(148,163,184,0.4)" stroke-width="1.5" />
+        </g>
+        <g>
+          <rect x="26" y="26" width="36" height="12" rx="6" fill="rgba(56,189,248,0.18)" stroke="rgba(56,189,248,0.35)" />
+          <rect x="26" y="26" width="18" height="12" rx="6" fill="rgba(56,189,248,0.75)" />
+          <rect x="98" y="82" width="42" height="12" rx="6" fill="rgba(250,204,21,0.18)" stroke="rgba(250,204,21,0.35)" />
+          <rect x="98" y="82" width="24" height="12" rx="6" fill="rgba(250,204,21,0.75)" />
+        </g>
+        <circle cx="92" cy="40" r="12" fill="rgba(244,114,182,0.15)" stroke="rgba(244,114,182,0.5)" stroke-width="2" />
+        <path d="M88 38 L96 42" stroke="rgba(248,113,113,0.8)" stroke-width="2" stroke-linecap="round" />
+        <path d="M96 38 L88 42" stroke="rgba(248,113,113,0.8)" stroke-width="2" stroke-linecap="round" />
+      </svg>
+    `,
+  },
+  {
     id: "captains-echo",
     name: "Captain's Echo",
     description: "Stage the four-beat desk salute before the dean snuffs the Carpe Diem spark.",
