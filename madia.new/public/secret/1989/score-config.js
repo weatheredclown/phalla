@@ -155,6 +155,18 @@ export const scoreConfigs = {
     empty: "No climbs logged yet.",
     format: ({ value }) => `${value ?? 0} m`,
   },
+  // Level 22
+  "deepcore-descent": {
+    label: "Max Depth",
+    empty: "No dives logged yet.",
+    format: ({ value, meta }) => {
+      const bursts = Number(meta?.powerBursts ?? 0);
+      const hull = Number(meta?.hull);
+      const burstLabel = bursts === 1 ? "1 burst" : `${bursts} bursts`;
+      const hullLabel = Number.isFinite(hull) ? `${hull}% hull` : "hull unknown";
+      return `${value ?? 0} m · ${burstLabel} · ${hullLabel}`;
+    },
+  }, // Level 22
   "rollercoaster-of-life": {
     label: "Family Harmony",
     empty: "No harmony runs logged yet.",
