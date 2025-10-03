@@ -1582,6 +1582,51 @@ const games = [
       </svg>
     `,
   },
+  // Level 16
+  {
+    id: "wind-beneath-my-wings",
+    name: "Wind Beneath My Wings",
+    description: "Guide the ballad from rehearsal hush to arena roar with flawless taps and soaring holds.",
+    url: "./wind-beneath-my-wings/index.html",
+    thumbnail: `
+      <svg viewBox="0 0 160 120" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Wind Beneath My Wings preview">
+        <defs>
+          <linearGradient id="wbmwBackdrop" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="rgba(15,23,42,0.95)" />
+            <stop offset="100%" stop-color="rgba(30,41,59,0.92)" />
+          </linearGradient>
+          <radialGradient id="wbmwSpot" cx="0.5" cy="0.28" r="0.7">
+            <stop offset="0%" stop-color="rgba(250,250,250,0.85)" />
+            <stop offset="100%" stop-color="rgba(250,250,250,0)" />
+          </radialGradient>
+          <linearGradient id="wbmwStage" x1="0" y1="0" x2="1" y2="0">
+            <stop offset="0%" stop-color="rgba(76,201,240,0.85)" />
+            <stop offset="100%" stop-color="rgba(249,168,212,0.85)" />
+          </linearGradient>
+        </defs>
+        <rect x="10" y="12" width="140" height="96" rx="20" fill="rgba(9,13,28,0.95)" stroke="rgba(148,163,184,0.35)" />
+        <rect x="22" y="24" width="116" height="72" rx="16" fill="url(#wbmwBackdrop)" stroke="rgba(148,163,184,0.28)" />
+        <circle cx="80" cy="54" r="46" fill="url(#wbmwSpot)" />
+        <g>
+          <rect x="34" y="70" width="92" height="18" rx="9" fill="rgba(15,23,42,0.85)" stroke="rgba(148,163,184,0.4)" />
+          <rect x="42" y="74" width="76" height="10" rx="6" fill="url(#wbmwStage)" />
+        </g>
+        <g>
+          <path d="M46 64 C54 40 106 40 114 64" fill="none" stroke="rgba(236,72,153,0.65)" stroke-width="4" stroke-linecap="round" />
+          <path d="M54 58 C64 48 96 48 106 58" fill="none" stroke="rgba(56,189,248,0.6)" stroke-width="4" stroke-linecap="round" />
+          <circle cx="80" cy="44" r="10" fill="rgba(248,250,252,0.95)" stroke="rgba(148,163,184,0.4)" stroke-width="2" />
+          <path d="M80 34 L70 18" stroke="rgba(251,191,36,0.8)" stroke-width="3" stroke-linecap="round" />
+          <path d="M80 34 L90 18" stroke="rgba(251,191,36,0.6)" stroke-width="3" stroke-linecap="round" />
+        </g>
+        <g fill="rgba(248,250,252,0.85)">
+          <circle cx="32" cy="32" r="4" />
+          <circle cx="128" cy="36" r="3.5" />
+          <circle cx="112" cy="88" r="3.2" />
+          <circle cx="48" cy="90" r="2.8" />
+        </g>
+      </svg>
+    `,
+  }, // Level 16
 ];
 
 const grid = document.getElementById("game-grid");

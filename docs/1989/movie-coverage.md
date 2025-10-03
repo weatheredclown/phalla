@@ -2,6 +2,8 @@
 
 This reference tracks how the 1989 arcade cabinets map to their source films and how far the ladder has progressed up the 1989 domestic box office chart.
 
+Wind Beneath My Wings now elevates Level 16, transforming *Beaches* into a spotlight rhythm showcase that bridges the ladder’s middle stretch between the family dramedies and the Top 15 crowd-pleasers.
+
 River of Slime Escape now shocks Level 27 with Ghostbusters II’s river chase while Three Fugitives continues anchoring Level 32, and the ladder keeps backfilling the remaining Top 50 slots.
 Three Fugitives now anchors Level 32 while Hoverboard Pursuit secures Level 26, covering another Top 10 release as the ladder continues to backfill the remaining hits.
 Rollercoaster of Life now anchors Level 25, pushing the ladder deeper into the top 25 while earlier levels keep filling in the remaining Top 50 slots.
@@ -43,6 +45,7 @@ Three Fugitives now anchors Level 32, covering the next-highest new release stil
 | 25 | Rollercoaster of Life | *Parenthood* | #9 |
 | 23 | Tailing the Trash | *Turner & Hooch* | #12 |
 | 18 | Restless Acre Rise | *Pet Sematary* | #17 |
+| 16 | Wind Beneath My Wings | *Beaches* | #19 |
 | 20 | Twenty-Five Thousand Bulbs | *National Lampoon's Christmas Vacation* | #15 |
 | 29 | The K-Mart Countdown | *Rain Man* | #5 |
 | 28 | Voice Box Swap | *Look Who's Talking* | #6 |
@@ -87,7 +90,6 @@ Remaining:
 | **20** | National Lampoon's Christmas Vacation | #15 | Twenty-Five Thousand Bulbs | An electrical circuit puzzle where you must connect all the wires in the neighborhood to light up the house. |
 | **19** | Sea of Love | #16 | The Personal Ad Trap | A deductive game where you cross-reference different clues and profiles to find a killer who connects through newspaper personal ads. |
 | **17** | Harlem Nights | #18 | The Sugar Ray Hustle | A quick-draw or reaction game set in a 1930s speakeasy, perhaps a high-stakes, fast-paced dice game. |
-| **16** | Beaches | #19 | Wind Beneath My Wings | A musical rhythm or karaoke-style game hitting the notes of a powerful Bette Midler song. |
 | **15** | The Abyss | #20 | Deepcore Descent | A pressure/balance management game, keeping a deep-sea submersible stable and intact under crushing pressure. |
 | **14** | Star Trek V: The Final Frontier | #21 | The Final Barrier | A flying/shooting level piloting the Enterprise through a chaotic and disorienting energy field to reach a mythical planet. |
 | **13** | The Little Mermaid | #22 | Under the Sea Scramble | A hidden object or collection game in a colorful undersea environment, gathering "human gadgets." |

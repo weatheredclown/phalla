@@ -159,7 +159,7 @@ export const scoreConfigs = {
     label: "Family Harmony",
     empty: "No harmony runs logged yet.",
     format: ({ value }) => `Harmony ${value ?? 0}`,
-  }
+  },
   "tailing-the-trash": {
     label: "Evidence Logged",
     empty: "No stakeouts logged yet.",
@@ -169,7 +169,7 @@ export const scoreConfigs = {
         return `${value ?? 0} logs · ${suspicion}% peak`;
       }
       return `${value ?? 0} logs`;
-    }
+    },
   },
   "restless-acre-rise": {
     label: "Altitude",
@@ -238,6 +238,17 @@ export const scoreConfigs = {
       return `${value ?? 0} pts · ${comboLabel}${riskyLabel}`;
     },
   },
+  // Level 16
+  "wind-beneath-my-wings": {
+    label: "Applause Score",
+    empty: "No applause recorded yet.",
+    format: ({ value, meta }) => {
+      const accuracy = Number.isFinite(meta?.accuracy) ? `${meta.accuracy}% accuracy` : "0% accuracy";
+      const crescendos = Number(meta?.crescendos ?? 0);
+      const crescLabel = crescendos === 1 ? "1 crescendo" : `${crescendos} crescendos`;
+      return `${value ?? 0} applause · ${accuracy} · ${crescLabel}`;
+    },
+  }, // Level 16
   "whispers-garden": {
     label: "Field Completion",
     empty: "No whispers answered yet.",
