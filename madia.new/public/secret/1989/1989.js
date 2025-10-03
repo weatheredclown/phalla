@@ -1287,6 +1287,54 @@ const games = [
       </svg>
     `,
   },
+  // Level 17
+  {
+    id: "sugar-ray-hustle",
+    name: "The Sugar Ray Hustle",
+    description: "Catch the shrinking ring in the Rose Room, double the pot, and cash swagger into slow-motion showdowns.",
+    url: "./sugar-ray-hustle/index.html",
+    thumbnail: `
+      <svg viewBox="0 0 160 120" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="The Sugar Ray Hustle preview">
+        <defs>
+          <linearGradient id="hustleBg" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0%" stop-color="rgba(6,11,26,0.95)" />
+            <stop offset="100%" stop-color="rgba(15,23,42,0.92)" />
+          </linearGradient>
+          <radialGradient id="ringGlow" cx="0.5" cy="0.4" r="0.6">
+            <stop offset="0%" stop-color="rgba(250,204,21,0.95)" />
+            <stop offset="45%" stop-color="rgba(250,204,21,0.45)" />
+            <stop offset="100%" stop-color="rgba(250,204,21,0.05)" />
+          </radialGradient>
+          <linearGradient id="felt" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="rgba(17,24,39,0.92)" />
+            <stop offset="100%" stop-color="rgba(8,11,24,0.92)" />
+          </linearGradient>
+        </defs>
+        <rect x="8" y="8" width="144" height="104" rx="18" fill="url(#hustleBg)" stroke="rgba(250,204,21,0.35)" />
+        <rect x="20" y="20" width="120" height="80" rx="16" fill="url(#felt)" stroke="rgba(148,163,184,0.3)" />
+        <g opacity="0.65">
+          <circle cx="80" cy="62" r="34" fill="none" stroke="rgba(250,204,21,0.28)" stroke-width="4" />
+          <circle cx="80" cy="62" r="24" fill="none" stroke="rgba(249,115,22,0.4)" stroke-width="4" />
+          <circle cx="80" cy="62" r="16" fill="none" stroke="rgba(250,204,21,0.65)" stroke-width="4" />
+        </g>
+        <circle cx="80" cy="62" r="18" fill="url(#ringGlow)" stroke="rgba(250,204,21,0.8)" stroke-width="2" />
+        <g transform="translate(48 36)">
+          <rect x="0" y="0" width="20" height="20" rx="5" fill="rgba(15,23,42,0.85)" stroke="rgba(250,204,21,0.55)" />
+          <circle cx="10" cy="10" r="4" fill="rgba(250,204,21,0.85)" />
+          <rect x="26" y="4" width="24" height="12" rx="6" fill="rgba(14,116,144,0.8)" stroke="rgba(56,189,248,0.6)" />
+          <rect x="26" y="20" width="24" height="12" rx="6" fill="rgba(244,114,182,0.78)" stroke="rgba(244,114,182,0.6)" />
+        </g>
+        <g transform="translate(50 76)">
+          <rect x="0" y="0" width="60" height="18" rx="9" fill="rgba(15,23,42,0.92)" stroke="rgba(250,204,21,0.5)" />
+          <text x="30" y="12" text-anchor="middle" font-size="10" fill="rgba(250,250,250,0.9)" font-family="'Press Start 2P', monospace">CHALLENGE</text>
+        </g>
+        <g opacity="0.7">
+          <text x="24" y="104" font-size="9" fill="rgba(250,204,21,0.75)" font-family="'Press Start 2P', monospace">×2 POT</text>
+          <text x="136" y="104" text-anchor="end" font-size="9" fill="rgba(148,163,184,0.75)" font-family="'Press Start 2P', monospace">SWAGGER</text>
+        </g>
+      </svg>
+    `,
+  }, // Level 17
   {
     id: "personal-ad-trap",
     name: "The Personal Ad Trap",
