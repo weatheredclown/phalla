@@ -171,6 +171,53 @@ const games = [
     `,
   },
   {
+    id: "flapjack-flip-out",
+    name: "Flapjack Flip-Out",
+    description: "Juggle Uncle Buck's oversized flapjacks and gamble on nudges to keep the stack sky-high.",
+    url: "./flapjack-flip-out/index.html",
+    thumbnail: `
+      <svg viewBox="0 0 160 120" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Flapjack Flip-Out preview">
+        <defs>
+          <linearGradient id="flapjackSky" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="rgba(15,23,42,0.95)" />
+            <stop offset="100%" stop-color="rgba(8,13,28,0.92)" />
+          </linearGradient>
+          <linearGradient id="flapjackPlate" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0%" stop-color="rgba(56,189,248,0.75)" />
+            <stop offset="100%" stop-color="rgba(37,99,235,0.55)" />
+          </linearGradient>
+          <linearGradient id="flapjackStack" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="#fde68a" />
+            <stop offset="100%" stop-color="#f97316" />
+          </linearGradient>
+        </defs>
+        <rect x="10" y="10" width="140" height="100" rx="18" fill="rgba(6,10,22,0.95)" stroke="rgba(148,163,184,0.35)" />
+        <rect x="18" y="18" width="124" height="84" rx="16" fill="url(#flapjackSky)" stroke="rgba(148,163,184,0.28)" />
+        <g transform="translate(0 6)">
+          <rect x="32" y="70" width="96" height="18" rx="9" fill="url(#flapjackPlate)" stroke="rgba(148,163,184,0.4)" />
+          <ellipse cx="80" cy="79" rx="32" ry="6" fill="rgba(14,116,144,0.35)" />
+        </g>
+        <g transform="translate(0 -2)">
+          <g>
+            <rect x="60" y="60" width="40" height="10" rx="4" fill="#f97316" stroke="rgba(148,163,184,0.3)" />
+            <ellipse cx="80" cy="58" rx="32" ry="12" fill="url(#flapjackStack)" stroke="rgba(148,163,184,0.3)" />
+            <ellipse cx="80" cy="50" rx="28" ry="10" fill="#fde68a" stroke="rgba(148,163,184,0.28)" />
+            <ellipse cx="80" cy="42" rx="24" ry="9" fill="#fbbf24" stroke="rgba(148,163,184,0.26)" />
+            <ellipse cx="80" cy="34" rx="20" ry="8" fill="#fb7185" stroke="rgba(148,163,184,0.25)" />
+          </g>
+          <path d="M110 24 L142 16" stroke="rgba(59,130,246,0.65)" stroke-width="4" stroke-linecap="round" />
+          <path d="M112 24 L134 34" stroke="rgba(248,113,113,0.8)" stroke-width="5" stroke-linecap="round" />
+          <circle cx="134" cy="34" r="6" fill="#facc15" stroke="rgba(248,250,252,0.6)" stroke-width="2" />
+        </g>
+        <g>
+          <circle cx="44" cy="90" r="4" fill="#38bdf8" />
+          <circle cx="116" cy="90" r="4" fill="#f97316" />
+          <circle cx="80" cy="22" r="3" fill="#facc15" />
+        </g>
+      </svg>
+    `,
+  },
+  {
     id: "cable-clash",
     name: "The Cable Clash",
     description: "Route the cobalt line across the ring while juking roaming rivals.",
@@ -611,6 +658,56 @@ const games = [
         </g>
         <path d="M24 74 L36 88" stroke="rgba(56,189,248,0.4)" stroke-width="3" stroke-linecap="round" />
         <path d="M136 74 L124 88" stroke="rgba(236,72,153,0.4)" stroke-width="3" stroke-linecap="round" />
+      </svg>
+    `,
+  },
+  {
+    id: "diner-debate",
+    name: "The Diner Debate",
+    description: "Time every cue, shatter the doubts, and choose the perfect moment for the neon climax.",
+    url: "./diner-debate/index.html",
+    thumbnail: `
+      <svg viewBox="0 0 160 120" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="The Diner Debate preview">
+        <defs>
+          <linearGradient id="dinerBackdrop" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0%" stop-color="#1e293b" />
+            <stop offset="100%" stop-color="#0f172a" />
+          </linearGradient>
+          <linearGradient id="boothGlow" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="rgba(244,114,182,0.65)" />
+            <stop offset="100%" stop-color="rgba(56,189,248,0.45)" />
+          </linearGradient>
+          <linearGradient id="timelineSweep" x1="0" y1="0" x2="1" y2="0">
+            <stop offset="0%" stop-color="#38bdf8" />
+            <stop offset="50%" stop-color="#facc15" />
+            <stop offset="100%" stop-color="#f472b6" />
+          </linearGradient>
+        </defs>
+        <rect x="8" y="10" width="144" height="100" rx="18" fill="rgba(8,11,22,0.94)" stroke="rgba(148,163,184,0.35)" />
+        <rect x="16" y="18" width="128" height="84" rx="16" fill="url(#dinerBackdrop)" stroke="rgba(148,163,184,0.28)" />
+        <g>
+          <rect x="24" y="32" width="44" height="52" rx="16" fill="rgba(244,114,182,0.3)" stroke="rgba(244,114,182,0.55)" />
+          <rect x="92" y="32" width="44" height="52" rx="16" fill="rgba(56,189,248,0.28)" stroke="rgba(56,189,248,0.5)" />
+        </g>
+        <rect x="50" y="56" width="60" height="26" rx="12" fill="rgba(15,23,42,0.9)" stroke="rgba(148,163,184,0.45)" />
+        <rect x="62" y="44" width="36" height="12" rx="6" fill="url(#boothGlow)" stroke="rgba(248,250,252,0.35)" />
+        <g>
+          <rect x="24" y="84" width="112" height="18" rx="9" fill="rgba(15,23,42,0.9)" stroke="rgba(56,189,248,0.4)" />
+          <rect x="28" y="88" width="104" height="10" rx="5" fill="rgba(15,23,42,0.9)" stroke="rgba(56,189,248,0.4)" />
+          <rect x="30" y="90" width="100" height="6" rx="3" fill="rgba(15,23,42,0.9)" stroke="rgba(148,163,184,0.3)" />
+          <rect x="30" y="90" width="70" height="6" rx="3" fill="rgba(59,130,246,0.35)" />
+          <line x1="80" y1="86" x2="80" y2="104" stroke="url(#timelineSweep)" stroke-width="4" stroke-linecap="round" />
+          <circle cx="108" cy="93" r="8" fill="rgba(244,114,182,0.85)" stroke="rgba(248,250,252,0.5)" />
+          <circle cx="52" cy="93" r="8" fill="rgba(56,189,248,0.85)" stroke="rgba(248,250,252,0.45)" />
+          <circle cx="80" cy="93" r="9" fill="rgba(250,204,21,0.88)" stroke="rgba(248,250,252,0.6)" />
+        </g>
+        <g>
+          <path d="M34 28 C46 20 68 18 80 24" fill="none" stroke="rgba(244,114,182,0.55)" stroke-width="3" stroke-linecap="round" />
+          <path d="M80 24 C92 18 114 22 126 30" fill="none" stroke="rgba(56,189,248,0.5)" stroke-width="3" stroke-linecap="round" />
+          <circle cx="44" cy="28" r="5" fill="#facc15" stroke="rgba(248,250,252,0.6)" stroke-width="1.2" />
+          <circle cx="80" cy="24" r="5" fill="#38bdf8" stroke="rgba(248,250,252,0.6)" stroke-width="1.2" />
+          <circle cx="118" cy="30" r="5" fill="#f472b6" stroke="rgba(248,250,252,0.6)" stroke-width="1.2" />
+        </g>
       </svg>
     `,
   },
