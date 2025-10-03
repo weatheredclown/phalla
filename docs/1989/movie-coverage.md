@@ -1,6 +1,7 @@
 # 1989 Arcade Film Coverage
 
 This reference tracks how the 1989 arcade cabinets map to their source films and how far the ladder has progressed up the 1989 domestic box office chart.
+Freddy's Dream Maze now seals Level 5 with an Elm Street sanity sprint while the ladder keeps stitching in the remaining Top 50 nightmares.
 
 Frank Drebin's Follies now detonates Level 6 with a rapid-reaction tribute to *The Naked Gun: From the Files of Police Squad!*, weaving slapstick decision pressure into the home stretch of the ladder. River of Slime Escape still shocks Level 27 with Ghostbusters II’s river chase while Three Fugitives continues anchoring Level 32, and the remaining rungs keep backfilling the Top 50 slots.
 Under the Sea Scramble now glitters at Level 13, turning Ariel's curiosity into a timed hidden-object sprint that punishes sloppy clicks while rewarding precise treasure hunts.
@@ -65,6 +66,7 @@ Merger Madness now occupies Level 22, translating *Working Girl*'s corporate scr
 | 24 | The Diner Debate | *When Harry Met Sally...* | #11 |
 | 11 | Wild Thing Wind-Up | *Major League* | #24 |
 | 29 | Flapjack Flip-Out | *Uncle Buck* | #13 |
+| 5 | Freddy's Dream Maze | *A Nightmare on Elm Street 5: The Dream Child* | #50 |
 | 6 | Frank Drebin's Follies | *The Naked Gun: From the Files of Police Squad!* | #49 |
 | 13 | Under the Sea Scramble | *The Little Mermaid* | #22 |
 | 7 | Framed Breakout | *Tango & Cash* | #48 |
@@ -117,7 +119,6 @@ Remaining:
 | **8** | Working Girl | #27 | Merger Madness | A quick-typing or paperwork sorting challenge in a high-rise office environment to prepare for a major business meeting. |
 | **7** | Tango & Cash | #48 | Framed Breakout | A prison break level focused on quick puzzle solving and avoiding guards while wearing ridiculous "action hero" disguises. |
 | **6** | The Naked Gun: From the Files of Police Squad! | #49 | Frank Drebin's Follies | A quick-reaction game requiring you to perform perfectly normal tasks while hilariously and accidentally causing massive collateral damage. |
-| **5** | A Nightmare on Elm Street 5: The Dream Child | #50 | Freddy's Dream Maze | A horror-themed maze or escape room game where the environment is constantly changing based on your character's deepest fears. |
 | **4** | Batman | #1 | The Bat-Signal Scramble | A fast-paced driving/grappling sequence across Gotham City rooftops to answer the Bat-Signal before the Joker strikes. |
 | **3** | Indiana Jones and the Last Crusade | #2 | The Grail Trial | A trio of physical and mental challenge puzzles based on the three final tests to prove worthiness for the Holy Grail. |
 | **2** | Lethal Weapon 2 | #3 | Toilet Bomb Disposal | A tense, timed puzzle game to disarm a bomb, with the added pressure of Rigg's reckless attitude. |

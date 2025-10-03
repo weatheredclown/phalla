@@ -2059,7 +2059,52 @@ const games = [
         <rect x="94" y="82" width="28" height="10" rx="5" fill="rgba(255,133,243,0.55)" stroke="rgba(255,255,255,0.4)" />
       </svg>
     `,
-  },
+  }, // voice box swap
+  // Level 5
+  {
+    id: "freddys-dream-maze",
+    name: "Freddy's Dream Maze",
+    description: "Navigate the shifting nightmare, confront phobias, and race the claw before your sanity collapses.",
+    url: "./freddys-dream-maze/index.html",
+    thumbnail: `
+      <svg viewBox="0 0 160 120" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Freddy's Dream Maze preview">
+        <defs>
+          <linearGradient id="dreamMazeBg" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0%" stop-color="#030617" />
+            <stop offset="100%" stop-color="#160414" />
+          </linearGradient>
+          <radialGradient id="dreamMazeGlow" cx="0.52" cy="0.42" r="0.7">
+            <stop offset="0%" stop-color="rgba(248,113,113,0.85)" />
+            <stop offset="55%" stop-color="rgba(168,85,247,0.6)" />
+            <stop offset="100%" stop-color="rgba(15,23,42,0.1)" />
+          </radialGradient>
+          <linearGradient id="dreamMazeClaw" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0%" stop-color="#f87171" />
+            <stop offset="100%" stop-color="#fbbf24" />
+          </linearGradient>
+        </defs>
+        <rect x="8" y="8" width="144" height="104" rx="22" fill="url(#dreamMazeBg)" stroke="rgba(148,163,184,0.35)" />
+        <g>
+          <path d="M28 94 C36 60 54 40 82 36 C110 32 126 24 134 12" fill="none" stroke="rgba(248,113,113,0.4)" stroke-width="6" stroke-linecap="round" stroke-linejoin="round" />
+          <path d="M34 92 C44 66 58 50 84 46 C108 42 120 30 126 22" fill="none" stroke="rgba(59,130,246,0.45)" stroke-width="3" stroke-dasharray="6 6" stroke-linecap="round" />
+        </g>
+        <circle cx="84" cy="56" r="34" fill="url(#dreamMazeGlow)" stroke="rgba(148,163,184,0.25)" stroke-width="2" />
+        <path d="M62 58 C74 44 94 44 106 58 C94 72 74 72 62 58 Z" fill="none" stroke="rgba(248,250,252,0.35)" stroke-width="2" />
+        <path d="M70 48 L98 64" stroke="rgba(248,250,252,0.4)" stroke-width="2.5" stroke-linecap="round" />
+        <g stroke="url(#dreamMazeClaw)" stroke-linecap="round" stroke-width="4">
+          <line x1="108" y1="32" x2="132" y2="18" />
+          <line x1="114" y1="40" x2="138" y2="28" />
+          <line x1="118" y1="50" x2="140" y2="40" />
+        </g>
+        <g>
+          <circle cx="48" cy="86" r="6" fill="rgba(59,130,246,0.45)" stroke="rgba(248,250,252,0.4)" stroke-width="2" />
+          <circle cx="66" cy="92" r="4" fill="rgba(168,85,247,0.55)" />
+          <circle cx="92" cy="90" r="5" fill="rgba(248,113,113,0.55)" />
+        </g>
+      </svg>
+    `,
+  }, // Level 5
+
   // Level 7
   {
     id: "framed-breakout",

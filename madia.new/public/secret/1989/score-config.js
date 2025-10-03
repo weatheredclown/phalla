@@ -122,6 +122,21 @@ export const scoreConfigs = {
       return `${value ?? 0} pts`;
     },
   },
+  "freddys-dream-maze": {
+    label: "Sanity Retained",
+    empty: "No dream escapes logged yet.",
+    format: ({ value, meta }) => {
+      const confronted = Number(meta?.confronted ?? 0);
+      const safeZones = Number(meta?.safeZones ?? 0);
+      const timeMs = Number(meta?.timeMs ?? 0);
+      const minutes = Math.floor(Math.max(0, timeMs) / 60000);
+      const seconds = Math.floor((Math.max(0, timeMs) % 60000) / 1000);
+      const timeLabel = `${minutes}:${String(seconds).padStart(2, "0")}`;
+      const confrontedLabel = confronted === 1 ? "1 fear" : `${confronted} fears`;
+      const safeLabel = safeZones === 1 ? "1 safe" : `${safeZones} safes`;
+      return `${value ?? 0}% · ${confrontedLabel} · ${safeLabel} · ${timeLabel}`;
+    },
+  },
   "flapjack-flip-out": {
     label: "Stack Height",
     empty: "No stacks flipped yet.",
