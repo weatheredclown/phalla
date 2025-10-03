@@ -1,3 +1,5 @@
+import { initHighScoreBanner } from "../arcade-scores.js";
+import { getScoreConfig } from "../score-config.js";
 import { mountParticleField } from "../particles.js";
 
 const particleSystem = mountParticleField({
@@ -5,6 +7,14 @@ const particleSystem = mountParticleField({
     palette: ["#38bdf8", "#f472b6", "#facc15", "#fb7185"],
     ambientDensity: 0.6,
   },
+});
+
+const scoreConfig = getScoreConfig("say-anything");
+const highScore = initHighScoreBanner({
+  gameId: "say-anything",
+  label: scoreConfig.label,
+  format: scoreConfig.format,
+  emptyText: scoreConfig.empty,
 });
 
 const STARTING_FLOW = 72;
@@ -57,6 +67,7 @@ const state = {
   playing: false,
   index: -1,
   flow: STARTING_FLOW,
+  highestFlow: STARTING_FLOW,
   miscommunication: [],
   positiveStreak: 0,
   activeEvent: null,
@@ -115,6 +126,7 @@ function beginSession() {
   state.miscommunication = [];
   state.positiveStreak = 0;
   state.flow = STARTING_FLOW;
+  state.highestFlow = STARTING_FLOW;
   state.activeEvent = null;
   state.activePair = null;
   state.boomboxWindow = false;
@@ -530,6 +542,10 @@ function clearActiveBlocks(force = false) {
 function setFlow(value) {
   const clamped = Math.max(0, Math.min(MAX_FLOW, Math.round(value)));
   state.flow = clamped;
+  if (clamped > state.highestFlow) {
+    state.highestFlow = clamped;
+    highScore.submit(state.highestFlow);
+  }
   flowFill.style.width = `${clamped}%`;
   flowValue.textContent = String(clamped);
   flowMeter.setAttribute("aria-valuenow", String(clamped));

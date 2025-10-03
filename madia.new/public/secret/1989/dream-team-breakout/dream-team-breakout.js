@@ -1,3 +1,5 @@
+import { initHighScoreBanner } from "../arcade-scores.js";
+import { getScoreConfig } from "../score-config.js";
 import { mountParticleField } from "../particles.js";
 
 const particleSystem = mountParticleField({
@@ -5,6 +7,14 @@ const particleSystem = mountParticleField({
     palette: ["#38bdf8", "#34d399", "#facc15", "#f97316"],
     ambientDensity: 0.5,
   },
+});
+
+const scoreConfig = getScoreConfig("dream-team-breakout");
+const highScore = initHighScoreBanner({
+  gameId: "dream-team-breakout",
+  label: scoreConfig.label,
+  format: scoreConfig.format,
+  emptyText: scoreConfig.empty,
 });
 
 const TURN_COUNT = 6;
@@ -834,6 +844,7 @@ runButton.addEventListener("click", () => {
   statusReadout.textContent = "Simulating the breakout...";
   const result = runSimulation(plan);
   setSanity(result.sanity);
+  highScore.submit(result.sanity);
   applySnapshot(result.timeline);
   result.events.forEach(({ message, type }) => {
     pushEvent(message, type);

@@ -1,3 +1,5 @@
+import { initHighScoreBanner } from "../arcade-scores.js";
+import { getScoreConfig } from "../score-config.js";
 import { mountParticleField } from "../particles.js";
 
 const particleSystem = mountParticleField({
@@ -5,6 +7,14 @@ const particleSystem = mountParticleField({
     palette: ["#f97316", "#38bdf8", "#facc15", "#fb7185"],
     ambientDensity: 0.6,
   },
+});
+
+const scoreConfig = getScoreConfig("amore-express");
+const highScore = initHighScoreBanner({
+  gameId: "amore-express",
+  label: scoreConfig.label,
+  format: scoreConfig.format,
+  emptyText: scoreConfig.empty,
 });
 
 const boardSize = 6;
@@ -410,6 +420,7 @@ function finalizeRoute() {
   });
 
   deliveredCount += 1;
+  highScore.submit(deliveredCount);
   updateDeliveredCount();
   logEvent(`Delivered ${order.pizza} to ${housesById.get(order.houseId)?.name ?? "a client"}.`);
   particleSystem.emitBurst(1.2);

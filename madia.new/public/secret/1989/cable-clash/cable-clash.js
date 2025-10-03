@@ -1,3 +1,5 @@
+import { initHighScoreBanner } from "../arcade-scores.js";
+import { getScoreConfig } from "../score-config.js";
 import { mountParticleField } from "../particles.js";
 
 const particleSystem = mountParticleField({
@@ -5,6 +7,14 @@ const particleSystem = mountParticleField({
     palette: ["#38bdf8", "#f472b6", "#facc15", "#f97316"],
     ambientDensity: 0.55,
   },
+});
+
+const scoreConfig = getScoreConfig("cable-clash");
+const highScore = initHighScoreBanner({
+  gameId: "cable-clash",
+  label: scoreConfig.label,
+  format: scoreConfig.format,
+  emptyText: scoreConfig.empty,
 });
 
 const boardElement = document.getElementById("board");
@@ -455,6 +465,7 @@ function onCircuitClosed() {
   setStatus("Circuit complete! The main-event slam erupts and stuns nearby rivals.");
   logEvent("The main-event slam fires—broadcast restored!");
   particleSystem.emitBurst(1.4);
+  highScore.submit(turnCounter);
   rivals.forEach((rival) => {
     if (isAdjacent(rival.position, GOAL)) {
       rival.stunned = true;

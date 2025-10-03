@@ -1,3 +1,5 @@
+import { initHighScoreBanner } from "../arcade-scores.js";
+import { getScoreConfig } from "../score-config.js";
 import { mountParticleField } from "../particles.js";
 
 const particleSystem = mountParticleField({
@@ -5,6 +7,14 @@ const particleSystem = mountParticleField({
     palette: ["#38bdf8", "#f97316", "#facc15", "#fda4af"],
     ambientDensity: 0.6,
   },
+});
+
+const scoreConfig = getScoreConfig("cooler-chaos");
+const highScore = initHighScoreBanner({
+  gameId: "cooler-chaos",
+  label: scoreConfig.label,
+  format: scoreConfig.format,
+  emptyText: scoreConfig.empty,
 });
 
 const GRID_ROWS = 8;
@@ -308,6 +318,7 @@ function tryPushChain(startRow, startCol, delta) {
 
 function handleEjection(exitCell) {
   state.ejected += 1;
+  highScore.submit(state.ejected);
   const now = performance.now();
   if (now - state.lastEjectTime <= COMBO_WINDOW) {
     state.comboCount += 1;

@@ -1,3 +1,5 @@
+import { initHighScoreBanner } from "../arcade-scores.js";
+import { getScoreConfig } from "../score-config.js";
 import { mountParticleField } from "../particles.js";
 
 const particleSystem = mountParticleField({
@@ -5,6 +7,14 @@ const particleSystem = mountParticleField({
     palette: ["#38bdf8", "#f472b6", "#facc15", "#fb7185"],
     ambientDensity: 0.5,
   },
+});
+
+const scoreConfig = getScoreConfig("captains-echo");
+const highScore = initHighScoreBanner({
+  gameId: "captains-echo",
+  label: scoreConfig.label,
+  format: scoreConfig.format,
+  emptyText: scoreConfig.empty,
 });
 
 const students = [
@@ -382,6 +392,7 @@ function evaluatePlan() {
 
   renderContributions(contributions);
   setMeter(score);
+  highScore.submit(score);
 
   targetCallout.classList.remove("warning", "success");
   if (score >= TARGET_SCORE) {

@@ -1,3 +1,5 @@
+import { initHighScoreBanner } from "../arcade-scores.js";
+import { getScoreConfig } from "../score-config.js";
 import { mountParticleField } from "../particles.js";
 
 const particleSystem = mountParticleField({
@@ -5,6 +7,14 @@ const particleSystem = mountParticleField({
     palette: ["#38bdf8", "#facc15", "#fb7185", "#34d399"],
     ambientDensity: 0.55,
   },
+});
+
+const scoreConfig = getScoreConfig("speed-zone");
+const highScore = initHighScoreBanner({
+  gameId: "speed-zone",
+  label: scoreConfig.label,
+  format: scoreConfig.format,
+  emptyText: scoreConfig.empty,
 });
 
 const svgNS = "http://www.w3.org/2000/svg";
@@ -452,6 +462,7 @@ function resolveRoute() {
     const clearedId = checkpoints[checkpointIndex];
     const clearedName = nodesById.get(clearedId).name;
     checkpointIndex += 1;
+    highScore.submit(checkpointIndex);
     adjustHeat(-4);
     particleSystem.emitBurst(1.3);
     logEvent(`🏁 Cleared ${clearedName}. Heat -4.`);
@@ -493,6 +504,7 @@ function triggerBypass() {
     const skipped = nodesById.get(checkpoints[checkpointIndex]).name;
     checkpointIndex += 1;
     particleSystem.emitBurst(1.25);
+    highScore.submit(checkpointIndex);
     logEvent(`🪄 Bypass actuation burns ${skipped}. Next checkpoint auto-cleared.`);
     updateCheckpointReadout();
   }

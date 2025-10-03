@@ -1,3 +1,5 @@
+import { initHighScoreBanner } from "../arcade-scores.js";
+import { getScoreConfig } from "../score-config.js";
 import { mountParticleField } from "../particles.js";
 
 const particleSystem = mountParticleField({
@@ -5,6 +7,14 @@ const particleSystem = mountParticleField({
     palette: ["#f97316", "#facc15", "#38bdf8", "#fda4af"],
     ambientDensity: 0.55,
   },
+});
+
+const scoreConfig = getScoreConfig("blaze");
+const highScore = initHighScoreBanner({
+  gameId: "blaze",
+  label: scoreConfig.label,
+  format: scoreConfig.format,
+  emptyText: scoreConfig.empty,
 });
 
 const boardElement = document.getElementById("board");
@@ -452,6 +462,7 @@ function advanceFlow() {
     billPosition = { ...nextStep };
     if (billPosition.row === GOAL.row && billPosition.col === GOAL.col) {
       signedBills += 1;
+      highScore.submit(signedBills);
       politicalCapital += BILL_REWARD;
       logEvent(`Bill signed cleanly. Political Capital +${BILL_REWARD} (now ${politicalCapital}).`);
       particleSystem.emitSparkle(1.1);
