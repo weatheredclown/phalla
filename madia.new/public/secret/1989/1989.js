@@ -1280,6 +1280,60 @@ const games = [
       </svg>
     `,
   },
+  // Level 10
+  {
+    id: "toilet-bomb-disposal",
+    name: "Toilet Bomb Disposal",
+    description: "Disarm the porcelain nightmare: mirror the primes, lull the sensor, and balance the plate before it blows.",
+    url: "./toilet-bomb-disposal/index.html",
+    thumbnail: `
+      <svg viewBox="0 0 160 120" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Toilet Bomb Disposal preview">
+        <defs>
+          <linearGradient id="stallBackdrop" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0%" stop-color="rgba(8,12,26,0.96)" />
+            <stop offset="100%" stop-color="rgba(5,10,24,0.92)" />
+          </linearGradient>
+          <linearGradient id="timerGlow" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0%" stop-color="#f87171" />
+            <stop offset="100%" stop-color="#facc15" />
+          </linearGradient>
+          <linearGradient id="porcelainBody" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="rgba(226,232,240,0.92)" />
+            <stop offset="100%" stop-color="rgba(148,163,184,0.6)" />
+          </linearGradient>
+          <linearGradient id="wireTrail" x1="0" y1="0" x2="1" y2="0">
+            <stop offset="0%" stop-color="#38bdf8" />
+            <stop offset="50%" stop-color="#f97316" />
+            <stop offset="100%" stop-color="#f472b6" />
+          </linearGradient>
+        </defs>
+        <rect x="8" y="10" width="144" height="100" rx="18" fill="url(#stallBackdrop)" stroke="rgba(148,163,184,0.4)" />
+        <rect x="20" y="20" width="120" height="80" rx="16" fill="rgba(10,18,36,0.9)" stroke="rgba(148,163,184,0.32)" />
+        <rect x="52" y="24" width="56" height="22" rx="6" fill="rgba(15,23,42,0.9)" stroke="url(#timerGlow)" />
+        <rect x="56" y="28" width="48" height="14" rx="6" fill="rgba(10,18,36,0.92)" stroke="url(#timerGlow)" />
+        <text x="60" y="39" font-size="11" fill="#f87171" font-family="'Segment7Standard','Share Tech Mono',monospace">01:12</text>
+        <g>
+          <rect x="54" y="50" width="52" height="44" rx="18" fill="url(#porcelainBody)" stroke="rgba(148,163,184,0.6)" />
+          <rect x="60" y="54" width="40" height="16" rx="8" fill="rgba(226,232,240,0.85)" stroke="rgba(148,163,184,0.45)" />
+          <path d="M64 72 C64 86 92 86 92 72" fill="rgba(248,250,252,0.9)" stroke="rgba(148,163,184,0.5)" stroke-width="1.5" />
+          <rect x="68" y="82" width="28" height="8" rx="4" fill="rgba(15,23,42,0.85)" stroke="rgba(148,163,184,0.4)" />
+        </g>
+        <g stroke="url(#wireTrail)" stroke-width="3" stroke-linecap="round">
+          <path d="M32 88 C48 76 68 96 82 84" fill="none" />
+          <path d="M82 84 C96 74 110 92 126 82" fill="none" />
+        </g>
+        <g>
+          <circle cx="34" cy="88" r="6" fill="#38bdf8" stroke="rgba(255,255,255,0.6)" />
+          <circle cx="82" cy="84" r="6" fill="#facc15" stroke="rgba(255,255,255,0.6)" />
+          <circle cx="126" cy="82" r="6" fill="#f97316" stroke="rgba(255,255,255,0.6)" />
+        </g>
+        <rect x="30" y="32" width="20" height="12" rx="4" fill="rgba(248,113,113,0.25)" stroke="rgba(248,113,113,0.55)" />
+        <rect x="110" y="32" width="20" height="12" rx="4" fill="rgba(56,189,248,0.25)" stroke="rgba(56,189,248,0.55)" />
+        <rect x="30" y="48" width="20" height="12" rx="4" fill="rgba(250,204,21,0.25)" stroke="rgba(250,204,21,0.55)" />
+        <text x="120" y="39" font-size="7" fill="#facc15" font-family="'Share Tech Mono', monospace" text-anchor="middle">42lbs</text>
+      </svg>
+    `,
+  }, // Level 10
   { // Level 22
     id: "disorient-express",
     name: "The Disorient Express",

@@ -264,6 +264,21 @@ export const scoreConfigs = {
       return `${value ?? 0} logs`;
     },
   },
+  // Level 10
+  "toilet-bomb-disposal": {
+    label: "Time Remaining",
+    empty: "No defusals logged yet.",
+    format: ({ value, meta }) => {
+      const raw = Number.isFinite(value) ? Number(value) : 0;
+      const safeValue = Math.max(0, Math.round(raw));
+      const minutes = Math.floor(safeValue / 60000);
+      const seconds = Math.floor((safeValue % 60000) / 1000);
+      const tenths = Math.floor((safeValue % 1000) / 100);
+      const timeLabel = `${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}.${tenths}`;
+      const riggsBadge = meta?.riggs ? " · Riggs Maneuver" : "";
+      return `${timeLabel}${riggsBadge}`;
+    },
+  }, // Level 10
   "disorient-express": {
     label: "Cooperation Time",
     empty: "No co-op runs logged yet.",
