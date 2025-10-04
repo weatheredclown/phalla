@@ -154,6 +154,22 @@ export const scoreConfigs = {
       return `${value ?? 0} pts · ${crumbLabel}`;
     },
   }, // Level 15
+  // Level 4
+  "power-glove-prodigy": {
+    label: "Tournament Score",
+    empty: "No tournaments logged yet.",
+    format: ({ value, meta }) => {
+      const streak = Number(meta?.bestStreak ?? 0);
+      const multiplier = Number(meta?.peakMultiplier ?? meta?.multiplierPeak ?? 0);
+      const hype = Number(meta?.hypePeak ?? 0);
+      const streakLabel = streak === 1 ? "1 streak" : `${streak} streak`;
+      const multiplierLabel = Number.isFinite(multiplier) && multiplier > 0
+        ? `×${multiplier.toFixed(1)} peak`
+        : "×1.0 peak";
+      const hypeLabel = `${Math.round(hype)}% hype`;
+      return `${value ?? 0} pts · ${streakLabel} · ${multiplierLabel} · ${hypeLabel}`;
+    },
+  }, // Level 4
   "freddys-dream-maze": {
     label: "Sanity Retained",
     empty: "No dream escapes logged yet.",

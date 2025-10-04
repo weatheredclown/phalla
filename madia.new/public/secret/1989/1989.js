@@ -2233,6 +2233,58 @@ const games = [
       </svg>
     `,
   }, // voice box swap
+  // Level 4
+  {
+    id: "power-glove-prodigy",
+    name: "Power Glove Prodigy",
+    description:
+      "Thread impossible controller strings, trigger Turbo Overflow, and bathe the championship in synthfire works.",
+    url: "./power-glove-prodigy/index.html",
+    thumbnail: `
+      <svg viewBox="0 0 160 120" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Power Glove Prodigy preview">
+        <defs>
+          <linearGradient id="pgpPanel" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0%" stop-color="rgba(15,23,42,0.95)" />
+            <stop offset="100%" stop-color="rgba(6,12,32,0.92)" />
+          </linearGradient>
+          <linearGradient id="pgpGlow" x1="0" y1="0" x2="1" y2="0">
+            <stop offset="0%" stop-color="#22d3ee" />
+            <stop offset="50%" stop-color="#7c3aed" />
+            <stop offset="100%" stop-color="#f97316" />
+          </linearGradient>
+          <radialGradient id="pgpBurst" cx="50%" cy="50%" r="65%">
+            <stop offset="0%" stop-color="rgba(124,58,237,0.75)" />
+            <stop offset="100%" stop-color="rgba(124,58,237,0)" />
+          </radialGradient>
+        </defs>
+        <rect x="8" y="8" width="144" height="104" rx="20" fill="rgba(5,10,24,0.92)" stroke="rgba(148,163,184,0.35)" />
+        <rect x="18" y="18" width="124" height="84" rx="18" fill="url(#pgpPanel)" stroke="rgba(148,163,184,0.3)" />
+        <circle cx="80" cy="58" r="44" fill="url(#pgpBurst)" opacity="0.85" />
+        <g transform="translate(30 32)">
+          <rect x="0" y="0" width="72" height="52" rx="14" fill="rgba(15,23,42,0.88)" stroke="rgba(148,163,184,0.32)" />
+          <rect x="8" y="10" width="56" height="12" rx="6" fill="rgba(34,211,238,0.18)" />
+          <rect x="8" y="26" width="56" height="22" rx="9" fill="rgba(7,12,30,0.95)" stroke="rgba(34,211,238,0.45)" />
+          <text x="36" y="38" text-anchor="middle" font-size="10" fill="#22d3ee" font-family="'Press Start 2P', monospace">×5.6</text>
+        </g>
+        <g transform="translate(108 32)">
+          <rect x="-14" y="0" width="44" height="52" rx="16" fill="rgba(15,23,42,0.88)" stroke="rgba(148,163,184,0.35)" />
+          <circle cx="8" cy="18" r="12" fill="rgba(34,211,238,0.35)" stroke="rgba(148,163,184,0.4)" />
+          <circle cx="8" cy="18" r="6" fill="rgba(248,250,252,0.92)" />
+          <rect x="-2" y="32" width="20" height="8" rx="4" fill="#f97316" />
+          <rect x="14" y="32" width="20" height="8" rx="4" fill="#22d3ee" />
+          <rect x="6" y="42" width="16" height="6" rx="3" fill="#7c3aed" />
+        </g>
+        <g>
+          <path d="M26 86 C42 74 64 66 80 66 C96 66 118 74 134 86" stroke="url(#pgpGlow)" stroke-width="6" stroke-linecap="round" opacity="0.65" />
+          <circle cx="44" cy="86" r="7" fill="#22d3ee" stroke="rgba(248,250,252,0.6)" stroke-width="2" />
+          <circle cx="80" cy="86" r="7" fill="#7c3aed" stroke="rgba(248,250,252,0.6)" stroke-width="2" />
+          <circle cx="116" cy="86" r="7" fill="#f97316" stroke="rgba(248,250,252,0.6)" stroke-width="2" />
+        </g>
+        <path d="M30 24 L40 30 L30 36" stroke="rgba(34,211,238,0.55)" stroke-width="3" stroke-linecap="round" />
+        <path d="M130 24 L120 30 L130 36" stroke="rgba(249,115,22,0.55)" stroke-width="3" stroke-linecap="round" />
+      </svg>
+    `,
+  }, // Level 4
   // Level 5
   {
     id: "freddys-dream-maze",
