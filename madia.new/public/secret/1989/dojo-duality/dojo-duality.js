@@ -20,122 +20,22 @@ const BALANCE_RECENTER = 0.35;
 const FOCUS_SAFE_THRESHOLD = 20;
 const MAX_LOG_ENTRIES = 12;
 
-const TETROMINOS = [
+const STREAM_PATTERNS = [
   {
-    name: "crane",
-    rotations: [
-      [
-        { x: 0, y: 0 },
-        { x: -1, y: 0 },
-        { x: 1, y: 0 },
-        { x: 0, y: 1 },
-      ],
-      [
-        { x: 0, y: 0 },
-        { x: 0, y: -1 },
-        { x: 0, y: 1 },
-        { x: 1, y: 0 },
-      ],
-      [
-        { x: 0, y: 0 },
-        { x: -1, y: 0 },
-        { x: 1, y: 0 },
-        { x: 0, y: -1 },
-      ],
-      [
-        { x: 0, y: 0 },
-        { x: 0, y: -1 },
-        { x: 0, y: 1 },
-        { x: -1, y: 0 },
-      ],
-    ],
+    name: "centerline",
+    tokens: ["positive", "negative", "positive"],
   },
   {
-    name: "sweep",
-    rotations: [
-      [
-        { x: 0, y: 0 },
-        { x: 1, y: 0 },
-        { x: 0, y: 1 },
-        { x: -1, y: 1 },
-      ],
-      [
-        { x: 0, y: 0 },
-        { x: 0, y: 1 },
-        { x: 1, y: 1 },
-        { x: 1, y: 2 },
-      ],
-      [
-        { x: 0, y: 0 },
-        { x: 1, y: 0 },
-        { x: 0, y: -1 },
-        { x: -1, y: -1 },
-      ],
-      [
-        { x: 0, y: 0 },
-        { x: -1, y: 0 },
-        { x: -1, y: 1 },
-        { x: -1, y: 2 },
-      ],
-    ],
+    name: "fang-drift",
+    tokens: ["negative", "negative", "positive"],
   },
   {
-    name: "ridge",
-    rotations: [
-      [
-        { x: 0, y: 0 },
-        { x: -1, y: 0 },
-        { x: 0, y: 1 },
-        { x: 1, y: 1 },
-      ],
-      [
-        { x: 0, y: 0 },
-        { x: 0, y: 1 },
-        { x: -1, y: 1 },
-        { x: -1, y: 2 },
-      ],
-      [
-        { x: 0, y: 0 },
-        { x: -1, y: 0 },
-        { x: 0, y: -1 },
-        { x: 1, y: -1 },
-      ],
-      [
-        { x: 0, y: 0 },
-        { x: 1, y: 0 },
-        { x: 1, y: 1 },
-        { x: 1, y: 2 },
-      ],
-    ],
+    name: "pulse-bridge",
+    tokens: ["positive", "positive", "negative"],
   },
   {
-    name: "stance",
-    rotations: [
-      [
-        { x: 0, y: 0 },
-        { x: 1, y: 0 },
-        { x: 0, y: 1 },
-        { x: 1, y: 1 },
-      ],
-      [
-        { x: 0, y: 0 },
-        { x: 1, y: 0 },
-        { x: 0, y: 1 },
-        { x: 1, y: 1 },
-      ],
-      [
-        { x: 0, y: 0 },
-        { x: 1, y: 0 },
-        { x: 0, y: 1 },
-        { x: 1, y: 1 },
-      ],
-      [
-        { x: 0, y: 0 },
-        { x: 1, y: 0 },
-        { x: 0, y: 1 },
-        { x: 1, y: 1 },
-      ],
-    ],
+    name: "mirror-wave",
+    tokens: ["negative", "positive", "negative"],
   },
 ];
 
@@ -158,7 +58,6 @@ const state = {
   running: false,
   board: createBoard(),
   active: null,
-  rotation: 0,
   position: { x: 0, y: 0 },
   dropInterval: START_INTERVAL,
   dropTimer: 0,
@@ -228,7 +127,6 @@ function resetMatch() {
   state.running = false;
   state.board = createBoard();
   state.active = null;
-  state.rotation = 0;
   state.position = { x: 0, y: 0 };
   state.dropInterval = START_INTERVAL;
   state.nextPiece = null;
@@ -246,10 +144,12 @@ function resetMatch() {
 
 function spawnPiece() {
   state.active = state.nextPiece ?? randomPiece();
-  state.rotation = 0;
-  state.position = { x: Math.floor(COLS / 2), y: -1 };
+  state.position = {
+    x: Math.floor(COLS / 2),
+    y: -state.active.tokens.length,
+  };
   state.nextPiece = randomPiece();
-  if (!isValidPosition(state.position.x, state.position.y, state.rotation)) {
+  if (!isValidPosition(state.position.x, state.position.y)) {
     endMatch("The mat overflows. Focus slips away.");
     return;
   }
@@ -258,9 +158,12 @@ function spawnPiece() {
 }
 
 function randomPiece() {
-  const shape = TETROMINOS[Math.floor(Math.random() * TETROMINOS.length)];
-  const type = Math.random() < 0.55 ? "positive" : "negative";
-  return { shape, type };
+  const pattern = STREAM_PATTERNS[Math.floor(Math.random() * STREAM_PATTERNS.length)];
+  const tokens = pattern.tokens.map((defaultType) => ({
+    type: maybeFlipType(defaultType),
+  }));
+  ensureMixedEnergy(tokens);
+  return { name: pattern.name, tokens };
 }
 
 function handleKeyDown(event) {
@@ -290,14 +193,14 @@ function handleKeyDown(event) {
     case "Z":
       if (!frozen) {
         event.preventDefault();
-        rotatePiece(-1);
+        cycleStream(-1);
       }
       break;
     case "x":
     case "X":
       if (!frozen) {
         event.preventDefault();
-        rotatePiece(1);
+        cycleStream(1);
       }
       break;
     case " ":
@@ -318,7 +221,7 @@ function handleKeyUp(event) {
 function movePiece(dx, dy) {
   const newX = state.position.x + dx;
   const newY = state.position.y + dy;
-  if (isValidPosition(newX, newY, state.rotation)) {
+  if (isValidPosition(newX, newY)) {
     state.position = { x: newX, y: newY };
     renderBoard();
     return true;
@@ -338,31 +241,29 @@ function softDrop() {
   }
 }
 
-function rotatePiece(direction) {
-  const newRotation = (state.rotation + direction + 4) % 4;
-  if (isValidPosition(state.position.x, state.position.y, newRotation)) {
-    state.rotation = newRotation;
-    renderBoard();
+function cycleStream(direction) {
+  if (!state.active) {
     return;
   }
-  if (isValidPosition(state.position.x + 1, state.position.y, newRotation)) {
-    state.position.x += 1;
-    state.rotation = newRotation;
-    renderBoard();
-    return;
+  if (direction > 0) {
+    const first = state.active.tokens.shift();
+    if (first) {
+      state.active.tokens.push(first);
+    }
+  } else {
+    const last = state.active.tokens.pop();
+    if (last) {
+      state.active.tokens.unshift(last);
+    }
   }
-  if (isValidPosition(state.position.x - 1, state.position.y, newRotation)) {
-    state.position.x -= 1;
-    state.rotation = newRotation;
-    renderBoard();
-  }
+  renderBoard();
 }
 
-function isValidPosition(x, y, rotation) {
+function isValidPosition(x, y) {
   if (!state.active) {
     return false;
   }
-  const cells = getPieceCells(state.active, rotation, { x, y });
+  const cells = getPieceCells(state.active, { x, y });
   for (const { col, row } of cells) {
     if (col < 0 || col >= COLS) {
       return false;
@@ -377,11 +278,11 @@ function isValidPosition(x, y, rotation) {
   return true;
 }
 
-function getPieceCells(piece, rotation, position) {
-  const offsets = piece.shape.rotations[rotation];
-  return offsets.map((offset) => ({
-    col: position.x + offset.x,
-    row: position.y + offset.y,
+function getPieceCells(piece, position) {
+  return piece.tokens.map((token, index) => ({
+    col: position.x,
+    row: position.y + index,
+    type: token.type,
   }));
 }
 
@@ -389,14 +290,14 @@ function lockPiece() {
   if (!state.active) {
     return;
   }
-  const cellsToLock = getPieceCells(state.active, state.rotation, state.position);
+  const cellsToLock = getPieceCells(state.active, state.position);
   let outOfBounds = false;
-  for (const { col, row } of cellsToLock) {
+  for (const { col, row, type } of cellsToLock) {
     if (row < 0) {
       outOfBounds = true;
       continue;
     }
-    state.board[row][col] = { type: state.active.type };
+    state.board[row][col] = { type };
   }
   if (outOfBounds) {
     endMatch("Silver's pressure overwhelms Daniel at the top row.");
@@ -546,7 +447,7 @@ function triggerFearLock() {
   state.fear = 60;
   state.dropInterval = Math.max(MIN_INTERVAL, state.dropInterval - 120);
   updateStatus("Fear spikes—Daniel freezes as Silver speeds the cadence.");
-  logEvent("Paralyzed with fear. Blocks accelerate until composure returns.", "warning");
+  logEvent("Paralyzed with fear. Streams accelerate until composure returns.", "warning");
 }
 
 function attemptCraneKick() {
@@ -575,7 +476,7 @@ function attemptCraneKick() {
   state.balance = clamp(state.balance * 0.5, -40, 40);
   rewardFocus(Math.max(8, cleared / 2));
   updateStatus("Crane Kick lands—Cobra Kai swept clean.");
-  logEvent(`Crane Kick wipeout clears ${cleared} Cobra Kai blocks.`, "success");
+  logEvent(`Crane Kick wipeout clears ${cleared} Cobra Kai beads.`, "success");
   renderBoard();
   updateMeters();
   updateButtons();
@@ -624,21 +525,21 @@ function renderBoard() {
       cellElement.className = "cell";
       if (value) {
         cellElement.classList.add(value.type);
-        cellElement.setAttribute("aria-label", `${value.type === "positive" ? "Miyagi-Do" : "Cobra Kai"} block`);
+        cellElement.setAttribute("aria-label", `${value.type === "positive" ? "Miyagi-Do" : "Cobra Kai"} bead`);
       } else {
         cellElement.setAttribute("aria-label", "Empty cell");
       }
     }
   }
   if (state.active) {
-    const previewCells = getPieceCells(state.active, state.rotation, state.position);
-    for (const { col, row } of previewCells) {
+    const previewCells = getPieceCells(state.active, state.position);
+    for (const { col, row, type } of previewCells) {
       if (row < 0 || row >= ROWS || col < 0 || col >= COLS) {
         continue;
       }
       const cellIndex = row * COLS + col;
       const cellElement = cells[cellIndex];
-      cellElement.classList.add(state.active.type, "preview");
+      cellElement.classList.add(type, "preview");
     }
   }
 }
@@ -658,6 +559,26 @@ function updateButtons() {
 
 function updateStatus(message) {
   statusBar.textContent = message;
+}
+
+function maybeFlipType(type) {
+  if (Math.random() < 0.18) {
+    return type === "positive" ? "negative" : "positive";
+  }
+  return type;
+}
+
+function ensureMixedEnergy(tokens) {
+  const hasPositive = tokens.some((token) => token.type === "positive");
+  const hasNegative = tokens.some((token) => token.type === "negative");
+  if (!hasPositive) {
+    const index = Math.floor(Math.random() * tokens.length);
+    tokens[index].type = "positive";
+  }
+  if (!hasNegative) {
+    const index = Math.floor(Math.random() * tokens.length);
+    tokens[index].type = "negative";
+  }
 }
 
 function logEvent(message, tone = "neutral") {
