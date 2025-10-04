@@ -11,6 +11,8 @@ const particleSystem = mountParticleField({
   },
 });
 
+const audio = createAudioBoard();
+
 const scoreConfig = getScoreConfig("frank-drebins-follies");
 const highScore = initHighScoreBanner({
   gameId: "frank-drebins-follies",
@@ -561,6 +563,20 @@ const START_REPUTATION = 100;
 const MIN_WINDOW = 850;
 const GRACE_BONUS = 420;
 
+const TONE_ALIASES = {
+  neutral: "neutral",
+  info: "neutral",
+  success: "success",
+  positive: "success",
+  victory: "success",
+  warning: "warning",
+  caution: "warning",
+  alert: "warning",
+  danger: "danger",
+  failure: "danger",
+  negative: "danger",
+};
+
 const chaosScoreEl = document.getElementById("chaos-score");
 const reputationTile = document.getElementById("reputation-tile");
 const reputationFill = document.getElementById("reputation-fill");
@@ -591,7 +607,9 @@ const replayButton = document.getElementById("replay-button");
 const closeWrapUp = document.getElementById("close-wrap-up");
 
 const log = createLogChannel(eventLogList, { limit: 16 });
-const setStatus = createStatusChannel(statusBar);
+const setStatus = createStatusChannel(statusBar, {
+  onTone: handleStatusTone,
+});
 
 autoEnhanceFeedback();
 
@@ -611,6 +629,32 @@ let graceTime = 0;
 let pendingIntervention = null;
 let interventionTimerId = null;
 let wrapUpReason = "";
+let lastReputationTone = "success";
+
+function normalizeTone(tone = "neutral") {
+  const key = String(tone).toLowerCase();
+  return TONE_ALIASES[key] ?? "neutral";
+}
+
+function pulseElement(element, className) {
+  if (!element || !className) {
+    return;
+  }
+  element.classList.remove(className);
+  // eslint-disable-next-line no-unused-expressions
+  element.offsetWidth;
+  element.classList.add(className);
+}
+
+function handleStatusTone(tone) {
+  const normalized = normalizeTone(tone);
+  const tile = statusBar.closest(".status-tile");
+  if (tile) {
+    tile.dataset.tone = normalized;
+    pulseElement(tile, "status-flare");
+  }
+  audio.playStatus(normalized);
+}
 
 function clamp(value, min, max) {
   return Math.min(max, Math.max(min, value));
@@ -634,7 +678,13 @@ function updateReputationDisplay() {
   }
   meter.classList.toggle("is-danger", percent <= 20);
   meter.classList.toggle("is-shrug", graceTime > 0);
-  meter.dataset.tone = percent <= 20 ? "danger" : percent >= 70 ? "success" : "neutral";
+  const tone = percent <= 20 ? "danger" : percent >= 70 ? "success" : "neutral";
+  meter.dataset.tone = tone;
+  reputationTile.dataset.tone = tone;
+  if (tone !== lastReputationTone) {
+    lastReputationTone = tone;
+    audio.playMeterTone(tone);
+  }
   meter.classList.remove("reputation-pulse");
   // eslint-disable-next-line no-unused-expressions
   meter.offsetWidth;
@@ -650,6 +700,9 @@ function resetPromptDisplay() {
   promptButton.disabled = true;
   promptButton.dataset.expectedKey = "";
   promptTimerEl.style.setProperty("--time-progress", "0");
+  promptCard.dataset.fxTone = "neutral";
+  promptCard.classList.remove("fx-burst", "fx-sparkle", "is-armed");
+  promptButton.classList.remove("is-primed");
 }
 
 function hideIntervention() {
@@ -693,6 +746,10 @@ function setPrompt(step) {
   promptButton.disabled = false;
   promptButton.dataset.expectedKey = step.key;
   promptTimerEl.style.setProperty("--time-progress", "1");
+  promptCard.classList.add("is-armed");
+  promptButton.classList.add("is-primed");
+  promptCard.dataset.fxTone = "neutral";
+  audio.playPromptReady();
 
   const tick = () => {
     if (!activeStep) {
@@ -721,14 +778,31 @@ function pushHighlight(text, severity = "minor") {
   highlightReel.push({ text, severity });
 }
 
+function flashPrompt(effect, tone) {
+  const normalizedTone = normalizeTone(tone);
+  promptCard.dataset.fxTone = normalizedTone;
+  if (effect === "burst") {
+    pulseElement(promptCard, "fx-burst");
+  } else if (effect === "sparkle") {
+    pulseElement(promptCard, "fx-sparkle");
+  }
+}
+
 function fireFX(outcome) {
   if (!outcome) {
     return;
   }
+  const normalizedTone = normalizeTone(outcome.tone);
+  const severity = outcome.severity === "major" ? "major" : "minor";
   if (outcome.fx === "burst") {
-    particleSystem.emitBurst(1.1);
+    particleSystem.emitBurst(severity === "major" ? 1.35 : 1.1);
+    flashPrompt("burst", normalizedTone);
   } else if (outcome.fx === "sparkle") {
-    particleSystem.emitSparkle(1.05);
+    particleSystem.emitSparkle(severity === "major" ? 1.25 : 1.05);
+    flashPrompt("sparkle", normalizedTone);
+  }
+  if (outcome.fx) {
+    audio.playFx(outcome.fx, { tone: normalizedTone, severity });
   }
 }
 
@@ -742,6 +816,12 @@ function applyOutcome(outcome, sourceStep) {
   reputation = clamp(reputation + repDelta, 0, 100);
   updateChaosDisplay();
   updateReputationDisplay();
+  if ((outcome.chaos ?? 0) !== 0) {
+    pulseElement(chaosScoreEl, "score-pop");
+  }
+  if (repDelta !== 0) {
+    pulseElement(reputationTile, "status-flare");
+  }
 
   if (outcome.log) {
     log.push(outcome.log.replace(/&mdash;/g, "—"), outcome.tone ?? "info");
@@ -772,6 +852,7 @@ function triggerIntervention(intervention) {
   interventionLabel.textContent = intervention.label;
   interventionKey.textContent = `Press ${intervention.key.toUpperCase()}`;
   interventionTimerEl.style.setProperty("--intervention-progress", "1");
+  audio.playInterventionCue();
 
   const tick = () => {
     if (!pendingIntervention) {
@@ -806,6 +887,8 @@ function resolveStep(success, reason = "input") {
   const step = activeStep;
   activeStep = null;
   promptButton.disabled = true;
+  promptButton.classList.remove("is-primed");
+  promptCard.classList.remove("is-armed");
   const outcome = success ? step.success : step.failure;
   applyOutcome(outcome, step);
 
@@ -827,6 +910,7 @@ function resolveIntervention(success) {
   const intervention = pendingIntervention;
   hideIntervention();
   const outcome = success ? intervention.success : intervention.failure;
+  audio.playInterventionOutcome(success);
   applyOutcome(outcome);
   if (reputation <= 0) {
     return;
@@ -873,6 +957,9 @@ function startRun() {
   if (runActive) {
     return;
   }
+  audio.unlock().then(() => {
+    audio.playShiftStart();
+  });
   runActive = true;
   wrapUp.hidden = true;
   chaosRating = 0;
@@ -884,13 +971,15 @@ function startRun() {
   propertyDamage = 0;
   graceTime = 0;
   wrapUpReason = "";
+  lastReputationTone = "success";
   updateChaosDisplay();
   updateReputationDisplay();
   log.push("Desk sergeant growls: 'Try not to level the city this time.'", "info");
   advanceScenario();
 }
 
-function resetRun() {
+function resetRun(options = {}) {
+  const { silent = false } = options;
   runActive = false;
   wrapUp.hidden = true;
   hideIntervention();
@@ -909,8 +998,12 @@ function resetRun() {
   graceTime = 0;
   difficultyTier = 0;
   wrapUpReason = "";
+  lastReputationTone = "success";
   updateChaosDisplay();
   updateReputationDisplay();
+  if (!silent) {
+    audio.playReset();
+  }
 }
 
 function endRun() {
@@ -943,6 +1036,7 @@ function endRun() {
   }
   wrapUp.hidden = false;
   wrapUp.focus({ preventScroll: true });
+  audio.playWrapUp(reputation > 0);
   highScore.submit(chaosRating, {
     highlights: highlightReel.length,
     propertyDamage,
@@ -997,6 +1091,196 @@ function handleKeydown(event) {
   }
 }
 
+function createAudioBoard() {
+  const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+  const context = AudioContextClass ? new AudioContextClass() : null;
+  let unlocked = false;
+
+  function canPlay() {
+    return Boolean(context) && unlocked && context.state === "running";
+  }
+
+  function unlock() {
+    if (!context) {
+      return Promise.resolve();
+    }
+    if (context.state === "running") {
+      unlocked = true;
+      return Promise.resolve();
+    }
+    if (unlocked) {
+      return Promise.resolve();
+    }
+    return context.resume()
+      .catch(() => {})
+      .then(() => {
+        if (context.state === "running") {
+          unlocked = true;
+        }
+      });
+  }
+
+  function playTone({ frequency, duration = 0.24, type = "sine", gain = 0.12, start = 0 }) {
+    if (!canPlay()) {
+      return;
+    }
+    const oscillator = context.createOscillator();
+    const gainNode = context.createGain();
+    const startTime = context.currentTime + start;
+    oscillator.type = type;
+    oscillator.frequency.setValueAtTime(frequency, startTime);
+    gainNode.gain.setValueAtTime(0.0001, startTime);
+    const attackTime = Math.min(0.04, duration * 0.35);
+    gainNode.gain.linearRampToValueAtTime(gain, startTime + attackTime);
+    gainNode.gain.exponentialRampToValueAtTime(0.0001, startTime + duration);
+    oscillator.connect(gainNode).connect(context.destination);
+    oscillator.start(startTime);
+    oscillator.stop(startTime + duration + 0.2);
+  }
+
+  function playNoise(duration = 0.32, gain = 0.16, start = 0) {
+    if (!canPlay()) {
+      return;
+    }
+    const length = Math.max(1, Math.floor(context.sampleRate * duration));
+    const buffer = context.createBuffer(1, length, context.sampleRate);
+    const data = buffer.getChannelData(0);
+    for (let index = 0; index < length; index += 1) {
+      data[index] = Math.random() * 2 - 1;
+    }
+    const source = context.createBufferSource();
+    source.buffer = buffer;
+    const gainNode = context.createGain();
+    const startTime = context.currentTime + start;
+    gainNode.gain.setValueAtTime(0.0001, startTime);
+    gainNode.gain.linearRampToValueAtTime(gain, startTime + 0.02);
+    gainNode.gain.exponentialRampToValueAtTime(0.0001, startTime + duration);
+    source.connect(gainNode).connect(context.destination);
+    source.start(startTime);
+    source.stop(startTime + duration + 0.2);
+  }
+
+  function playFx(type, { tone = "neutral", severity = "minor" } = {}) {
+    if (!canPlay()) {
+      return;
+    }
+    const normalizedTone = normalizeTone(tone);
+    const strength = severity === "major" ? 1.3 : 1;
+    if (type === "burst") {
+      const base = normalizedTone === "danger" ? 210 : normalizedTone === "warning" ? 320 : 360;
+      playTone({ frequency: base, duration: 0.26 * strength, type: "sawtooth", gain: 0.14 * strength });
+      playNoise(0.32 * strength, 0.18 * strength);
+    } else if (type === "sparkle") {
+      const base = normalizedTone === "success" ? 780 : 660;
+      playTone({ frequency: base, duration: 0.18 * strength, type: "triangle", gain: 0.1 * strength });
+      playTone({ frequency: base * 1.32, duration: 0.22 * strength, type: "sine", gain: 0.08 * strength, start: 0.05 });
+    }
+  }
+
+  function playStatus(tone = "neutral") {
+    if (!canPlay()) {
+      return;
+    }
+    const normalized = normalizeTone(tone);
+    if (normalized === "success") {
+      playTone({ frequency: 680, duration: 0.28, type: "triangle", gain: 0.1 });
+      playTone({ frequency: 920, duration: 0.2, type: "sine", gain: 0.07, start: 0.12 });
+    } else if (normalized === "warning") {
+      playTone({ frequency: 460, duration: 0.34, type: "square", gain: 0.11 });
+    } else if (normalized === "danger") {
+      playTone({ frequency: 260, duration: 0.36, type: "sawtooth", gain: 0.14 });
+      playNoise(0.3, 0.16, 0.04);
+    } else {
+      playTone({ frequency: 520, duration: 0.2, type: "sine", gain: 0.07 });
+    }
+  }
+
+  function playMeterTone(tone = "neutral") {
+    if (!canPlay()) {
+      return;
+    }
+    const normalized = normalizeTone(tone);
+    if (normalized === "danger") {
+      playTone({ frequency: 220, duration: 0.28, type: "square", gain: 0.13 });
+      playNoise(0.24, 0.14, 0.02);
+    } else if (normalized === "success") {
+      playTone({ frequency: 760, duration: 0.22, type: "triangle", gain: 0.09 });
+    } else {
+      playTone({ frequency: 540, duration: 0.18, type: "sine", gain: 0.07 });
+    }
+  }
+
+  function playInterventionCue() {
+    if (!canPlay()) {
+      return;
+    }
+    playTone({ frequency: 860, duration: 0.12, type: "triangle", gain: 0.1 });
+    playTone({ frequency: 980, duration: 0.1, type: "sine", gain: 0.08, start: 0.08 });
+  }
+
+  function playInterventionOutcome(success) {
+    if (!canPlay()) {
+      return;
+    }
+    if (success) {
+      playTone({ frequency: 720, duration: 0.22, type: "triangle", gain: 0.1 });
+      playTone({ frequency: 960, duration: 0.18, type: "sine", gain: 0.08, start: 0.1 });
+    } else {
+      playTone({ frequency: 240, duration: 0.32, type: "sawtooth", gain: 0.14 });
+      playNoise(0.26, 0.14, 0.04);
+    }
+  }
+
+  function playShiftStart() {
+    if (!canPlay()) {
+      return;
+    }
+    playTone({ frequency: 420, duration: 0.26, type: "triangle", gain: 0.1 });
+    playTone({ frequency: 640, duration: 0.24, type: "sine", gain: 0.08, start: 0.14 });
+  }
+
+  function playReset() {
+    if (!canPlay()) {
+      return;
+    }
+    playTone({ frequency: 360, duration: 0.22, type: "sine", gain: 0.08 });
+    playTone({ frequency: 260, duration: 0.2, type: "triangle", gain: 0.07, start: 0.12 });
+  }
+
+  function playPromptReady() {
+    if (!canPlay()) {
+      return;
+    }
+    playTone({ frequency: 840, duration: 0.12, type: "triangle", gain: 0.09 });
+  }
+
+  function playWrapUp(survived) {
+    if (!canPlay()) {
+      return;
+    }
+    if (survived) {
+      playTone({ frequency: 700, duration: 0.28, type: "triangle", gain: 0.09 });
+      playTone({ frequency: 940, duration: 0.24, type: "sine", gain: 0.08, start: 0.14 });
+    } else {
+      playTone({ frequency: 240, duration: 0.34, type: "sawtooth", gain: 0.13 });
+      playNoise(0.28, 0.15, 0.05);
+    }
+  }
+
+  return {
+    unlock,
+    playFx,
+    playStatus,
+    playMeterTone,
+    playInterventionCue,
+    playInterventionOutcome,
+    playShiftStart,
+    playReset,
+    playPromptReady,
+    playWrapUp,
+  };
+}
+
 startButton.addEventListener("click", () => {
   if (!runActive) {
     startRun();
@@ -1024,4 +1308,4 @@ wrapUp.addEventListener("click", (event) => {
 
 document.addEventListener("keydown", handleKeydown);
 
-resetRun();
+resetRun({ silent: true });
