@@ -20,6 +20,18 @@ const highScore = initHighScoreBanner({
   emptyText: scoreConfig.empty,
 });
 
+const audio = createAudioController();
+
+const PROXIMITY_NOTES = {
+  calm: "Mower distant",
+  alert: "Engine hum rising",
+  danger: "Close pass incoming",
+  critical: "Blades at your flank",
+  impact: "On top of you",
+};
+
+const TRAIL_LIMIT = 5;
+
 const layout = [
   "CCPPPPPPPPPF",
   "C.CPPPPBPPPP",
@@ -99,6 +111,9 @@ for (let rowIndex = 0; rowIndex < GRID_ROWS; rowIndex += 1) {
     cell.dataset.player = "false";
     cell.dataset.mower = "false";
     cell.dataset.crumb = tile.crumb ? "true" : "false";
+    cell.dataset.trail = "0";
+    cell.dataset.sweep = "none";
+    cell.dataset.danger = "false";
     if (tile.sprinkler) {
       sprinklerCells.push(cell);
     }
@@ -142,6 +157,9 @@ const state = {
   lastFrame: null,
   mowerProgress: 0,
   logs: [],
+  trail: [],
+  sprinklerActive: false,
+  lastProximityStage: "calm",
 };
 
 placePlayer();
@@ -231,6 +249,7 @@ function beginRun() {
   state.pendingAnimation = requestAnimationFrame(step);
   setSessionStatus("Run live. Track the mower and move with intent.", "success");
   addLog("Engine ignites. First pass sweeping the top row.", "info");
+  audio.play("start");
   startButton.disabled = true;
   dashButton.disabled = false;
   waitButton.disabled = false;
@@ -260,6 +279,9 @@ function resetRun({ preserveLog = false } = {}) {
   state.lastDirection = { dx: 1, dy: 0 };
   state.mowerProgress = 0;
   state.lastFrame = null;
+  state.trail = [];
+  state.sprinklerActive = false;
+  state.lastProximityStage = "calm";
   if (!preserveLog) {
     state.logs = [];
     renderLog();
@@ -282,6 +304,10 @@ function resetRun({ preserveLog = false } = {}) {
   placePlayer();
   placeMower();
   resetSprinklerCells(false);
+  recordTrail(state.playerPos);
+  boardEl.dataset.sprinkler = "idle";
+  delete boardEl.dataset.outcome;
+  setDangerStage("calm", { force: true });
   updateHud();
   sprinklerTimerEl.textContent = "Dry window";
   setSessionStatus("Engine rumble on standby. Start the run to engage the mower.");
@@ -334,6 +360,14 @@ function updateSprinklerCycle() {
   const cycle = state.sprinklerTimer % SPRINKLER_CYCLE_MS;
   const active = cycle < SPRINKLER_ACTIVE_MS;
   resetSprinklerCells(active);
+  if (active !== state.sprinklerActive) {
+    state.sprinklerActive = active;
+    if (active) {
+      audio.play("sprinkler");
+      pulseBoard("sprinkler-wave");
+    }
+  }
+  boardEl.dataset.sprinkler = active ? "active" : "idle";
   if (active) {
     const remaining = Math.max(0, SPRINKLER_ACTIVE_MS - cycle);
     sprinklerTimerEl.textContent = `Impact! ${formatSeconds(remaining)}s`;
@@ -359,17 +393,18 @@ function updateProximity() {
   const distance = manhattan(state.playerPos, state.mowerPos);
   const ratio = 1 - Math.min(distance, MAX_PROXIMITY_DISTANCE) / MAX_PROXIMITY_DISTANCE;
   proximityFillEl.style.width = `${Math.max(8, Math.round(ratio * 100))}%`;
-  if (distance >= 8) {
-    proximityNoteEl.textContent = "Mower distant";
-  } else if (distance >= 5) {
-    proximityNoteEl.textContent = "Engine hum rising";
-  } else if (distance >= 3) {
-    proximityNoteEl.textContent = "Close pass incoming";
-  } else if (distance >= 1) {
-    proximityNoteEl.textContent = "Blades at your flank";
-  } else {
-    proximityNoteEl.textContent = "On top of you";
+  let stage = "calm";
+  if (distance < 1) {
+    stage = "impact";
+  } else if (distance < 3) {
+    stage = "critical";
+  } else if (distance < 5) {
+    stage = "danger";
+  } else if (distance < 8) {
+    stage = "alert";
   }
+  proximityNoteEl.textContent = PROXIMITY_NOTES[stage] ?? PROXIMITY_NOTES.calm;
+  setDangerStage(stage);
 }
 
 function attemptMove(dx, dy) {
@@ -391,7 +426,8 @@ function attemptMove(dx, dy) {
   }
 }
 
-function performStep(dx, dy) {
+function performStep(dx, dy, options = {}) {
+  const from = { ...state.playerPos };
   const next = { x: state.playerPos.x + dx, y: state.playerPos.y + dy };
   if (!isInside(next)) {
     setSessionStatus("That path leads off the lawn.", "warning");
@@ -404,7 +440,14 @@ function performStep(dx, dy) {
   }
   state.playerPos = next;
   placePlayer();
+  recordTrail(from);
   postMoveEffects(tile);
+  if (!state.ended && !options.silent) {
+    audio.play("step");
+  }
+  if (typeof options.onStepComplete === "function") {
+    options.onStepComplete(from, tile);
+  }
   return true;
 }
 
@@ -423,8 +466,15 @@ function performDash() {
     return;
   }
   let steps = 0;
+  const dashTrail = [];
   for (let i = 0; i < 2; i += 1) {
-    if (!performStep(dx, dy)) {
+    const moved = performStep(dx, dy, {
+      silent: true,
+      onStepComplete(from) {
+        dashTrail.push({ ...from });
+      },
+    });
+    if (!moved) {
       if (steps === 0) {
         addLog("Dash aborted against an obstacle.", "warning");
       }
@@ -440,6 +490,14 @@ function performDash() {
     state.moveCooldown = DASH_STUN_MS;
     setSessionStatus(`Mad dash executed (${steps} tiles). Catch your breath!`, "success");
     addLog(`Mad dash covered ${steps} tile${steps === 1 ? "" : "s"}.`, "success");
+    dashTrail.forEach((position, index) => {
+      const dashTile = getTile(position);
+      if (dashTile) {
+        pulseCell(dashTile.cell, index === 0 ? "dash-echo-strong" : "dash-echo");
+      }
+    });
+    particleField?.emitSparkle?.(0.6 + steps * 0.25);
+    audio.play("dash");
   }
 }
 
@@ -451,6 +509,7 @@ function holdPosition() {
   state.moveCooldown = HOLD_COOLDOWN_MS;
   setSessionStatus("You hunker down and let the mower pass.", "success");
   addLog("Holding position—staying low behind cover.", "info");
+  audio.play("hold");
   if (!getTile(state.playerPos).cover) {
     addLog("Exposed on open turf. Find cover soon!", "warning");
   }
@@ -458,11 +517,15 @@ function holdPosition() {
 
 function postMoveEffects(tile) {
   setSessionStatus(`Moved to row ${state.playerPos.y + 1}, column ${state.playerPos.x + 1}.`);
+  pulseCell(tile?.cell, "cell-step");
   if (tile.crumb && !state.collectedCrumbs.has(keyFrom(tile.x, tile.y))) {
     state.collectedCrumbs.add(keyFrom(tile.x, tile.y));
     tile.crumb = false;
     tile.cell.dataset.crumb = "false";
     addLog("Snagged a crumb bonus in the open!", "success");
+    pulseCell(tile.cell, "crumb-pop");
+    particleField?.emitSparkle?.(0.9);
+    audio.play("crumb");
   }
   if (tile.sprinkler && state.sprinklerTimer % SPRINKLER_CYCLE_MS < SPRINKLER_ACTIVE_MS) {
     failRun("Sprinkler droplet slams you off the turf.");
@@ -529,7 +592,12 @@ function completeRun() {
   } banked.`;
   setSessionStatus("Safe Zone reached!", "success");
   addLog("You dive beneath the patio flag—run secured!", "success");
-  particleField?.trigger?.({ intensity: 0.7 });
+  particleField?.emitBurst?.(1.15);
+  particleField?.emitSparkle?.(1.1);
+  boardEl.dataset.outcome = "success";
+  pulseBoard("board-success");
+  audio.play("success");
+  setDangerStage("calm", { force: true });
 }
 
 function failRun(message) {
@@ -553,7 +621,11 @@ function failRun(message) {
   wrapUpText.textContent = `${message} Try again for a faster time.`;
   setSessionStatus(message, "danger");
   addLog(message, "danger");
-  particleField?.trigger?.({ mode: "burst", intensity: 0.3 });
+  particleField?.emitBurst?.(0.45);
+  boardEl.dataset.outcome = "fail";
+  pulseBoard("board-fail");
+  audio.play("fail");
+  setDangerStage("impact", { force: true });
 }
 
 function placePlayer() {
@@ -562,14 +634,24 @@ function placePlayer() {
       tile.cell.dataset.player = tile.x === state.playerPos.x && tile.y === state.playerPos.y ? "true" : "false";
     });
   });
+  updateThreatHighlights();
 }
 
 function placeMower() {
+  const nextIndex = (state.mowerIndex + 1) % mowerRoute.length;
+  const nextPos = mowerRoute[nextIndex];
+  const previewIndex = (state.mowerIndex + 2) % mowerRoute.length;
+  const previewPos = mowerRoute[previewIndex];
   tiles.forEach((row) => {
     row.forEach((tile) => {
-      tile.cell.dataset.mower = tile.x === state.mowerPos.x && tile.y === state.mowerPos.y ? "true" : "false";
+      const isCurrent = tile.x === state.mowerPos.x && tile.y === state.mowerPos.y;
+      const isNext = tile.x === nextPos.x && tile.y === nextPos.y;
+      const isPreview = tile.x === previewPos.x && tile.y === previewPos.y;
+      tile.cell.dataset.mower = isCurrent ? "true" : "false";
+      tile.cell.dataset.sweep = isCurrent ? "current" : isNext ? "next" : isPreview ? "preview" : "none";
     });
   });
+  updateThreatHighlights();
 }
 
 function getTile(position) {
@@ -632,6 +714,103 @@ function setSessionStatus(message, tone = "info") {
   }
 }
 
+function setDangerStage(stage, { force = false } = {}) {
+  if (!force && state.lastProximityStage === stage) {
+    return;
+  }
+  state.lastProximityStage = stage;
+  boardEl.dataset.dangerLevel = stage;
+  if (force) {
+    return;
+  }
+  if (stage === "danger") {
+    audio.play("warning");
+  } else if (stage === "critical" || stage === "impact") {
+    audio.play("threat");
+  }
+}
+
+function updateThreatHighlights() {
+  const dangerCells = new Set();
+  const playerTile = getTile(state.playerPos);
+  if (playerTile && !playerTile.cover) {
+    if (state.playerPos.x === state.mowerPos.x) {
+      const start = Math.min(state.playerPos.y, state.mowerPos.y);
+      const end = Math.max(state.playerPos.y, state.mowerPos.y);
+      for (let y = start; y <= end; y += 1) {
+        dangerCells.add(keyFrom(state.playerPos.x, y));
+      }
+    } else if (state.playerPos.y === state.mowerPos.y) {
+      const start = Math.min(state.playerPos.x, state.mowerPos.x);
+      const end = Math.max(state.playerPos.x, state.mowerPos.x);
+      for (let x = start; x <= end; x += 1) {
+        dangerCells.add(keyFrom(x, state.playerPos.y));
+      }
+    }
+  }
+  tiles.forEach((row) => {
+    row.forEach((tile) => {
+      const key = keyFrom(tile.x, tile.y);
+      tile.cell.dataset.danger = dangerCells.has(key) ? "true" : "false";
+    });
+  });
+}
+
+function recordTrail(position) {
+  if (!position) {
+    return;
+  }
+  const key = keyFrom(position.x, position.y);
+  state.trail = state.trail.filter((entry) => keyFrom(entry.x, entry.y) !== key);
+  state.trail.unshift({ ...position });
+  if (state.trail.length > TRAIL_LIMIT) {
+    state.trail.length = TRAIL_LIMIT;
+  }
+  updateTrailMarkers();
+}
+
+function updateTrailMarkers() {
+  const map = new Map();
+  state.trail.forEach((position, index) => {
+    map.set(keyFrom(position.x, position.y), index + 1);
+  });
+  tiles.forEach((row) => {
+    row.forEach((tile) => {
+      const level = map.get(keyFrom(tile.x, tile.y));
+      tile.cell.dataset.trail = level ? String(level) : "0";
+    });
+  });
+}
+
+function pulseCell(cell, className) {
+  if (!cell) {
+    return;
+  }
+  cell.classList.remove(className);
+  void cell.offsetWidth;
+  cell.classList.add(className);
+  cell.addEventListener(
+    "animationend",
+    () => {
+      cell.classList.remove(className);
+    },
+    { once: true },
+  );
+}
+
+function pulseBoard(className) {
+  boardEl.classList.remove(className);
+  void boardEl.offsetWidth;
+  boardEl.classList.add(className);
+  boardEl.addEventListener(
+    "animationend",
+    () => {
+      boardEl.classList.remove(className);
+    },
+    { once: true },
+  );
+}
+
 function buildMowerRoute() {
   const route = [];
   for (let y = 0; y < GRID_ROWS; y += 1) {
@@ -674,6 +853,220 @@ function formatSeconds(milliseconds) {
 
 function keyFrom(x, y) {
   return `${x},${y}`;
+}
+
+function createAudioController() {
+  const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+  let context = null;
+  let masterGain = null;
+  let noiseBuffer = null;
+
+  function ensureContext() {
+    if (!AudioContextClass) {
+      return null;
+    }
+    if (!context) {
+      context = new AudioContextClass();
+      masterGain = context.createGain();
+      masterGain.gain.value = 0.24;
+      masterGain.connect(context.destination);
+    }
+    if (context.state === "suspended") {
+      context.resume().catch(() => {});
+    }
+    return context;
+  }
+
+  function getNoiseBuffer(ctx) {
+    if (noiseBuffer) {
+      return noiseBuffer;
+    }
+    const length = Math.round(ctx.sampleRate * 1.5);
+    noiseBuffer = ctx.createBuffer(1, length, ctx.sampleRate);
+    const data = noiseBuffer.getChannelData(0);
+    for (let i = 0; i < length; i += 1) {
+      data[i] = Math.random() * 2 - 1;
+    }
+    return noiseBuffer;
+  }
+
+  function playTone(ctx, frequency, options = {}) {
+    if (!ctx || !masterGain) {
+      return;
+    }
+    const oscillator = ctx.createOscillator();
+    oscillator.type = options.type ?? "sine";
+    const startTime = options.startTime ?? ctx.currentTime;
+    oscillator.frequency.setValueAtTime(frequency, startTime);
+    if (typeof options.endFrequency === "number") {
+      const endTime = startTime + (options.attack ?? 0.01) + (options.hold ?? 0.08);
+      oscillator.frequency.linearRampToValueAtTime(options.endFrequency, endTime);
+    }
+    if (typeof options.detune === "number") {
+      oscillator.detune.setValueAtTime(options.detune, startTime);
+    }
+    const gainNode = ctx.createGain();
+    const attack = options.attack ?? 0.015;
+    const hold = options.hold ?? 0.08;
+    const release = options.release ?? 0.18;
+    const sustain = options.sustain ?? 0.6;
+    const peak = options.gain ?? 0.2;
+    gainNode.gain.setValueAtTime(0, startTime);
+    gainNode.gain.linearRampToValueAtTime(peak, startTime + attack);
+    gainNode.gain.linearRampToValueAtTime(peak * sustain, startTime + attack + hold);
+    gainNode.gain.linearRampToValueAtTime(0, startTime + attack + hold + release);
+    oscillator.connect(gainNode).connect(masterGain);
+    oscillator.start(startTime);
+    oscillator.stop(startTime + attack + hold + release + 0.05);
+  }
+
+  function playNoise(ctx, options = {}) {
+    if (!ctx || !masterGain) {
+      return;
+    }
+    const bufferSource = ctx.createBufferSource();
+    bufferSource.buffer = getNoiseBuffer(ctx);
+    bufferSource.loop = true;
+    const gainNode = ctx.createGain();
+    const startTime = options.startTime ?? ctx.currentTime;
+    const attack = options.attack ?? 0.02;
+    const hold = options.hold ?? 0.05;
+    const release = options.release ?? 0.18;
+    const peak = options.gain ?? 0.15;
+    gainNode.gain.setValueAtTime(0, startTime);
+    gainNode.gain.linearRampToValueAtTime(peak, startTime + attack);
+    gainNode.gain.linearRampToValueAtTime(peak * 0.6, startTime + attack + hold);
+    gainNode.gain.linearRampToValueAtTime(0, startTime + attack + hold + release);
+    bufferSource.connect(gainNode).connect(masterGain);
+    bufferSource.start(startTime);
+    bufferSource.stop(startTime + attack + hold + release + 0.05);
+  }
+
+  function play(type) {
+    const ctx = ensureContext();
+    if (!ctx || !masterGain) {
+      return;
+    }
+    const now = ctx.currentTime + 0.02;
+    switch (type) {
+      case "start": {
+        playTone(ctx, 420, { type: "triangle", gain: 0.16, attack: 0.02, hold: 0.1, release: 0.32, startTime: now });
+        playTone(ctx, 640, { type: "sine", gain: 0.12, attack: 0.02, hold: 0.1, release: 0.3, startTime: now + 0.08 });
+        playTone(ctx, 860, { type: "triangle", gain: 0.12, attack: 0.02, hold: 0.08, release: 0.28, startTime: now + 0.16 });
+        break;
+      }
+      case "step": {
+        playTone(ctx, 520, { type: "triangle", gain: 0.12, attack: 0.012, hold: 0.05, release: 0.12, startTime: now });
+        break;
+      }
+      case "dash": {
+        playTone(ctx, 300, {
+          type: "sawtooth",
+          gain: 0.18,
+          attack: 0.01,
+          hold: 0.12,
+          release: 0.22,
+          endFrequency: 560,
+          startTime: now,
+        });
+        playTone(ctx, 760, {
+          type: "sine",
+          gain: 0.12,
+          attack: 0.015,
+          hold: 0.08,
+          release: 0.25,
+          startTime: now + 0.06,
+          endFrequency: 1020,
+        });
+        break;
+      }
+      case "crumb": {
+        playTone(ctx, 860, {
+          type: "triangle",
+          gain: 0.16,
+          attack: 0.015,
+          hold: 0.08,
+          release: 0.34,
+          startTime: now,
+          endFrequency: 1020,
+        });
+        playTone(ctx, 1260, {
+          type: "sine",
+          gain: 0.11,
+          attack: 0.02,
+          hold: 0.06,
+          release: 0.32,
+          startTime: now + 0.05,
+          endFrequency: 1500,
+        });
+        break;
+      }
+      case "warning": {
+        playTone(ctx, 460, { type: "square", gain: 0.12, attack: 0.01, hold: 0.05, release: 0.18, startTime: now });
+        break;
+      }
+      case "threat": {
+        playTone(ctx, 320, {
+          type: "square",
+          gain: 0.18,
+          attack: 0.008,
+          hold: 0.08,
+          release: 0.24,
+          startTime: now,
+          endFrequency: 260,
+        });
+        playTone(ctx, 620, {
+          type: "triangle",
+          gain: 0.1,
+          attack: 0.012,
+          hold: 0.06,
+          release: 0.2,
+          startTime: now + 0.05,
+        });
+        break;
+      }
+      case "hold": {
+        playTone(ctx, 220, { type: "sine", gain: 0.12, attack: 0.02, hold: 0.1, release: 0.22, startTime: now });
+        break;
+      }
+      case "sprinkler": {
+        playNoise(ctx, { gain: 0.14, attack: 0.02, hold: 0.08, release: 0.22, startTime: now });
+        playTone(ctx, 980, {
+          type: "sine",
+          gain: 0.09,
+          attack: 0.015,
+          hold: 0.05,
+          release: 0.24,
+          startTime: now + 0.04,
+          endFrequency: 720,
+        });
+        break;
+      }
+      case "success": {
+        playTone(ctx, 520, { type: "triangle", gain: 0.18, attack: 0.018, hold: 0.18, release: 0.4, startTime: now });
+        playTone(ctx, 780, { type: "sine", gain: 0.14, attack: 0.02, hold: 0.22, release: 0.45, startTime: now + 0.08 });
+        playTone(ctx, 1040, { type: "triangle", gain: 0.12, attack: 0.02, hold: 0.18, release: 0.4, startTime: now + 0.18 });
+        break;
+      }
+      case "fail": {
+        playTone(ctx, 380, {
+          type: "sawtooth",
+          gain: 0.22,
+          attack: 0.012,
+          hold: 0.12,
+          release: 0.5,
+          startTime: now,
+          endFrequency: 140,
+        });
+        playNoise(ctx, { gain: 0.12, attack: 0.015, hold: 0.12, release: 0.45, startTime: now + 0.02 });
+        break;
+      }
+      default:
+        break;
+    }
+  }
+
+  return { play };
 }
 
 resetRun();
