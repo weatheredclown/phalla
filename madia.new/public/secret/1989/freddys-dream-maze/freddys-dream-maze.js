@@ -144,6 +144,7 @@ const state = {
   runStart: 0,
   lastTick: 0,
   elapsedMs: 0,
+  fearState: "lucid",
   audio: null,
 };
 
@@ -191,6 +192,28 @@ const chaseOverlay = document.getElementById("chase-overlay");
 const chaseFill = document.getElementById("chase-fill");
 const chaseNote = document.getElementById("chase-note");
 const chaseResist = document.getElementById("chase-resist");
+const nightmareHaze = document.getElementById("nightmare-haze");
+
+const FEAR_STATE_EFFECTS = {
+  lucid: {
+    ambientPalette: ["#38bdf8", "#a855f7", "#f97316"],
+    effectPalette: ["#38bdf8", "#fbbf24", "#a855f7"],
+    haze: { opacity: 0.32, blur: "32px", duration: "30s", tilt: "8deg" },
+    audioIntensity: 0.28,
+  },
+  distorted: {
+    ambientPalette: ["#f97316", "#f472b6", "#fde047"],
+    effectPalette: ["#f97316", "#ec4899", "#a855f7"],
+    haze: { opacity: 0.46, blur: "36px", duration: "24s", tilt: "10deg" },
+    audioIntensity: 0.55,
+  },
+  collapsing: {
+    ambientPalette: ["#ef4444", "#a855f7", "#facc15"],
+    effectPalette: ["#ef4444", "#f97316", "#fda4af"],
+    haze: { opacity: 0.64, blur: "40px", duration: "18s", tilt: "12deg" },
+    audioIntensity: 0.82,
+  },
+};
 
 function randomBetween(min, max) {
   return Math.random() * (max - min) + min;
@@ -198,6 +221,34 @@ function randomBetween(min, max) {
 
 function pick(list) {
   return list[Math.floor(Math.random() * list.length)];
+}
+
+function applyFearStateFX(nextState) {
+  const fx = FEAR_STATE_EFFECTS[nextState] ?? FEAR_STATE_EFFECTS.lucid;
+  particleField.setAmbientPalette?.(fx.ambientPalette);
+  particleField.setEffectPalette?.(fx.effectPalette);
+  if (nightmareHaze) {
+    if (fx.haze?.opacity !== undefined) {
+      nightmareHaze.style.setProperty("--haze-opacity", String(fx.haze.opacity));
+    }
+    if (fx.haze?.blur) {
+      nightmareHaze.style.setProperty("--haze-blur", fx.haze.blur);
+    }
+    if (fx.haze?.duration) {
+      nightmareHaze.style.setProperty("--haze-duration", fx.haze.duration);
+    }
+    if (fx.haze?.tilt) {
+      nightmareHaze.style.setProperty("--haze-tilt", fx.haze.tilt);
+    }
+    nightmareHaze.dataset.state = nextState;
+  }
+  if (environmentOverlay) {
+    environmentOverlay.dataset.fear = nextState;
+  }
+  if (environmentGrid) {
+    environmentGrid.dataset.fear = nextState;
+  }
+  state.audio?.setIntensity?.(fx.audioIntensity ?? 0.3);
 }
 
 function clamp(value, min, max) {
@@ -259,6 +310,10 @@ function renderSanity() {
     fearState === "lucid" ? "Lucid Drift" : fearState === "distorted" ? "Warped Focus" : "Fracture Threshold";
   fearStateLabel.textContent = fearLabel;
   fearNote.textContent = note;
+  if (state.fearState !== fearState) {
+    state.fearState = fearState;
+    applyFearStateFX(fearState);
+  }
 }
 
 function resetEnvironment() {
@@ -274,17 +329,32 @@ function resetEnvironment() {
 }
 
 function renderEnvironmentGrid(theme = "neutral") {
+  const GRID_THEMES = {
+    neutral: { safe: 0.16, threat: 0.22, active: 0.2 },
+    safe: { safe: 0.35, threat: 0.12, active: 0.24 },
+    threat: { safe: 0.08, threat: 0.38, active: 0.28 },
+    lucid: { safe: 0.24, threat: 0.18, active: 0.24 },
+    distorted: { safe: 0.14, threat: 0.32, active: 0.32 },
+    collapsing: { safe: 0.08, threat: 0.42, active: 0.34 },
+  };
+  const effectiveTheme = theme === "neutral" ? state.fearState ?? "neutral" : theme;
+  const config = GRID_THEMES[effectiveTheme] ?? GRID_THEMES.neutral;
+  const safeThreshold = Math.max(0, Math.min(1, config.safe ?? 0));
+  const threatThreshold = Math.max(0, Math.min(1, safeThreshold + (config.threat ?? 0)));
+  const activeThreshold = Math.max(0, Math.min(1, threatThreshold + (config.active ?? 0)));
+
   environmentGrid.innerHTML = "";
+  environmentGrid.dataset.fear = state.fearState;
   const frag = document.createDocumentFragment();
   for (let index = 0; index < 36; index += 1) {
     const tile = document.createElement("span");
     tile.classList.add("tile");
     const roll = Math.random();
-    if (theme === "safe" && roll < 0.2) {
+    if (roll < safeThreshold) {
       tile.classList.add("is-safe");
-    } else if (theme === "threat" && roll < 0.35) {
+    } else if (roll < threatThreshold) {
       tile.classList.add("is-threat");
-    } else if (roll < 0.18) {
+    } else if (roll < activeThreshold) {
       tile.classList.add("is-active");
     }
     frag.appendChild(tile);
@@ -317,6 +387,8 @@ function resetState() {
   state.confrontation = null;
   state.chase = null;
   state.elapsedMs = 0;
+  state.fearState = "lucid";
+  applyFearStateFX(state.fearState);
   renderHud();
   resetEnvironment();
   decisionOptions.innerHTML = "";
@@ -351,6 +423,7 @@ function startRun() {
   renderOptions();
   startTicker();
   ensureAudio();
+  applyFearStateFX(state.fearState);
 }
 
 function resetRun() {
@@ -390,22 +463,26 @@ function ensureAudio() {
   master.gain.value = 0.035;
   master.connect(context.destination);
 
+  const panner = context.createStereoPanner();
+  panner.pan.value = 0;
+  panner.connect(master);
+
   const lowOsc = context.createOscillator();
   lowOsc.type = "sawtooth";
   lowOsc.frequency.value = 58;
   const lowGain = context.createGain();
-  lowGain.gain.value = 0.2;
+  lowGain.gain.value = 0.18;
   lowOsc.connect(lowGain);
-  lowGain.connect(master);
+  lowGain.connect(panner);
   lowOsc.start();
 
   const pulse = context.createOscillator();
   pulse.type = "triangle";
   pulse.frequency.value = 138;
   const pulseGain = context.createGain();
-  pulseGain.gain.value = 0.08;
+  pulseGain.gain.value = 0.06;
   pulse.connect(pulseGain);
-  pulseGain.connect(master);
+  pulseGain.connect(panner);
   pulse.start();
 
   const lfo = context.createOscillator();
@@ -417,7 +494,88 @@ function ensureAudio() {
   lfoGain.connect(pulse.frequency);
   lfo.start();
 
-  state.audio = { context, master, muted: false, nodes: [lowOsc, pulse, lfo], subGains: [lowGain, pulseGain] };
+  const breathLfo = context.createOscillator();
+  breathLfo.type = "sine";
+  breathLfo.frequency.value = 0.07;
+  const breathDepth = context.createGain();
+  breathDepth.gain.value = 0.04;
+  breathLfo.connect(breathDepth);
+  breathDepth.connect(lowGain.gain);
+  breathLfo.start();
+
+  const noiseBuffer = context.createBuffer(1, context.sampleRate * 2, context.sampleRate);
+  const noiseData = noiseBuffer.getChannelData(0);
+  for (let index = 0; index < noiseData.length; index += 1) {
+    noiseData[index] = (Math.random() * 2 - 1) * 0.6;
+  }
+  const noiseSource = context.createBufferSource();
+  noiseSource.buffer = noiseBuffer;
+  noiseSource.loop = true;
+
+  const noiseFilter = context.createBiquadFilter();
+  noiseFilter.type = "bandpass";
+  noiseFilter.frequency.value = 520;
+  noiseFilter.Q.value = 0.8;
+
+  const noiseGain = context.createGain();
+  noiseGain.gain.value = 0.02;
+  noiseSource.connect(noiseFilter);
+  noiseFilter.connect(noiseGain);
+  noiseGain.connect(panner);
+  noiseSource.start();
+
+  const shimmer = context.createOscillator();
+  shimmer.type = "sine";
+  shimmer.frequency.value = 410;
+  const shimmerGain = context.createGain();
+  shimmerGain.gain.value = 0.018;
+  shimmer.connect(shimmerGain);
+  shimmerGain.connect(panner);
+  shimmer.start();
+
+  const shimmerLfo = context.createOscillator();
+  shimmerLfo.type = "sine";
+  shimmerLfo.frequency.value = 0.32;
+  const shimmerDepth = context.createGain();
+  shimmerDepth.gain.value = 18;
+  shimmerLfo.connect(shimmerDepth);
+  shimmerDepth.connect(shimmer.frequency);
+  shimmerLfo.start();
+
+  const panLfo = context.createOscillator();
+  panLfo.type = "sine";
+  panLfo.frequency.value = 0.06;
+  const panDepth = context.createGain();
+  panDepth.gain.value = 0.35;
+  panLfo.connect(panDepth);
+  panDepth.connect(panner.pan);
+  panLfo.start();
+
+  function setIntensity(level) {
+    const value = Math.max(0, Math.min(1, level));
+    const now = context.currentTime;
+    lowGain.gain.setTargetAtTime(0.16 + value * 0.24, now, 1.2);
+    pulseGain.gain.setTargetAtTime(0.05 + value * 0.16, now, 0.9);
+    noiseGain.gain.setTargetAtTime(0.018 + value * 0.12, now, 1.4);
+    shimmerGain.gain.setTargetAtTime(0.012 + value * 0.09, now, 0.9);
+    panDepth.gain.setTargetAtTime(0.35 + value * 0.4, now, 1.6);
+    lfo.frequency.setTargetAtTime(0.14 + value * 0.42, now, 1.2);
+    shimmerLfo.frequency.setTargetAtTime(0.28 + value * 0.6, now, 1.2);
+    noiseFilter.frequency.setTargetAtTime(480 + value * 320, now, 1.5);
+  }
+
+  state.audio = {
+    context,
+    master,
+    panner,
+    muted: false,
+    setIntensity,
+    nodes: [lowOsc, pulse, lfo, breathLfo, noiseSource, shimmer, shimmerLfo, panLfo],
+    subGains: { low: lowGain, pulse: pulseGain, noise: noiseGain, shimmer: shimmerGain },
+    noiseFilter,
+    panDepth,
+  };
+  setIntensity(FEAR_STATE_EFFECTS[state.fearState]?.audioIntensity ?? 0.3);
 }
 
 function toggleAudio() {
@@ -592,6 +750,15 @@ function maybeGainSigil(chance, message) {
     state.sigils += 1;
     sigilCount.textContent = `${state.sigils} / ${REQUIRED_SIGILS}`;
     logEvent(message ?? "A new sigil sears into your vision.");
+    const fx = FEAR_STATE_EFFECTS[state.fearState] ?? FEAR_STATE_EFFECTS.lucid;
+    particleField.emitSparkle?.(0.9, {
+      palette: fx.effectPalette,
+      y: 0.34,
+      lift: 260,
+      driftX: randomBetween(-24, 24),
+      size: 11,
+      shardChance: 0.2,
+    });
     if (state.sigils >= REQUIRED_SIGILS) {
       triggerExitDoor();
     }
@@ -602,6 +769,13 @@ function triggerExitDoor() {
   state.awaitingExit = true;
   decisionTitle.textContent = "Wake Threshold";
   logEvent("Four sigils glow at once—the wake door is unlocked.");
+  const fx = FEAR_STATE_EFFECTS[state.fearState] ?? FEAR_STATE_EFFECTS.lucid;
+  particleField.emitBurst?.(1.1, {
+    palette: fx.effectPalette,
+    y: 0.52,
+    lift: 320,
+    shardChance: 0.55,
+  });
   renderExitOptions();
 }
 
@@ -628,6 +802,14 @@ function openManifestation(manifestation) {
   confrontationTimer.textContent = "";
   manifestationOverlay.hidden = false;
   disableDecisions();
+  const fx = FEAR_STATE_EFFECTS[state.fearState] ?? FEAR_STATE_EFFECTS.lucid;
+  particleField.emitBurst?.(0.7, {
+    palette: fx.effectPalette,
+    y: 0.44,
+    lift: 280,
+    shardChance: 0.5,
+  });
+  state.audio?.setIntensity?.(Math.min(1, (fx.audioIntensity ?? 0.5) + 0.18));
 }
 
 function disableDecisions() {
@@ -730,15 +912,29 @@ function resolveConfrontation(success, message) {
   if (success) {
     state.confronted += 1;
     updateSanity(manifest.confrontBonus, { log: message });
-    particleField.emitBurst?.(0.8);
+    const fx = FEAR_STATE_EFFECTS[state.fearState] ?? FEAR_STATE_EFFECTS.lucid;
+    particleField.emitBurst?.(0.9, {
+      palette: fx.effectPalette,
+      y: 0.35,
+      lift: 280,
+      shardChance: 0.5,
+    });
     maybeGainSigil(0.6, "The conquered fear crumbles into a fresh sigil.");
   } else {
     updateSanity(-manifest.confrontPenalty, { log: message, severity: "danger" });
     state.routeInstability += 0.6;
     state.threat += 0.4;
+    const fx = FEAR_STATE_EFFECTS[state.fearState] ?? FEAR_STATE_EFFECTS.lucid;
+    particleField.emitSparkle?.(0.45, {
+      palette: fx.effectPalette,
+      y: 0.62,
+      lift: 190,
+      shardChance: 0.25,
+    });
   }
   renderHud();
   renderOptions();
+  applyFearStateFX(state.fearState);
 }
 
 function evadeManifestation() {
@@ -755,6 +951,7 @@ function evadeManifestation() {
   manifestationOverlay.hidden = true;
   enableDecisions();
   renderOptions();
+  applyFearStateFX(state.fearState);
 }
 
 function scheduleSlowDrainFade(amount) {
@@ -785,6 +982,14 @@ function startChase() {
   chaseOverlay.hidden = false;
   disableDecisions();
   updateSanity(-12, { log: "Freddy rakes across your sanity." });
+  const fx = FEAR_STATE_EFFECTS[state.fearState] ?? FEAR_STATE_EFFECTS.lucid;
+  particleField.emitBurst?.(0.75, {
+    palette: fx.effectPalette,
+    y: 0.6,
+    lift: 300,
+    shardChance: 0.62,
+  });
+  state.audio?.setIntensity?.(Math.min(1, (fx.audioIntensity ?? 0.6) + 0.25));
   const timer = window.setInterval(() => {
     if (!state.chase) {
       return;
@@ -805,7 +1010,13 @@ function resistChase() {
   const progressPercent = (state.chase.progress / state.chase.required) * 100;
   chaseFill.style.width = `${Math.min(progressPercent, 100)}%`;
   chaseNote.textContent = `${state.chase.progress} / ${state.chase.required} bursts`;
-  particleField.emitSparkle?.(0.5);
+  const fx = FEAR_STATE_EFFECTS[state.fearState] ?? FEAR_STATE_EFFECTS.lucid;
+  particleField.emitSparkle?.(0.6, {
+    palette: fx.effectPalette,
+    y: 0.42,
+    lift: 220,
+    shardChance: 0.28,
+  });
   updateSanity(2, { log: "You wrench free of the claws." });
   if (state.chase.progress >= state.chase.required) {
     stopChase(true);
@@ -821,10 +1032,25 @@ function stopChase(victorious = false) {
   enableDecisions();
   if (victorious) {
     state.threat = Math.max(0, state.threat - 0.6);
-    particleField.emitBurst?.(0.6);
+    const fx = FEAR_STATE_EFFECTS[state.fearState] ?? FEAR_STATE_EFFECTS.lucid;
+    particleField.emitBurst?.(0.85, {
+      palette: fx.effectPalette,
+      y: 0.48,
+      lift: 300,
+      shardChance: 0.58,
+    });
     logEvent("You slam a dream door and hear Freddy howl behind it.");
+  } else {
+    const fx = FEAR_STATE_EFFECTS[state.fearState] ?? FEAR_STATE_EFFECTS.lucid;
+    particleField.emitSparkle?.(0.4, {
+      palette: fx.effectPalette,
+      y: 0.68,
+      lift: 180,
+      shardChance: 0.22,
+    });
   }
   renderOptions();
+  applyFearStateFX(state.fearState);
 }
 
 function finishRun() {
@@ -855,7 +1081,13 @@ function endRun(success, reason) {
   wrapupFears.textContent = String(state.confronted);
   wrapupSafes.textContent = String(state.safeZones);
   wrapupTime.textContent = formatTime(state.elapsedMs);
-  particleField.emitBurst?.(escaped ? 1 : 0.4);
+  const fx = FEAR_STATE_EFFECTS[state.fearState] ?? FEAR_STATE_EFFECTS.lucid;
+  particleField.emitBurst?.(escaped ? 1 : 0.45, {
+    palette: fx.effectPalette,
+    y: escaped ? 0.5 : 0.62,
+    lift: escaped ? 320 : 220,
+    shardChance: escaped ? 0.6 : 0.3,
+  });
   highScore.submit(sanityValueFinal, {
     confronted: state.confronted,
     safeZones: state.safeZones,

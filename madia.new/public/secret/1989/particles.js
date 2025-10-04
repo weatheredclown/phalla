@@ -217,6 +217,17 @@ function mountCelebrationEffects({
   let disposed = false;
   let ambientTimer = null;
   const normalizedDensity = Math.max(0, Math.min(1, ambientDensity));
+  let currentPalette = Array.isArray(palette) && palette.length > 0 ? [...palette] : [];
+
+  function resolveLocalPalette(overridePalette) {
+    if (Array.isArray(overridePalette) && overridePalette.length > 0) {
+      return overridePalette;
+    }
+    if (currentPalette.length > 0) {
+      return currentPalette;
+    }
+    return DEFAULT_EFFECT_PALETTE;
+  }
 
   function scheduleAmbient() {
     if (disposed || normalizedDensity === 0) {
@@ -230,8 +241,9 @@ function mountCelebrationEffects({
         return;
       }
       const count = Math.round(randomBetween(1, 2 + normalizedDensity * 2));
+      const paletteForAmbient = resolveLocalPalette();
       for (let index = 0; index < count; index += 1) {
-        createCelebrationParticle(layer, palette);
+        createCelebrationParticle(layer, paletteForAmbient);
       }
       scheduleAmbient();
     }, delay);
@@ -239,14 +251,16 @@ function mountCelebrationEffects({
 
   scheduleAmbient();
 
-  function emitBurst(strength = 1) {
+  function emitBurst(strength = 1, overrides = {}) {
     if (disposed) {
       return;
     }
     const burstStrength = Math.max(0.2, strength);
     const count = Math.round(randomBetween(10, 16) * burstStrength);
+    const paletteForBurst = resolveLocalPalette(overrides.palette);
+    const { palette: _paletteOverride, ...particleOverrides } = overrides ?? {};
     for (let index = 0; index < count; index += 1) {
-      createCelebrationParticle(layer, palette, {
+      const particleConfig = {
         y: randomBetween(0.4, 0.85),
         lift: randomBetween(160, 280),
         driftX: randomBetween(-80, 80),
@@ -254,26 +268,34 @@ function mountCelebrationEffects({
         duration: randomBetween(2600, 4600),
         opacity: randomBetween(0.65, 0.95),
         shardChance: 0.45,
-      });
+      };
+      createCelebrationParticle(layer, paletteForBurst, { ...particleConfig, ...particleOverrides });
     }
   }
 
-  function emitSparkle(strength = 1) {
+  function emitSparkle(strength = 1, overrides = {}) {
     if (disposed) {
       return;
     }
     const sparkleStrength = Math.max(0.2, strength);
     const count = Math.round(randomBetween(4, 8) * sparkleStrength);
+    const paletteForSparkle = resolveLocalPalette(overrides.palette);
+    const { palette: _sparkPalette, ...particleOverrides } = overrides ?? {};
     for (let index = 0; index < count; index += 1) {
-      createCelebrationParticle(layer, palette, {
+      const particleConfig = {
         y: randomBetween(0.15, 0.65),
         lift: randomBetween(120, 180),
         driftX: randomBetween(-40, 40),
         size: randomBetween(4, 8),
         duration: randomBetween(2200, 3600),
         shardChance: 0.25,
-      });
+      };
+      createCelebrationParticle(layer, paletteForSparkle, { ...particleConfig, ...particleOverrides });
     }
+  }
+
+  function setPalette(newPalette) {
+    currentPalette = Array.isArray(newPalette) && newPalette.length > 0 ? [...newPalette] : [];
   }
 
   function destroy() {
@@ -285,10 +307,11 @@ function mountCelebrationEffects({
     layer.remove();
   }
 
-  return { emitBurst, emitSparkle, destroy };
+  return { emitBurst, emitSparkle, setPalette, setEffectPalette: setPalette, destroy };
 }
 
 function createParticle(width, height, palette) {
+  const paletteSource = Array.isArray(palette) && palette.length > 0 ? palette : DEFAULT_COLORS;
   const angle = Math.random() * Math.PI * 2;
   const baseSpeed = 0.018 + Math.random() * 0.06;
   return {
@@ -300,7 +323,7 @@ function createParticle(width, height, palette) {
     radius: 0.6 + Math.random() * 2.2,
     life: 0,
     ttl: 260 + Math.random() * 360,
-    color: palette[Math.floor(Math.random() * palette.length)],
+    color: paletteSource[Math.floor(Math.random() * paletteSource.length)],
     alpha: 0.35 + Math.random() * 0.45,
   };
 }
@@ -351,14 +374,25 @@ export function mountParticleField(options = {}) {
   } = options;
 
   ensureStyles(container);
-  const palette = resolvePalette(colors);
+  const basePalette = resolvePalette(colors);
+  let ambientPalette = basePalette.slice();
+
+  function getAmbientPalette() {
+    if (ambientPalette.length > 0) {
+      return ambientPalette;
+    }
+    if (basePalette.length > 0) {
+      return basePalette;
+    }
+    return DEFAULT_COLORS;
+  }
 
   let celebrationControls = null;
   if (effects) {
     const effectPalette = Array.isArray(effects.palette) && effects.palette.length > 0
       ? effects.palette
-      : palette.length > 0
-        ? palette
+      : basePalette.length > 0
+        ? basePalette
         : DEFAULT_EFFECT_PALETTE;
     celebrationControls = mountCelebrationEffects({
       container,
@@ -378,6 +412,8 @@ export function mountParticleField(options = {}) {
     return {
       emitBurst: celebrationControls ? celebrationControls.emitBurst : () => {},
       emitSparkle: celebrationControls ? celebrationControls.emitSparkle : () => {},
+      setEffectPalette: celebrationControls ? celebrationControls.setEffectPalette : () => {},
+      setAmbientPalette() {},
       destroy() {
         if (celebrationControls) {
           celebrationControls.destroy();
@@ -416,7 +452,7 @@ export function mountParticleField(options = {}) {
 
     const targetCount = Math.round(width * height * density);
     while (particles.length < targetCount) {
-      particles.push(createParticle(width, height, palette));
+      particles.push(createParticle(width, height, getAmbientPalette()));
     }
     if (particles.length > targetCount) {
       particles.splice(targetCount);
@@ -427,7 +463,7 @@ export function mountParticleField(options = {}) {
     for (let i = particles.length - 1; i >= 0; i -= 1) {
       const particle = particles[i];
       if (!updateParticle(particle, width, height, delta)) {
-        particles[i] = createParticle(width, height, palette);
+        particles[i] = createParticle(width, height, getAmbientPalette());
         continue;
       }
       drawParticle(ctx, particle);
@@ -454,9 +490,26 @@ export function mountParticleField(options = {}) {
   window.addEventListener("resize", resizeCanvas);
   document.addEventListener("visibilitychange", handleVisibilityChange);
 
+  function setAmbientPalette(nextPalette) {
+    if (Array.isArray(nextPalette) && nextPalette.length > 0) {
+      ambientPalette = [...nextPalette];
+    } else {
+      ambientPalette = [];
+    }
+
+    const paletteForParticles = getAmbientPalette();
+    if (paletteForParticles.length > 0) {
+      for (const particle of particles) {
+        particle.color = paletteForParticles[Math.floor(Math.random() * paletteForParticles.length)];
+      }
+    }
+  }
+
   return {
     emitBurst: celebrationControls ? celebrationControls.emitBurst : () => {},
     emitSparkle: celebrationControls ? celebrationControls.emitSparkle : () => {},
+    setEffectPalette: celebrationControls ? celebrationControls.setEffectPalette : () => {},
+    setAmbientPalette,
     destroy() {
       if (animationId !== null) {
         window.cancelAnimationFrame(animationId);
