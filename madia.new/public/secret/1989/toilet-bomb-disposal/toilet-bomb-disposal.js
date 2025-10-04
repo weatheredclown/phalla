@@ -1,11 +1,26 @@
 import { initHighScoreBanner } from "../arcade-scores.js";
 import { getScoreConfig } from "../score-config.js";
 import { autoEnhanceFeedback } from "../feedback.js";
+import { mountParticleField } from "../particles.js";
 
 const GAME_ID = "toilet-bomb-disposal";
 const START_TIME_SECONDS = 120;
 const PENALTY_SECONDS = 25;
 const RIGGS_SUCCESS_CHANCE = 0.18;
+
+const stagePalettes = {
+  wires: ["#38bdf8", "#0ea5e9", "#22d3ee"],
+  sensor: ["#f97316", "#fb923c", "#facc15"],
+  pressure: ["#f472b6", "#f87171", "#facc15"],
+};
+
+const completionPalette = ["#facc15", "#fbbf24", "#38bdf8"];
+const failurePalette = ["#f87171", "#fb7185", "#f97316"];
+const celebrationIntensity = {
+  wires: 0.9,
+  sensor: 1.1,
+  pressure: 1.45,
+};
 
 const scoreConfig = getScoreConfig(GAME_ID);
 const highScore = initHighScoreBanner({
@@ -18,6 +33,7 @@ const highScore = initHighScoreBanner({
 autoEnhanceFeedback();
 
 const body = document.body;
+const simulator = document.querySelector(".simulator");
 const timerValue = document.getElementById("timer-value");
 const phaseFlag = document.getElementById("phase-flag");
 const riggsFlag = document.getElementById("riggs-flag");
@@ -41,6 +57,16 @@ const wrapupSubtitle = document.getElementById("wrapup-subtitle");
 const wrapupRetry = document.getElementById("wrapup-retry");
 const wrapupClose = document.getElementById("wrapup-close");
 
+const particleField = mountParticleField({
+  container: simulator ?? undefined,
+  colors: ["#0ea5e9", "#38bdf8", "#f472b6", "#facc15"],
+  effects: {
+    palette: ["#38bdf8", "#f97316", "#facc15", "#f472b6"],
+    ambientDensity: 0.58,
+    zIndex: 22,
+  },
+});
+
 const wiresSolution = ["green", "yellow"];
 const weightTargets = {
   "dry-a": 10,
@@ -49,6 +75,12 @@ const weightTargets = {
   toolkit: 8,
 };
 const TARGET_WEIGHT = 42;
+
+const panelMap = {
+  wires: document.getElementById("wires-panel"),
+  sensor: sensorPanel,
+  pressure: pressurePanel,
+};
 
 const riggsAdviceByStage = {
   wires: [
@@ -129,6 +161,8 @@ logEvent("Timer armed. Read every clue before you move.");
 updateTimerDisplay();
 updatePhaseFlag();
 updateRiggsFlag();
+highlightActivePanel(state.stage);
+updateAmbientForStage(state.stage);
 startCountdown();
 scheduleRiggs();
 
@@ -182,17 +216,33 @@ function playBeep(progress) {
     return;
   }
   try {
-    const oscillator = ctx.createOscillator();
+    const now = ctx.currentTime;
+    const baseFrequency = 520 + progress * 420;
+    const primary = ctx.createOscillator();
+    const overtone = ctx.createOscillator();
+    const filter = ctx.createBiquadFilter();
     const gain = ctx.createGain();
-    const frequency = 520 + progress * 420;
-    oscillator.type = "square";
-    oscillator.frequency.setValueAtTime(frequency, ctx.currentTime);
-    gain.gain.setValueAtTime(0.08 + progress * 0.08, ctx.currentTime);
-    gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.12);
-    oscillator.connect(gain);
-    gain.connect(ctx.destination);
-    oscillator.start();
-    oscillator.stop(ctx.currentTime + 0.12);
+    primary.type = "square";
+    overtone.type = "triangle";
+    primary.frequency.setValueAtTime(baseFrequency, now);
+    primary.frequency.linearRampToValueAtTime(baseFrequency + 120, now + 0.18);
+    overtone.frequency.setValueAtTime(baseFrequency / 2, now);
+    overtone.frequency.linearRampToValueAtTime(baseFrequency, now + 0.18);
+    overtone.detune.setValueAtTime(15, now);
+    filter.type = "bandpass";
+    filter.frequency.setValueAtTime(baseFrequency, now);
+    filter.Q.setValueAtTime(9, now);
+    const startGain = 0.1 + progress * 0.12;
+    gain.gain.setValueAtTime(startGain, now);
+    gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.24);
+    primary.connect(gain);
+    overtone.connect(gain);
+    gain.connect(filter);
+    filter.connect(ctx.destination);
+    primary.start(now);
+    overtone.start(now);
+    primary.stop(now + 0.26);
+    overtone.stop(now + 0.26);
   } catch (error) {
     // Ignore audio errors silently.
   }
@@ -204,16 +254,22 @@ function playClick() {
     return;
   }
   try {
+    const now = ctx.currentTime;
     const oscillator = ctx.createOscillator();
     const gain = ctx.createGain();
+    const filter = ctx.createBiquadFilter();
     oscillator.type = "triangle";
-    oscillator.frequency.setValueAtTime(660, ctx.currentTime);
-    gain.gain.setValueAtTime(0.08, ctx.currentTime);
-    gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.08);
+    oscillator.frequency.setValueAtTime(720, now);
+    oscillator.frequency.linearRampToValueAtTime(540, now + 0.06);
+    gain.gain.setValueAtTime(0.09, now);
+    gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.1);
+    filter.type = "highpass";
+    filter.frequency.setValueAtTime(520, now);
     oscillator.connect(gain);
-    gain.connect(ctx.destination);
-    oscillator.start();
-    oscillator.stop(ctx.currentTime + 0.08);
+    gain.connect(filter);
+    filter.connect(ctx.destination);
+    oscillator.start(now);
+    oscillator.stop(now + 0.12);
   } catch (error) {
     // Ignore audio errors silently.
   }
@@ -225,18 +281,37 @@ function playSuccess() {
     return;
   }
   try {
-    const oscillator = ctx.createOscillator();
-    const gain = ctx.createGain();
-    oscillator.type = "sine";
     const now = ctx.currentTime;
-    oscillator.frequency.setValueAtTime(540, now);
-    oscillator.frequency.linearRampToValueAtTime(720, now + 0.18);
+    const lead = ctx.createOscillator();
+    const harmony = ctx.createOscillator();
+    const shimmer = ctx.createOscillator();
+    const gain = ctx.createGain();
+    const filter = ctx.createBiquadFilter();
+    lead.type = "triangle";
+    harmony.type = "sine";
+    shimmer.type = "square";
+    lead.frequency.setValueAtTime(540, now);
+    lead.frequency.linearRampToValueAtTime(760, now + 0.24);
+    harmony.frequency.setValueAtTime(810, now);
+    harmony.frequency.linearRampToValueAtTime(1010, now + 0.24);
+    shimmer.frequency.setValueAtTime(1280, now);
+    shimmer.frequency.linearRampToValueAtTime(1560, now + 0.24);
+    shimmer.detune.setValueAtTime(12, now);
     gain.gain.setValueAtTime(0.12, now);
-    gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.24);
-    oscillator.connect(gain);
-    gain.connect(ctx.destination);
-    oscillator.start(now);
-    oscillator.stop(now + 0.24);
+    gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.38);
+    filter.type = "lowpass";
+    filter.frequency.setValueAtTime(1600, now);
+    lead.connect(gain);
+    harmony.connect(gain);
+    shimmer.connect(gain);
+    gain.connect(filter);
+    filter.connect(ctx.destination);
+    lead.start(now);
+    harmony.start(now + 0.02);
+    shimmer.start(now + 0.04);
+    lead.stop(now + 0.42);
+    harmony.stop(now + 0.42);
+    shimmer.stop(now + 0.42);
   } catch (error) {
     // Ignore audio errors silently.
   }
@@ -248,18 +323,30 @@ function playZap() {
     return;
   }
   try {
+    const now = ctx.currentTime;
     const oscillator = ctx.createOscillator();
     const gain = ctx.createGain();
+    const noise = createNoiseSource(ctx, 0.28);
+    const noiseGain = ctx.createGain();
+    const filter = ctx.createBiquadFilter();
     oscillator.type = "sawtooth";
-    const now = ctx.currentTime;
-    oscillator.frequency.setValueAtTime(1100, now);
-    oscillator.frequency.exponentialRampToValueAtTime(160, now + 0.18);
-    gain.gain.setValueAtTime(0.18, now);
-    gain.gain.linearRampToValueAtTime(0.0001, now + 0.25);
+    oscillator.frequency.setValueAtTime(1180, now);
+    oscillator.frequency.exponentialRampToValueAtTime(180, now + 0.22);
+    gain.gain.setValueAtTime(0.22, now);
+    gain.gain.linearRampToValueAtTime(0.0001, now + 0.28);
+    noiseGain.gain.setValueAtTime(0.12, now);
+    noiseGain.gain.exponentialRampToValueAtTime(0.0001, now + 0.3);
+    filter.type = "highpass";
+    filter.frequency.setValueAtTime(360, now);
     oscillator.connect(gain);
-    gain.connect(ctx.destination);
+    gain.connect(filter);
+    noise.connect(noiseGain);
+    noiseGain.connect(filter);
+    filter.connect(ctx.destination);
     oscillator.start(now);
-    oscillator.stop(now + 0.25);
+    oscillator.stop(now + 0.32);
+    noise.start(now);
+    noise.stop(now + 0.32);
   } catch (error) {
     // Ignore audio errors silently.
   }
@@ -271,18 +358,30 @@ function playBoom() {
     return;
   }
   try {
-    const oscillator = ctx.createOscillator();
-    const gain = ctx.createGain();
-    oscillator.type = "square";
     const now = ctx.currentTime;
-    oscillator.frequency.setValueAtTime(80, now);
-    oscillator.frequency.exponentialRampToValueAtTime(20, now + 0.5);
-    gain.gain.setValueAtTime(0.5, now);
-    gain.gain.linearRampToValueAtTime(0.0001, now + 0.6);
-    oscillator.connect(gain);
-    gain.connect(ctx.destination);
-    oscillator.start(now);
-    oscillator.stop(now + 0.6);
+    const rumble = ctx.createOscillator();
+    const rumbleGain = ctx.createGain();
+    const noise = createNoiseSource(ctx, 0.6);
+    const noiseGain = ctx.createGain();
+    const filter = ctx.createBiquadFilter();
+    rumble.type = "sine";
+    rumble.frequency.setValueAtTime(70, now);
+    rumble.frequency.exponentialRampToValueAtTime(24, now + 0.7);
+    rumbleGain.gain.setValueAtTime(0.48, now);
+    rumbleGain.gain.linearRampToValueAtTime(0.0001, now + 0.72);
+    noiseGain.gain.setValueAtTime(0.28, now);
+    noiseGain.gain.exponentialRampToValueAtTime(0.0001, now + 0.64);
+    filter.type = "lowpass";
+    filter.frequency.setValueAtTime(340, now);
+    rumble.connect(rumbleGain);
+    rumbleGain.connect(filter);
+    noise.connect(noiseGain);
+    noiseGain.connect(filter);
+    filter.connect(ctx.destination);
+    rumble.start(now);
+    rumble.stop(now + 0.8);
+    noise.start(now);
+    noise.stop(now + 0.7);
   } catch (error) {
     // Ignore audio errors silently.
   }
@@ -324,12 +423,11 @@ function updateTimerDisplay() {
   const tenths = Math.floor((ms % 1000) / 100);
   timerValue.textContent = `${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}.${tenths}`;
   const urgency = state.timeRemaining / START_TIME_SECONDS;
+  timerValue.classList.remove("is-warning", "is-critical");
   if (urgency < 0.25) {
-    timerValue.style.color = "#f87171";
+    timerValue.classList.add("is-critical");
   } else if (urgency < 0.5) {
-    timerValue.style.color = "#fbbf24";
-  } else {
-    timerValue.style.color = "#f87171";
+    timerValue.classList.add("is-warning");
   }
 }
 
@@ -378,6 +476,7 @@ function handleWireCut(button) {
 function completeWires() {
   wireStatus.textContent = "Harness stable. Motion sensor is next.";
   playSuccess();
+  celebrateStage("wires");
   revealSensor();
   setStage("sensor");
   logEvent("Wire harness contained. Move to the sensor.");
@@ -401,6 +500,7 @@ function handleSensorSubmit() {
   const valuesValid = sweep === "pulse" && field === "narrow" && power === "standby";
   if (valuesValid && orderValid) {
     playSuccess();
+    celebrateStage("sensor");
     sensorStatus.textContent = "Sensor sleeping. Pressure plate is live.";
     logEvent("Motion sensor parked in maintenance.");
     revealPressure();
@@ -420,6 +520,7 @@ function handlePressureApply() {
   const weight = selected.reduce((total, input) => total + (weightTargets[input.value] ?? 0), 0);
   if (weight === TARGET_WEIGHT && selected.length === 3 && hasRequiredWeights(selected)) {
     playSuccess();
+    celebrateStage("pressure");
     pressureStatus.textContent = "Seat lifted. Bomb disarmed.";
     logEvent("Counterweight locked. Pressure plate balanced.");
     completeBomb();
@@ -447,6 +548,8 @@ function revealPressure() {
 function setStage(stage) {
   state.stage = stage;
   updatePhaseFlag();
+  highlightActivePanel(stage);
+  updateAmbientForStage(stage);
   dismissRiggs();
   scheduleRiggs();
 }
@@ -460,9 +563,12 @@ function applyMistake(message) {
   updateTimerDisplay();
   logEvent(`${message} −${PENALTY_SECONDS}s.`);
   playZap();
+  particleField.emitSparkle(0.85 + state.mistakes * 0.12);
   body.classList.add("is-shaking");
+  body.classList.add("is-sparking");
   window.setTimeout(() => {
     body.classList.remove("is-shaking");
+    body.classList.remove("is-sparking");
   }, 500);
   if (state.timeRemaining <= 0) {
     triggerFailure("Timer collapsed after repeated shocks.");
@@ -478,6 +584,10 @@ function triggerFailure(reason) {
   dismissRiggs();
   clearRiggsTimer();
   playBoom();
+  particleField.emitBurst(1.2);
+  particleField.setAmbientPalette(failurePalette);
+  body.classList.remove("is-sparking");
+  body.classList.add("is-overloaded");
   body.classList.add("is-detonated");
   logEvent(reason);
   showWrapup({
@@ -497,6 +607,12 @@ function completeBomb() {
   logEvent("Bomb disarmed. Seat safe.");
   const remainingMs = Math.round(state.timeRemaining * 1000);
   highScore.submit(remainingMs, { riggs: state.riggsSuccess });
+  particleField.setAmbientPalette(completionPalette);
+  body.classList.remove("is-sparking");
+  body.classList.add("is-cleared");
+  window.setTimeout(() => {
+    body.classList.remove("is-cleared");
+  }, 1400);
   showWrapup({ success: true });
 }
 
@@ -546,6 +662,9 @@ function restartGame() {
   dismissRiggs();
   clearRiggsTimer();
   body.classList.remove("is-detonated");
+  body.classList.remove("is-overloaded");
+  body.classList.remove("is-cleared");
+  body.classList.remove("is-sparking");
   state.timeRemaining = START_TIME_SECONDS;
   state.stage = "wires";
   state.wiresCut = [];
@@ -579,6 +698,8 @@ function restartGame() {
   updateTimerDisplay();
   updatePhaseFlag();
   updateRiggsFlag();
+  highlightActivePanel(state.stage);
+  updateAmbientForStage(state.stage);
   startCountdown();
   scheduleRiggs();
 }
@@ -643,6 +764,8 @@ function spawnRiggsAdvice() {
   state.riggsPrompt = container;
   updateRiggsFlag();
   logEvent("Riggs is shouting a shortcut.");
+  playRiggsStinger();
+  particleField.emitSparkle(0.75);
 }
 
 function dismissRiggs() {
@@ -666,6 +789,9 @@ function followRiggs() {
     state.timeRemaining = Math.min(START_TIME_SECONDS, state.timeRemaining + bonus);
     updateTimerDisplay();
     playSuccess();
+    playRiggsVictory();
+    particleField.emitBurst(1.25);
+    particleField.emitSparkle(1.05);
     logEvent(`Riggs got lucky. Skipped the ${state.stage} phase. +${bonus}s.`);
     skipCurrentStage();
   } else {
@@ -692,6 +818,130 @@ function skipCurrentStage() {
     setStage("pressure");
     sensorStatus.textContent = "Riggs bypassed the sensor. Tread carefully.";
   } else if (state.stage === "pressure") {
+    celebrateStage("pressure");
     completeBomb();
+  }
+}
+
+function highlightActivePanel(stage) {
+  Object.entries(panelMap).forEach(([key, panel]) => {
+    if (!panel) {
+      return;
+    }
+    if (key === stage) {
+      panel.classList.add("is-active");
+    } else {
+      panel.classList.remove("is-active");
+    }
+  });
+}
+
+function updateAmbientForStage(stage) {
+  const palette = stagePalettes[stage];
+  if (palette) {
+    particleField.setAmbientPalette(palette);
+  }
+}
+
+function celebrateStage(stage) {
+  const intensity = celebrationIntensity[stage] ?? 1;
+  particleField.emitBurst(intensity);
+  particleField.emitSparkle(Math.min(1.35, 0.75 + intensity * 0.4));
+  playStageChime(stage);
+}
+
+function createNoiseSource(ctx, duration = 0.3) {
+  const length = Math.max(1, Math.floor(ctx.sampleRate * duration));
+  const buffer = ctx.createBuffer(1, length, ctx.sampleRate);
+  const channel = buffer.getChannelData(0);
+  for (let i = 0; i < length; i += 1) {
+    channel[i] = Math.random() * 2 - 1;
+  }
+  const source = ctx.createBufferSource();
+  source.buffer = buffer;
+  return source;
+}
+
+function playStageChime(stage) {
+  const ctx = getAudioContext();
+  if (!ctx) {
+    return;
+  }
+  try {
+    const now = ctx.currentTime;
+    const base = stage === "pressure" ? 420 : stage === "sensor" ? 360 : 300;
+    const lead = ctx.createOscillator();
+    const harmony = ctx.createOscillator();
+    const gain = ctx.createGain();
+    lead.type = "sine";
+    harmony.type = "triangle";
+    lead.frequency.setValueAtTime(base, now);
+    lead.frequency.linearRampToValueAtTime(base * 1.4, now + 0.4);
+    harmony.frequency.setValueAtTime(base * 1.5, now);
+    harmony.frequency.linearRampToValueAtTime(base * 1.85, now + 0.4);
+    gain.gain.setValueAtTime(0.09, now);
+    gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.6);
+    lead.connect(gain);
+    harmony.connect(gain);
+    gain.connect(ctx.destination);
+    lead.start(now);
+    harmony.start(now + 0.05);
+    lead.stop(now + 0.65);
+    harmony.stop(now + 0.65);
+  } catch (error) {
+    // Ignore audio errors silently.
+  }
+}
+
+function playRiggsStinger() {
+  const ctx = getAudioContext();
+  if (!ctx) {
+    return;
+  }
+  try {
+    const now = ctx.currentTime;
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = "square";
+    osc.frequency.setValueAtTime(880, now);
+    osc.frequency.exponentialRampToValueAtTime(440, now + 0.22);
+    gain.gain.setValueAtTime(0.08, now);
+    gain.gain.linearRampToValueAtTime(0.0001, now + 0.24);
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.start(now);
+    osc.stop(now + 0.3);
+  } catch (error) {
+    // Ignore audio errors silently.
+  }
+}
+
+function playRiggsVictory() {
+  const ctx = getAudioContext();
+  if (!ctx) {
+    return;
+  }
+  try {
+    const now = ctx.currentTime;
+    const oscA = ctx.createOscillator();
+    const oscB = ctx.createOscillator();
+    const gain = ctx.createGain();
+    oscA.type = "triangle";
+    oscB.type = "sawtooth";
+    oscA.frequency.setValueAtTime(520, now);
+    oscA.frequency.linearRampToValueAtTime(760, now + 0.3);
+    oscB.frequency.setValueAtTime(1040, now);
+    oscB.frequency.linearRampToValueAtTime(1280, now + 0.3);
+    gain.gain.setValueAtTime(0.11, now);
+    gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.5);
+    oscA.connect(gain);
+    oscB.connect(gain);
+    gain.connect(ctx.destination);
+    oscA.start(now);
+    oscB.start(now + 0.04);
+    oscA.stop(now + 0.52);
+    oscB.stop(now + 0.52);
+  } catch (error) {
+    // Ignore audio errors silently.
   }
 }
