@@ -174,9 +174,23 @@ const wrapPerfects = document.getElementById("wrap-perfects");
 const wrapNote = document.getElementById("wrap-note");
 const wrapReplay = document.getElementById("wrap-replay");
 const wrapClose = document.getElementById("wrap-close");
+const salonFloor = document.querySelector(".salon-floor");
+const tipCard = tipJarValue.closest(".hud-card");
+const heatCard = heatFill.closest(".hud-card");
 
 const statusChannel = createStatusChannel(statusStrip);
 const logChannel = createLogChannel(eventLog, { limit: 40 });
+
+const fx = createSalonFx({
+  particleField,
+  tipValue: tipJarValue,
+  tipCard,
+  perfectNote,
+  heatFill,
+  heatCard,
+  salonFloor,
+  statusStrip,
+});
 
 const toolButtons = new Map();
 
@@ -532,6 +546,8 @@ function registerMistake(client, message) {
   client.errorUntil = performance.now() + 900;
   client.patience = Math.max(0, client.patience - 25);
   pulseClientCard(client, "is-upset");
+  audio.mistake();
+  fx.mistake();
   statusChannel(message, "warning");
   logChannel.push(`${client.name} winced. Patience dropped!`, "warning");
   if (client.patience === 0) {
@@ -551,6 +567,8 @@ function finishClient(client) {
     state.perfects += 1;
   }
   pulseClientCard(client, "is-happy");
+  fx.tipBoost(totalTip, { perfect: client.mistakes === 0 });
+  audio.celebrate(client.mistakes === 0);
   statusChannel(
     `${client.name} left sparkling! +$${totalTip} in tips.`,
     "success",
@@ -571,6 +589,9 @@ function stormOut(client, reason) {
   const penalty = Math.min(state.tipJar, 12);
   state.tipJar = Math.max(0, state.tipJar - penalty);
   pulseClientCard(client, "is-upset");
+  fx.tipPenalty(penalty);
+  fx.storm();
+  audio.storm();
   statusChannel(`${client.name} stormed out! -$${penalty} penalty.`, "danger");
   logChannel.push(`${client.name} left furious. Lost $${penalty}.`, "danger");
   removeClient(client);
@@ -731,6 +752,7 @@ function updateHud() {
   queueHeat.textContent = state.queueHeatLabel ?? "Calm";
   heatFill.style.width = `${state.queueHeat}%`;
   heatMeter.setAttribute("aria-valuenow", state.queueHeat.toFixed(0));
+  fx.updateHeat(state.queueHeat, state.queueHeatLabel);
 }
 
 function updateQueueHeat() {
@@ -791,11 +813,15 @@ function hideWrapUp() {
 function offerGossip() {
   state.gossipCooldown = randomRange(28, 38);
   gossipZone.hidden = false;
+  gossipZone.classList.remove("is-frozen");
+  gossipZone.classList.add("is-offered");
   gossipMessage.textContent = "Hot gossip from Drum's cousin! Freeze timers for 5 seconds?";
 }
 
 function hideGossip() {
   gossipZone.hidden = true;
+  gossipZone.classList.remove("is-offered");
+  gossipZone.classList.remove("is-frozen");
 }
 
 function triggerGossip() {
@@ -803,7 +829,11 @@ function triggerGossip() {
   state.gossipTimer = GOSSIP_FREEZE;
   state.sabotagePending = Math.random() < GOSSIP_PENALTY_CHANCE;
   gossipZone.hidden = false;
+  gossipZone.classList.remove("is-offered");
+  gossipZone.classList.add("is-frozen");
   gossipMessage.textContent = `Timers frozen! ${state.sabotagePending ? "But that tea might rattle you..." : "Plan your next moves."}`;
+  audio.gossip(state.sabotagePending);
+  fx.gossipFreeze(state.sabotagePending);
   statusChannel("Salon froze in the gossip glow.", "info");
   logChannel.push("Gossip huddle paused every timer.", "info");
 }
@@ -811,6 +841,7 @@ function triggerGossip() {
 function endGossipFreeze() {
   state.gossipFrozen = false;
   gossipZone.hidden = true;
+  fx.gossipEnd();
   if (state.sabotagePending) {
     statusChannel("Distraction lingers—next action might slip!", "warning");
   } else {
@@ -858,12 +889,150 @@ function randomRange(min, max) {
   return min + Math.random() * (max - min);
 }
 
+function createSalonFx(options) {
+  const {
+    particleField: field,
+    tipValue,
+    tipCard,
+    perfectNote: perfectBadge,
+    heatFill: heatBar,
+    heatCard,
+    salonFloor: floor,
+    statusStrip: status,
+  } = options;
+
+  const TIP_VALUE_CLASSES = ["is-tip-boost-value", "is-tip-loss"];
+  let lastHeatValue = 0;
+  let lastHeatLabel = "";
+
+  function addTempClass(element, className, duration = 720) {
+    if (!element) {
+      return;
+    }
+    element.classList.remove(className);
+    void element.offsetWidth;
+    element.classList.add(className);
+    window.setTimeout(() => {
+      element.classList.remove(className);
+    }, duration);
+  }
+
+  function applyTipDelta(text, positive) {
+    if (!tipValue) {
+      return;
+    }
+    TIP_VALUE_CLASSES.forEach((className) => tipValue.classList.remove(className));
+    tipValue.dataset.delta = text;
+    void tipValue.offsetWidth;
+    tipValue.classList.add(positive ? "is-tip-boost-value" : "is-tip-loss");
+    window.setTimeout(() => {
+      if (tipValue.dataset.delta === text) {
+        delete tipValue.dataset.delta;
+        TIP_VALUE_CLASSES.forEach((className) => tipValue.classList.remove(className));
+      }
+    }, 900);
+  }
+
+  return {
+    tipBoost(amount, { perfect = false } = {}) {
+      if (amount > 0) {
+        applyTipDelta(`+$${amount}`, true);
+      }
+      if (tipCard) {
+        addTempClass(tipCard, perfect ? "is-perfect-boost" : "is-tip-boost", perfect ? 940 : 760);
+      }
+      if (perfect && perfectBadge) {
+        addTempClass(perfectBadge, "is-perfect-flash", 960);
+      }
+      if (field) {
+        if (perfect) {
+          field.emitBurst(1.6, {
+            palette: ["#f9a8d4", "#fde68a", "#c4b5fd", "#facc15"],
+            y: 0.62,
+            shardChance: 0.55,
+          });
+        } else {
+          field.emitSparkle(1.2, {
+            palette: ["#bfdbfe", "#f472b6", "#fde68a"],
+            y: 0.58,
+          });
+        }
+      }
+    },
+    tipPenalty(amount) {
+      if (!amount) {
+        return;
+      }
+      applyTipDelta(`-$${amount}`, false);
+      if (tipCard) {
+        addTempClass(tipCard, "is-tip-penalty", 900);
+      }
+      if (field) {
+        field.emitBurst(0.9, {
+          palette: ["#fda4af", "#fb7185", "#f97316"],
+          y: 0.72,
+          shardChance: 0.6,
+        });
+      }
+    },
+    storm() {
+      if (floor) {
+        addTempClass(floor, "is-shaking", 680);
+      }
+      if (heatCard) {
+        addTempClass(heatCard, "is-heat-alert", 960);
+      }
+    },
+    mistake() {
+      if (heatBar) {
+        addTempClass(heatBar, "is-heat-flash", 900);
+      }
+      if (field) {
+        field.emitSparkle(0.7, {
+          palette: ["#fecdd3", "#fcd34d"],
+          y: 0.45,
+        });
+      }
+    },
+    gossipFreeze(hasPenalty) {
+      if (status) {
+        addTempClass(status, hasPenalty ? "is-gossip-risk" : "is-gossip-freeze", 1400);
+      }
+      if (field) {
+        field.emitSparkle(1, {
+          palette: hasPenalty ? ["#fbbf24", "#f97316"] : ["#c4b5fd", "#fbcfe8"],
+          y: 0.35,
+        });
+      }
+    },
+    gossipEnd() {
+      if (status) {
+        addTempClass(status, "is-gossip-clear", 900);
+      }
+    },
+    updateHeat(value, label) {
+      if (typeof value === "number" && heatBar && value > lastHeatValue + 12) {
+        addTempClass(heatBar, "is-heat-surge", 1020);
+      }
+      if (label && label !== lastHeatLabel && heatCard) {
+        addTempClass(heatCard, "is-heat-label-shift", 940);
+      }
+      lastHeatValue = value;
+      lastHeatLabel = label ?? "";
+    },
+  };
+}
+
 function createSalonAudio() {
   const AudioContext = window.AudioContext || window.webkitAudioContext;
   if (!AudioContext) {
     return {
       unlock() {},
       play() {},
+      celebrate() {},
+      storm() {},
+      mistake() {},
+      gossip() {},
     };
   }
   const context = new AudioContext();
@@ -959,6 +1128,79 @@ function createSalonAudio() {
     osc.stop(now + 0.65);
   }
 
+  function playService(perfect) {
+    const now = context.currentTime;
+    const baseChord = perfect ? [784, 988, 1176] : [660, 880];
+    baseChord.forEach((freq, index) => {
+      const osc = context.createOscillator();
+      osc.type = perfect ? "sine" : "triangle";
+      const start = now + index * 0.03;
+      const stop = start + (perfect ? 0.6 : 0.45);
+      const gain = context.createGain();
+      gain.gain.setValueAtTime(0.0001, start);
+      gain.gain.exponentialRampToValueAtTime(perfect ? 0.52 : 0.35, start + 0.05);
+      gain.gain.exponentialRampToValueAtTime(0.001, stop);
+      osc.frequency.setValueAtTime(freq, start);
+      if (perfect) {
+        osc.frequency.linearRampToValueAtTime(freq * 1.06, stop);
+      }
+      osc.connect(gain).connect(master);
+      osc.start(start);
+      osc.stop(stop + 0.02);
+    });
+    if (perfect) {
+      playNoise(0.3, "white");
+    }
+  }
+
+  function playStorm() {
+    const now = context.currentTime;
+    const osc = context.createOscillator();
+    osc.type = "sawtooth";
+    const gain = context.createGain();
+    gain.gain.setValueAtTime(0.0001, now);
+    gain.gain.linearRampToValueAtTime(0.4, now + 0.08);
+    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.6);
+    osc.frequency.setValueAtTime(110, now);
+    osc.frequency.exponentialRampToValueAtTime(48, now + 0.6);
+    osc.connect(gain).connect(master);
+    osc.start(now);
+    osc.stop(now + 0.64);
+    playNoise(0.45, "pink");
+  }
+
+  function playMistake() {
+    const now = context.currentTime;
+    const osc = context.createOscillator();
+    osc.type = "square";
+    const gain = context.createGain();
+    gain.gain.setValueAtTime(0.0001, now);
+    gain.gain.linearRampToValueAtTime(0.32, now + 0.03);
+    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.32);
+    osc.frequency.setValueAtTime(260, now);
+    osc.frequency.linearRampToValueAtTime(180, now + 0.28);
+    osc.connect(gain).connect(master);
+    osc.start(now);
+    osc.stop(now + 0.34);
+  }
+
+  function playGossip(hasPenalty) {
+    const now = context.currentTime;
+    const osc = context.createOscillator();
+    osc.type = "sine";
+    const gain = context.createGain();
+    gain.gain.setValueAtTime(0.0001, now);
+    gain.gain.linearRampToValueAtTime(0.28, now + 0.04);
+    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.5);
+    const startFreq = hasPenalty ? 620 : 760;
+    const endFreq = hasPenalty ? startFreq * 0.74 : startFreq * 1.25;
+    osc.frequency.setValueAtTime(startFreq, now);
+    osc.frequency.exponentialRampToValueAtTime(endFreq, now + 0.5);
+    osc.connect(gain).connect(master);
+    osc.start(now);
+    osc.stop(now + 0.52);
+  }
+
   return {
     unlock() {
       ensure();
@@ -987,6 +1229,22 @@ function createSalonAudio() {
         default:
           playSpray();
       }
+    },
+    celebrate(perfect) {
+      ensure();
+      playService(Boolean(perfect));
+    },
+    storm() {
+      ensure();
+      playStorm();
+    },
+    mistake() {
+      ensure();
+      playMistake();
+    },
+    gossip(hasPenalty) {
+      ensure();
+      playGossip(Boolean(hasPenalty));
     },
   };
 }
