@@ -34,6 +34,7 @@ const LOSS_OF_CONTACT_LIMIT = 4.2;
 const COLLISION_DAMAGE = 18;
 const DISABLER_COST = 18;
 const DISABLER_RANGE = 150;
+const HALO_PULSE_INTERVAL = 1.1;
 
 const chaseField = document.getElementById("chase-field");
 const witnessElement = document.getElementById("witness");
@@ -41,6 +42,7 @@ const witnessGlow = witnessElement.querySelector(".witness-glow");
 const proximityRing = document.getElementById("proximity-ring");
 const playerElement = document.getElementById("player");
 const hazardsLayer = document.getElementById("hazards");
+const disablerEffects = document.getElementById("disabler-effects");
 
 const distanceValue = document.getElementById("distance-value");
 const healthFill = document.getElementById("health-fill");
@@ -108,7 +110,11 @@ const FINAL_SEGMENT = {
 const keys = new Set();
 
 let animationId = null;
-let warningContext = null;
+let audioContext = null;
+let boostActive = false;
+let haloPulseTimeout = null;
+let nextHaloPulseAt = HALO_PULSE_INTERVAL;
+let impactTimeoutId = null;
 
 const state = {
   running: false,
@@ -183,6 +189,13 @@ function resetState() {
   state.activePhase = ROUTE[0];
   state.finale = false;
   state.reason = "";
+  disablerEffects?.replaceChildren?.();
+  setSpeedFx(false);
+  clearHaloPulse();
+  nextHaloPulseAt = HALO_PULSE_INTERVAL;
+  window.clearTimeout(impactTimeoutId);
+  impactTimeoutId = null;
+  chaseField.classList.remove("is-impact");
   updateHud();
   updatePositions();
   updateProximityVisual(0);
@@ -290,7 +303,8 @@ function advanceSegment() {
 }
 
 function updatePlayer(delta) {
-  const acceleration = BASE_PLAYER_SPEED * (state.boostHeld && state.boost > 20 ? BOOST_MULTIPLIER : 1);
+  const boosting = state.boostHeld && state.boost > 20;
+  const acceleration = BASE_PLAYER_SPEED * (boosting ? BOOST_MULTIPLIER : 1);
   let inputX = 0;
   let inputY = 0;
   if (keys.has("arrowleft") || keys.has("a")) {
@@ -318,10 +332,10 @@ function updatePlayer(delta) {
 
   if (state.boostHeld && state.boost > 0) {
     state.boost = Math.max(0, state.boost - BOOST_DRAIN_PER_SECOND * delta);
-    playerElement.dataset.boost = "true";
-  } else {
-    playerElement.dataset.boost = "false";
   }
+
+  playerElement.dataset.boost = boosting ? "true" : "false";
+  setSpeedFx(boosting);
 
   clampPlayerPosition();
   updatePositions();
@@ -344,6 +358,10 @@ function updateProximity(delta) {
   if (distance <= PROXIMITY_RADIUS) {
     state.currentStreak += delta;
     state.longestStreak = Math.max(state.longestStreak, state.currentStreak);
+    if (state.currentStreak <= delta * 1.2 || state.currentStreak >= nextHaloPulseAt) {
+      pulseHalo();
+      nextHaloPulseAt = state.currentStreak + HALO_PULSE_INTERVAL;
+    }
     state.outOfRangeTime = Math.max(0, state.outOfRangeTime - delta * 0.8);
     state.boost = Math.min(100, state.boost + BOOST_GAIN_PER_SECOND * delta);
     witnessElement.classList.remove("out-of-range");
@@ -353,6 +371,8 @@ function updateProximity(delta) {
       log.push(`Proximity streak ended at ${(state.currentStreak).toFixed(1)}s.`, "warning");
     }
     state.currentStreak = 0;
+    nextHaloPulseAt = HALO_PULSE_INTERVAL;
+    clearHaloPulse();
     state.outOfRangeTime += delta;
     const damage = OUT_OF_RANGE_DAMAGE * delta;
     state.health = Math.max(0, state.health - damage);
@@ -386,6 +406,41 @@ function updateProximityVisual(ratio) {
     proximityState.textContent = "Critical";
     proximityRing.dataset.state = "warning";
   }
+}
+
+function setSpeedFx(active) {
+  if (active) {
+    if (!boostActive) {
+      playBoostCue();
+    }
+    boostActive = true;
+    chaseField.classList.add("is-speeding");
+    return;
+  }
+  if (boostActive) {
+    playBoostRelease();
+  }
+  boostActive = false;
+  chaseField.classList.remove("is-speeding");
+}
+
+function pulseHalo() {
+  if (!proximityRing) {
+    return;
+  }
+  proximityRing.classList.remove("is-pulsing");
+  void proximityRing.offsetWidth;
+  proximityRing.classList.add("is-pulsing");
+  window.clearTimeout(haloPulseTimeout);
+  haloPulseTimeout = window.setTimeout(() => {
+    proximityRing.classList.remove("is-pulsing");
+  }, 820);
+}
+
+function clearHaloPulse() {
+  window.clearTimeout(haloPulseTimeout);
+  haloPulseTimeout = null;
+  proximityRing.classList.remove("is-pulsing");
 }
 
 function updatePositions() {
@@ -537,7 +592,14 @@ function triggerImpactFx(x, y) {
   chaseField.classList.remove("is-shaking");
   void chaseField.offsetWidth;
   chaseField.classList.add("is-shaking");
+  chaseField.classList.add("is-impact");
+  window.clearTimeout(impactTimeoutId);
+  impactTimeoutId = window.setTimeout(() => {
+    chaseField.classList.remove("is-impact");
+  }, 360);
   spawnSpark(x, y);
+  particleSystem?.emitBurst?.(0.9);
+  playCrashCue();
 }
 
 function spawnSpark(x, y) {
@@ -551,6 +613,22 @@ function spawnSpark(x, y) {
   window.setTimeout(() => {
     spark.remove();
   }, 480);
+}
+
+function spawnDisablerWave() {
+  if (!disablerEffects) {
+    return;
+  }
+  const wave = document.createElement("span");
+  wave.className = "disabler-wave";
+  disablerEffects.append(wave);
+  positionElement(wave, state.player.x, state.player.y);
+  requestAnimationFrame(() => {
+    wave.classList.add("is-active");
+  });
+  window.setTimeout(() => {
+    wave.remove();
+  }, 620);
 }
 
 function triggerDisabler() {
@@ -583,19 +661,25 @@ function triggerDisabler() {
     }
   });
 
+  spawnDisablerWave();
+
   if (hits.length === 0) {
+    playDisablerCue(0);
     setStatus("Pulse fired—no threats in cone.", "warning");
     log.push("Disabler fizzled. Save it for a flank.", "warning");
     return;
   }
 
   state.disabledCount += hits.length;
+  playDisablerCue(hits.length);
   log.push(`Disabler pulse neutralized ${hits.length} threat${hits.length === 1 ? "" : "s"}.`, "success");
   const inHalo = witnessElement.classList.contains("out-of-range") === false;
   if (inHalo) {
     setStatus("Protector bonus! Witness lane is clear.", "success");
     state.boost = Math.min(100, state.boost + 24);
-    particleSystem?.emitBurst?.(1.25);
+    const intensity = 1.1 + hits.length * 0.15;
+    particleSystem?.emitBurst?.(intensity);
+    particleSystem?.emitSparkle?.(0.95 + hits.length * 0.2);
   } else {
     setStatus("Pulse connected. Reel back into the halo.", "warning");
   }
@@ -619,12 +703,18 @@ function endChase(reason, tone = "danger") {
   state.running = false;
   state.reason = reason;
   stopAnimation();
+  setSpeedFx(false);
+  clearHaloPulse();
+  window.clearTimeout(impactTimeoutId);
+  impactTimeoutId = null;
+  chaseField.classList.remove("is-impact");
   setStatus(reason, tone);
   log.push(reason, tone);
   showWrapUp();
 }
 
 function showWrapUp() {
+  disablerEffects?.replaceChildren?.();
   wrapUpDistance.textContent = `${Math.round(state.distance)} m`;
   wrapUpDisabled.textContent = String(state.disabledCount);
   wrapUpStreak.textContent = `${state.longestStreak.toFixed(1)} s`;
@@ -667,29 +757,218 @@ function randomBetween(min, max) {
   return Math.random() * (max - min) + min;
 }
 
-function playWarningTone() {
-  try {
-    if (!warningContext) {
-      const AudioContext = window.AudioContext || window.webkitAudioContext;
-      warningContext = AudioContext ? new AudioContext() : null;
-    }
-    if (!warningContext) {
-      return;
-    }
-    const now = warningContext.currentTime;
-    const oscillator = warningContext.createOscillator();
-    const gain = warningContext.createGain();
-    oscillator.type = "triangle";
-    oscillator.frequency.setValueAtTime(880, now);
-    gain.gain.setValueAtTime(0, now);
-    gain.gain.linearRampToValueAtTime(0.16, now + 0.05);
-    gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.4);
-    oscillator.connect(gain).connect(warningContext.destination);
-    oscillator.start(now);
-    oscillator.stop(now + 0.45);
-  } catch (error) {
-    console.warn("Unable to play warning tone", error);
+function getAudioContext() {
+  if (!audioContext) {
+    const AudioContextCtor = window.AudioContext || window.webkitAudioContext;
+    audioContext = AudioContextCtor ? new AudioContextCtor() : null;
   }
+  if (audioContext && audioContext.state === "suspended") {
+    audioContext.resume().catch(() => {});
+  }
+  return audioContext;
+}
+
+function playTone({
+  frequency,
+  duration = 0.35,
+  type = "sine",
+  gain = 0.12,
+  attack = 0.04,
+  release = 0.2,
+  detune = 0,
+  pan = 0,
+} = {}) {
+  const context = getAudioContext();
+  if (!context || !Number.isFinite(frequency)) {
+    return false;
+  }
+  const now = context.currentTime;
+  const oscillator = context.createOscillator();
+  oscillator.type = type;
+  oscillator.frequency.setValueAtTime(Math.max(1, frequency), now);
+  if (detune) {
+    oscillator.detune.setValueAtTime(detune, now);
+  }
+  const gainNode = context.createGain();
+  const safeAttack = Math.max(0.01, attack);
+  const safeRelease = Math.max(0.05, release);
+  const safeDuration = Math.max(duration, safeAttack + safeRelease + 0.05);
+  const sustainTime = Math.max(safeAttack, safeDuration - safeRelease);
+  const targetGain = Math.max(0, gain);
+  gainNode.gain.setValueAtTime(0, now);
+  gainNode.gain.linearRampToValueAtTime(targetGain, now + safeAttack);
+  gainNode.gain.setValueAtTime(targetGain, now + sustainTime);
+  gainNode.gain.linearRampToValueAtTime(0.0001, now + safeDuration);
+  if (typeof context.createStereoPanner === "function") {
+    const panner = context.createStereoPanner();
+    panner.pan.setValueAtTime(pan, now);
+    gainNode.connect(panner);
+    panner.connect(context.destination);
+  } else {
+    gainNode.connect(context.destination);
+  }
+  oscillator.connect(gainNode);
+  oscillator.start(now);
+  oscillator.stop(now + safeDuration + 0.05);
+  return true;
+}
+
+function playSweep({
+  startFreq,
+  endFreq,
+  duration = 0.4,
+  type = "sine",
+  gain = 0.14,
+  pan = 0,
+} = {}) {
+  const context = getAudioContext();
+  if (!context || !Number.isFinite(startFreq) || !Number.isFinite(endFreq)) {
+    return false;
+  }
+  const now = context.currentTime;
+  const oscillator = context.createOscillator();
+  oscillator.type = type;
+  oscillator.frequency.setValueAtTime(Math.max(1, startFreq), now);
+  oscillator.frequency.exponentialRampToValueAtTime(Math.max(1, endFreq), now + duration);
+  const gainNode = context.createGain();
+  const safeDuration = Math.max(duration, 0.45);
+  gainNode.gain.setValueAtTime(0, now);
+  gainNode.gain.linearRampToValueAtTime(Math.max(0, gain), now + 0.05);
+  gainNode.gain.linearRampToValueAtTime(0.0001, now + safeDuration);
+  if (typeof context.createStereoPanner === "function") {
+    const panner = context.createStereoPanner();
+    panner.pan.setValueAtTime(pan, now);
+    gainNode.connect(panner);
+    panner.connect(context.destination);
+  } else {
+    gainNode.connect(context.destination);
+  }
+  oscillator.connect(gainNode);
+  oscillator.start(now);
+  oscillator.stop(now + safeDuration + 0.05);
+  return true;
+}
+
+function playNoiseBurst({ duration = 0.32, gain = 0.2, frequency = 800 } = {}) {
+  const context = getAudioContext();
+  if (!context) {
+    return false;
+  }
+  const now = context.currentTime;
+  const sampleCount = Math.max(1, Math.floor(duration * context.sampleRate));
+  const buffer = context.createBuffer(1, sampleCount, context.sampleRate);
+  const data = buffer.getChannelData(0);
+  for (let i = 0; i < sampleCount; i += 1) {
+    const fade = 1 - i / sampleCount;
+    data[i] = (Math.random() * 2 - 1) * fade;
+  }
+  const source = context.createBufferSource();
+  source.buffer = buffer;
+  const filter = context.createBiquadFilter();
+  filter.type = "bandpass";
+  filter.frequency.setValueAtTime(Math.max(200, frequency), now);
+  filter.Q.setValueAtTime(0.9, now);
+  const gainNode = context.createGain();
+  gainNode.gain.setValueAtTime(Math.max(0.0001, gain), now);
+  gainNode.gain.linearRampToValueAtTime(0.0001, now + duration);
+  source.connect(filter).connect(gainNode).connect(context.destination);
+  source.start(now);
+  source.stop(now + duration + 0.05);
+  return true;
+}
+
+function playWarningTone() {
+  if (!playTone({
+    frequency: 880,
+    type: "triangle",
+    gain: 0.16,
+    attack: 0.05,
+    release: 0.35,
+  })) {
+    return;
+  }
+  playTone({
+    frequency: 660,
+    type: "sine",
+    gain: 0.1,
+    attack: 0.05,
+    release: 0.3,
+    detune: -30,
+  });
+}
+
+function playBoostCue() {
+  playSweep({
+    startFreq: 220,
+    endFreq: 520,
+    duration: 0.45,
+    type: "sawtooth",
+    gain: 0.12,
+    pan: -0.1,
+  });
+  playTone({
+    frequency: 760,
+    type: "triangle",
+    gain: 0.08,
+    attack: 0.02,
+    release: 0.25,
+    pan: 0.15,
+  });
+}
+
+function playBoostRelease() {
+  playSweep({
+    startFreq: 360,
+    endFreq: 180,
+    duration: 0.35,
+    type: "sawtooth",
+    gain: 0.1,
+    pan: 0.05,
+  });
+}
+
+function playDisablerCue(hitCount) {
+  if (hitCount <= 0) {
+    playTone({
+      frequency: 520,
+      duration: 0.22,
+      type: "sine",
+      gain: 0.08,
+      attack: 0.02,
+      release: 0.18,
+    });
+    return;
+  }
+  const intensity = Math.min(1, hitCount / 3);
+  playSweep({
+    startFreq: 780,
+    endFreq: 210,
+    duration: 0.45,
+    type: "square",
+    gain: 0.14 + intensity * 0.12,
+    pan: 0.05,
+  });
+  playTone({
+    frequency: 140 + hitCount * 40,
+    duration: 0.3,
+    type: "triangle",
+    gain: 0.08 + intensity * 0.08,
+    attack: 0.03,
+    release: 0.22,
+    pan: -0.05,
+  });
+}
+
+function playCrashCue() {
+  playNoiseBurst({ gain: 0.24, duration: 0.32, frequency: 840 });
+  playTone({
+    frequency: 160,
+    duration: 0.3,
+    type: "sawtooth",
+    gain: 0.1,
+    attack: 0.02,
+    release: 0.24,
+  });
 }
 
 startButton.addEventListener("click", () => {
