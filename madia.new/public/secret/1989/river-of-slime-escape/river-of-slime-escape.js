@@ -133,6 +133,7 @@ const state = {
   lastFrame: performance.now(),
   frameHandle: null,
   difficultyLevel: 0,
+  tierThreeCelebrated: false,
 };
 
 resizeCanvas();
@@ -208,6 +209,84 @@ function playHeroic() {
     oscillator.start(now);
     oscillator.stop(now + 0.75);
   });
+}
+
+function playTierThreeSurge() {
+  const audioCtx = ensureAudio();
+  if (!audioCtx) {
+    return;
+  }
+  const now = audioCtx.currentTime;
+  const masterGain = audioCtx.createGain();
+  masterGain.gain.setValueAtTime(0.0001, now);
+  masterGain.gain.exponentialRampToValueAtTime(0.6, now + 0.12);
+  masterGain.gain.exponentialRampToValueAtTime(0.0001, now + 1.4);
+  masterGain.connect(audioCtx.destination);
+
+  const bass = audioCtx.createOscillator();
+  bass.type = "sawtooth";
+  bass.frequency.setValueAtTime(110, now);
+  bass.frequency.linearRampToValueAtTime(220, now + 0.5);
+  bass.frequency.exponentialRampToValueAtTime(70, now + 1.3);
+  bass.connect(masterGain);
+  bass.start(now);
+  bass.stop(now + 1.3);
+
+  const shimmer = audioCtx.createOscillator();
+  shimmer.type = "triangle";
+  shimmer.frequency.setValueAtTime(420, now);
+  shimmer.frequency.linearRampToValueAtTime(680, now + 0.55);
+  shimmer.frequency.exponentialRampToValueAtTime(320, now + 1.3);
+  const shimmerGain = audioCtx.createGain();
+  shimmerGain.gain.setValueAtTime(0.0001, now);
+  shimmerGain.gain.linearRampToValueAtTime(0.26, now + 0.18);
+  shimmerGain.gain.exponentialRampToValueAtTime(0.0001, now + 1.2);
+  shimmer.connect(shimmerGain);
+  shimmerGain.connect(masterGain);
+  shimmer.start(now);
+  shimmer.stop(now + 1.3);
+
+  const noiseBuffer = audioCtx.createBuffer(1, Math.floor(audioCtx.sampleRate * 0.9), audioCtx.sampleRate);
+  const noiseData = noiseBuffer.getChannelData(0);
+  for (let i = 0; i < noiseData.length; i += 1) {
+    const progress = i / noiseData.length;
+    const envelope = (1 - progress) ** 1.8;
+    noiseData[i] = (Math.random() * 2 - 1) * envelope * 0.45;
+  }
+  const noiseSource = audioCtx.createBufferSource();
+  noiseSource.buffer = noiseBuffer;
+  const noiseFilter = audioCtx.createBiquadFilter();
+  noiseFilter.type = "bandpass";
+  noiseFilter.frequency.value = 520;
+  noiseFilter.Q.value = 0.85;
+  const noiseGain = audioCtx.createGain();
+  noiseGain.gain.setValueAtTime(0.0001, now);
+  noiseGain.gain.exponentialRampToValueAtTime(0.42, now + 0.1);
+  noiseGain.gain.exponentialRampToValueAtTime(0.0001, now + 0.95);
+  noiseSource.connect(noiseFilter);
+  noiseFilter.connect(noiseGain);
+  noiseGain.connect(masterGain);
+  noiseSource.start(now);
+  noiseSource.stop(now + 0.95);
+
+  let cleaned = false;
+  const cleanup = () => {
+    if (cleaned) {
+      return;
+    }
+    cleaned = true;
+    bass.disconnect();
+    shimmer.disconnect();
+    shimmerGain.disconnect();
+    noiseFilter.disconnect();
+    noiseGain.disconnect();
+    noiseSource.disconnect();
+    masterGain.disconnect();
+  };
+
+  bass.onended = cleanup;
+  shimmer.onended = cleanup;
+  noiseSource.onended = cleanup;
 }
 
 startButton.addEventListener("click", () => {
@@ -321,6 +400,8 @@ function resetGame() {
   state.hazardContact = new Map();
   state.pressed.clear();
   state.difficultyLevel = 0;
+  state.tierThreeCelebrated = false;
+  document.body.classList.remove("river-tier-three", "river-tier-three-flare");
   generateRowsUntil(140);
   updateHud();
   render(0);
@@ -473,6 +554,14 @@ function updateDifficulty() {
     state.difficultyLevel = level;
     logEvent(`Slime flow intensifies—difficulty tier ${level + 1}.`, "warning");
     setStatus("Slime tempo increased. Watch the hazard density.", "warning");
+    handleDifficultyTierChange(level);
+  }
+}
+
+function handleDifficultyTierChange(level) {
+  if (level >= 2 && !state.tierThreeCelebrated) {
+    state.tierThreeCelebrated = true;
+    celebrateTierThreeSurge();
   }
 }
 
@@ -565,6 +654,27 @@ function triggerPowerup(powerup) {
     particleField.emitBurst({ x: 0.5, y: 0.3, color: "#80ffea", lift: 360 });
     playHeroic();
   }
+}
+
+function celebrateTierThreeSurge() {
+  logEvent("Level 3 psycho-reactive surge ignites neon arcs overhead.", "warning");
+  setStatus("Level 3 surge! Slime lightning crackles—stay aggressive!", "warning");
+  const body = document.body;
+  if (body) {
+    body.classList.add("river-tier-three");
+    body.classList.add("river-tier-three-flare");
+    window.setTimeout(() => {
+      body.classList.remove("river-tier-three-flare");
+    }, 900);
+  }
+  for (let index = 0; index < 3; index += 1) {
+    window.setTimeout(() => {
+      const strength = 1.45 + index * 0.25;
+      particleField.emitBurst(strength);
+      particleField.emitSparkle(1.3 + index * 0.2);
+    }, index * 160);
+  }
+  playTierThreeSurge();
 }
 
 function applyMoraleDamage(amount, source, { silent = false } = {}) {
