@@ -118,6 +118,8 @@ const eventFeed = document.getElementById("event-feed");
 const simulatorHelp = document.getElementById("simulator-help");
 const startRunButton = document.getElementById("start-run");
 const resetRunButton = document.getElementById("reset-run");
+const heroismTile = document.querySelector(".status-tile--heroism");
+const timeTile = document.querySelector(".status-tile--time");
 
 const wrapupElement = document.getElementById("wrapup");
 const wrapupDialog = wrapupElement.querySelector(".wrapup-dialog");
@@ -153,7 +155,12 @@ const state = {
   qteHandler: null,
   qteTimer: null,
   modalCleanup: null,
+  timeWarningLevel: "safe",
 };
+
+if (heroismFill) {
+  heroismFill.dataset.previousValue = String(state.heroism);
+}
 
 let audioContext = null;
 
@@ -235,15 +242,143 @@ function playSiren() {
   sweep.stop(now + 0.82);
 }
 
+function playChargeSweep(delta = 1) {
+  const ctx = ensureAudio();
+  if (!ctx) {
+    return;
+  }
+  const now = ctx.currentTime;
+  const osc = ctx.createOscillator();
+  const gain = ctx.createGain();
+  const intensity = Math.min(Math.max(delta, 4), 28);
+  const startFreq = 220;
+  const endFreq = startFreq + intensity * 14;
+  osc.type = "sine";
+  osc.frequency.setValueAtTime(startFreq, now);
+  osc.frequency.exponentialRampToValueAtTime(endFreq, now + 0.4);
+  gain.gain.setValueAtTime(0.0001, now);
+  gain.gain.exponentialRampToValueAtTime(0.45, now + 0.05);
+  gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.45);
+  osc.connect(gain).connect(ctx.destination);
+  osc.start(now);
+  osc.stop(now + 0.48);
+}
+
+function playTimeWarning(level) {
+  const ctx = ensureAudio();
+  if (!ctx) {
+    return;
+  }
+  const now = ctx.currentTime;
+  const osc = ctx.createOscillator();
+  const gain = ctx.createGain();
+  osc.type = "triangle";
+  const base = level === "critical" ? 180 : 320;
+  osc.frequency.setValueAtTime(base, now);
+  if (level === "critical") {
+    const vibrato = ctx.createOscillator();
+    const vibratoGain = ctx.createGain();
+    vibrato.frequency.setValueAtTime(7, now);
+    vibratoGain.gain.setValueAtTime(30, now);
+    vibrato.connect(vibratoGain).connect(osc.frequency);
+    vibrato.start(now);
+    vibrato.stop(now + 0.3);
+  }
+  gain.gain.setValueAtTime(0.0001, now);
+  gain.gain.exponentialRampToValueAtTime(level === "critical" ? 0.5 : 0.35, now + 0.04);
+  gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.32);
+  osc.connect(gain).connect(ctx.destination);
+  osc.start(now);
+  osc.stop(now + 0.34);
+}
+
+function playCrashImpact() {
+  const ctx = ensureAudio();
+  if (!ctx) {
+    return;
+  }
+  const now = ctx.currentTime;
+  const buffer = ctx.createBuffer(1, ctx.sampleRate * 0.32, ctx.sampleRate);
+  const data = buffer.getChannelData(0);
+  for (let index = 0; index < data.length; index += 1) {
+    const fade = 1 - index / data.length;
+    data[index] = (Math.random() * 2 - 1) * fade;
+  }
+  const noise = ctx.createBufferSource();
+  noise.buffer = buffer;
+  const filter = ctx.createBiquadFilter();
+  filter.type = "bandpass";
+  filter.frequency.setValueAtTime(520, now);
+  filter.Q.value = 3;
+  const gain = ctx.createGain();
+  gain.gain.setValueAtTime(0.0001, now);
+  gain.gain.exponentialRampToValueAtTime(0.7, now + 0.02);
+  gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.36);
+  noise.connect(filter).connect(gain).connect(ctx.destination);
+  noise.start(now);
+  noise.stop(now + 0.34);
+}
+
+const elementPulseTimers = new WeakMap();
+
+function pulseClass(element, className, duration = 620) {
+  if (!element) {
+    return;
+  }
+  const timers = elementPulseTimers.get(element) ?? new Map();
+  const existing = timers.get(className);
+  if (typeof existing === "number") {
+    window.clearTimeout(existing);
+  }
+  element.classList.remove(className);
+  // eslint-disable-next-line no-unused-expressions
+  element.offsetWidth;
+  element.classList.add(className);
+  const timeoutId = window.setTimeout(() => {
+    element.classList.remove(className);
+    const current = elementPulseTimers.get(element);
+    if (current) {
+      current.delete(className);
+      if (current.size === 0) {
+        elementPulseTimers.delete(element);
+      }
+    }
+  }, duration);
+  timers.set(className, timeoutId);
+  elementPulseTimers.set(element, timers);
+}
+
 function updateHeroismUI(triggerFlash = false) {
+  const previous = Number(heroismFill?.dataset.previousValue ?? state.heroism);
   const clamped = Math.max(0, Math.min(HEROISM_MAX, Math.round(state.heroism)));
   state.heroism = clamped;
-  heroismFill.style.width = `${(clamped / HEROISM_MAX) * 100}%`;
-  heroismMeter.setAttribute("aria-valuenow", String(clamped));
+  if (heroismFill) {
+    heroismFill.style.width = `${(clamped / HEROISM_MAX) * 100}%`;
+    heroismFill.dataset.previousValue = String(clamped);
+  }
+  if (heroismMeter) {
+    heroismMeter.setAttribute("aria-valuenow", String(clamped));
+    heroismMeter.classList.toggle("heroism-meter--critical", clamped <= 18);
+  }
   heroismValue.textContent = `${clamped} / ${HEROISM_MAX}`;
   if (clamped > state.heroismPeak) {
     state.heroismPeak = clamped;
   }
+
+  const delta = clamped - previous;
+  if (heroismTile) {
+    heroismTile.classList.toggle("status-tile--charged", clamped >= 70);
+    if (delta > 0) {
+      pulseClass(heroismTile, "status-tile--surge");
+      if (delta >= 6) {
+        playChargeSweep(delta);
+      }
+    }
+    if (triggerFlash) {
+      pulseClass(heroismTile, "status-tile--drain");
+    }
+  }
+
   if (clamped === 0) {
     document.body.classList.add("heroism-drain");
   } else {
@@ -266,6 +401,26 @@ function updateTimeUI() {
   const clamped = Math.max(0, Math.round(state.timeBuffer));
   state.timeBuffer = clamped;
   timeBufferValue.textContent = `${clamped} beats`;
+  const previousLevel = state.timeWarningLevel ?? "safe";
+  let level = "safe";
+  if (clamped <= 12) {
+    level = "critical";
+  } else if (clamped <= 28) {
+    level = "warning";
+  }
+  if (timeTile) {
+    timeTile.classList.toggle("is-warning", level === "warning");
+    timeTile.classList.toggle("is-critical", level === "critical");
+  }
+  if (level !== previousLevel) {
+    state.timeWarningLevel = level;
+    if (level === "critical") {
+      particleField.emitSparkle(0.65);
+    }
+    if (level !== "safe") {
+      playTimeWarning(level);
+    }
+  }
 }
 
 function setGuardStatus(message) {
@@ -361,7 +516,21 @@ function resetBoard() {
   state.distractionWins = 0;
   state.directWins = 0;
   state.detectionCount = 0;
+  state.timeWarningLevel = "safe";
   resetHighlights();
+  if (heroismFill) {
+    heroismFill.dataset.previousValue = String(state.heroism);
+  }
+  if (heroismTile) {
+    heroismTile.classList.remove("status-tile--surge", "status-tile--charged", "status-tile--drain");
+  }
+  if (heroismMeter) {
+    heroismMeter.classList.remove("heroism-meter--critical");
+  }
+  if (timeTile) {
+    timeTile.classList.remove("is-warning", "is-critical");
+  }
+  document.body.classList.remove("heroism-crash");
   updateHeroismUI();
   updateScoreUI();
   updateTimeUI();
@@ -392,7 +561,21 @@ function startRun() {
   state.distractionWins = 0;
   state.directWins = 0;
   state.detectionCount = 0;
+  state.timeWarningLevel = "safe";
   resetHighlights();
+  if (heroismFill) {
+    heroismFill.dataset.previousValue = "0";
+  }
+  if (heroismTile) {
+    heroismTile.classList.remove("status-tile--surge", "status-tile--charged", "status-tile--drain");
+  }
+  if (heroismMeter) {
+    heroismMeter.classList.remove("heroism-meter--critical");
+  }
+  if (timeTile) {
+    timeTile.classList.remove("is-warning", "is-critical");
+  }
+  document.body.classList.remove("heroism-crash");
   updateHeroismUI();
   updateScoreUI();
   updateTimeUI();
@@ -444,6 +627,7 @@ function endRun(success, message) {
     setGuardStatus("Gate breach complete. Nobody believes the fake moustache, but you're gone.");
     simulatorHelp.textContent = "Replay the run or chase a higher Escape Prowess score.";
     particleField.emitBurst(1.2);
+    particleField.emitSparkle(1.4);
   } else {
     simulatorHelp.textContent = "Heroism meter empty. Set a safer distraction before trying another haymaker.";
   }
@@ -466,6 +650,12 @@ function spendTime(amount, description) {
 
 function handleDetection(reason) {
   playSiren();
+  playCrashImpact();
+  particleField.emitBurst(0.6);
+  document.body.classList.add("heroism-crash");
+  window.setTimeout(() => {
+    document.body.classList.remove("heroism-crash");
+  }, 560);
   state.detectionCount += 1;
   const previousHeroism = state.heroism;
   state.heroism = 0;
@@ -584,6 +774,7 @@ function resolveDirectSuccess(area, index) {
     document.body.classList.remove("slowmo-hit");
   }, 600);
   particleField.emitBurst(0.85);
+  particleField.emitSparkle(1.25);
   state.score += DIRECT_SCORE[index];
   state.heroism = Math.min(HEROISM_MAX, state.heroism + DIRECT_HEROISM[index]);
   state.heroismPeak = Math.max(state.heroismPeak, state.heroism);
