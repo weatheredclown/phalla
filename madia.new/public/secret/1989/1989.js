@@ -2515,11 +2515,21 @@ const frame = document.getElementById("game-frame");
 const title = document.getElementById("player-title");
 const description = document.getElementById("player-description");
 const fullscreenButton = document.getElementById("fullscreen-toggle");
+const restartButton = document.getElementById("restart-game");
 
 const gameLookup = new Map(games.map((game) => [game.id, game]));
 let lastFocusElement = null;
 const scoreSlots = new Map();
 const scorePulseTimers = new Map();
+let pendingRestart = null;
+
+function setRestartButtonEnabled(enabled) {
+  if (!restartButton) {
+    return;
+  }
+  restartButton.disabled = !enabled;
+  restartButton.setAttribute("aria-disabled", enabled ? "false" : "true");
+}
 
 function renderScore(gameId, entry = getHighScore(gameId)) {
   const slot = scoreSlots.get(gameId);
@@ -2716,6 +2726,8 @@ function renderGames() {
 function openGame(game) {
   title.textContent = game.name;
   description.textContent = game.description;
+  frame.dataset.baseUrl = game.url;
+  setRestartButtonEnabled(false);
   frame.src = game.url;
   overlay.hidden = false;
   overlay.dataset.activeGame = game.id;
@@ -2733,13 +2745,84 @@ function closeGame() {
   }
   overlay.hidden = true;
   overlay.dataset.activeGame = "";
+  try {
+    pendingRestart?.();
+  } catch (error) {
+    console.warn("Failed to cancel pending restart", error);
+  }
+  pendingRestart = null;
+  frame.dataset.baseUrl = "";
   frame.src = "";
+  setRestartButtonEnabled(false);
   setFullscreenButtonState(false);
   if (lastFocusElement && document.body.contains(lastFocusElement)) {
     lastFocusElement.focus({ preventScroll: true });
   } else {
     const fallbackButton = grid.querySelector(".play-button");
     fallbackButton?.focus({ preventScroll: true });
+  }
+}
+
+function restartGame() {
+  if (!restartButton || restartButton.disabled) {
+    return;
+  }
+  const activeGameId = overlay.dataset.activeGame;
+  if (!activeGameId) {
+    return;
+  }
+  const baseUrl = frame.dataset.baseUrl;
+  if (!baseUrl) {
+    return;
+  }
+  setRestartButtonEnabled(false);
+  try {
+    pendingRestart?.();
+  } catch (error) {
+    console.warn("Failed to clean up previous restart handler", error);
+  }
+  const restoreFocus = document.activeElement === restartButton;
+
+  const handleLoad = () => {
+    frame.removeEventListener("load", handleLoad);
+    pendingRestart = null;
+    if (overlay.hidden) {
+      return;
+    }
+    setRestartButtonEnabled(true);
+    if (restoreFocus) {
+      restartButton.focus({ preventScroll: true });
+    }
+  };
+
+  pendingRestart = () => {
+    frame.removeEventListener("load", handleLoad);
+    pendingRestart = null;
+  };
+
+  frame.addEventListener("load", handleLoad);
+
+  let reloadTriggered = false;
+  try {
+    if (frame.contentWindow) {
+      frame.contentWindow.location.reload();
+      reloadTriggered = true;
+    }
+  } catch (error) {
+    console.warn("Falling back to src reset for restart", error);
+  }
+
+  if (reloadTriggered) {
+    return;
+  }
+
+  try {
+    const resolvedUrl = new URL(baseUrl, window.location.href);
+    resolvedUrl.searchParams.set("restart", Date.now().toString(36));
+    frame.src = `${resolvedUrl.pathname}${resolvedUrl.search}${resolvedUrl.hash}`;
+  } catch (urlError) {
+    console.warn("Unable to build restart URL", urlError);
+    frame.src = baseUrl;
   }
 }
 
@@ -2796,8 +2879,15 @@ fullscreenButton?.addEventListener("click", () => {
   toggleFullscreen();
 });
 
+restartButton?.addEventListener("click", () => {
+  restartGame();
+});
+
 document.addEventListener("keydown", (event) => {
-  if (event.key === "Escape" && overlay.hidden === false) {
+  if (overlay.hidden === true) {
+    return;
+  }
+  if (event.key === "Escape") {
     if (isOverlayFullscreen()) {
       document.exitFullscreen().catch(() => {
         /* Ignore */
@@ -2805,6 +2895,11 @@ document.addEventListener("keydown", (event) => {
       return;
     }
     closeGame();
+    return;
+  }
+  if ((event.key === "r" || event.key === "R") && !event.metaKey && !event.ctrlKey && !event.altKey) {
+    event.preventDefault();
+    restartGame();
   }
 });
 
@@ -2813,6 +2908,14 @@ document.addEventListener("fullscreenchange", () => {
 });
 
 setFullscreenButtonState(false);
+setRestartButtonEnabled(false);
+
+frame.addEventListener("load", () => {
+  if (overlay.hidden) {
+    return;
+  }
+  setRestartButtonEnabled(true);
+});
 
 export function registerGame(gameConfig) {
   const { id, name, description, url, thumbnail } = gameConfig;
