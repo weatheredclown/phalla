@@ -26,6 +26,7 @@ const MANIFESTATION_BASE_CHANCE = 0.18;
 const FREDDY_BASE_CHANCE = 0.12;
 const CONFRONTATION_TIMEOUT = 12000;
 const GLYPHS = ["☾", "✶", "✕", "✥", "✴", "✦"];
+const flashTimers = new WeakMap();
 
 const ENVIRONMENT_BANK = [
   {
@@ -145,6 +146,10 @@ const state = {
   lastTick: 0,
   elapsedMs: 0,
   audio: null,
+  fearState: "lucid",
+  lastSigils: 0,
+  lastConfronted: 0,
+  lastSafeZones: 0,
 };
 
 const startButton = document.getElementById("start-dream");
@@ -165,6 +170,7 @@ const environmentShift = document.getElementById("environment-shift");
 const environmentDetail = document.getElementById("environment-detail");
 const environmentOverlay = document.getElementById("environment-overlay");
 const environmentGrid = document.getElementById("environment-grid");
+const environmentVisual = document.querySelector(".environment-visual");
 const decisionTitle = document.getElementById("decision-title");
 const decisionOptions = document.getElementById("decision-options");
 const dreamLog = document.getElementById("dream-log");
@@ -176,6 +182,7 @@ const wrapupSafes = document.getElementById("wrapup-safes");
 const wrapupTime = document.getElementById("wrapup-time");
 const wrapupReplay = document.getElementById("wrapup-replay");
 const wrapupClose = document.getElementById("wrapup-close");
+const wrapupCard = wrapup.querySelector(".wrapup-card");
 const manifestationOverlay = document.getElementById("manifestation");
 const manifestationTitle = document.getElementById("manifestation-title");
 const manifestationSubtitle = document.getElementById("manifestation-subtitle");
@@ -191,6 +198,29 @@ const chaseOverlay = document.getElementById("chase-overlay");
 const chaseFill = document.getElementById("chase-fill");
 const chaseNote = document.getElementById("chase-note");
 const chaseResist = document.getElementById("chase-resist");
+
+function flashElement(element, className, duration = 600) {
+  if (!element) {
+    return;
+  }
+  const timers = flashTimers.get(element) ?? new Map();
+  const existing = timers.get(className);
+  if (existing) {
+    window.clearTimeout(existing);
+  }
+  element.classList.remove(className);
+  void element.getBoundingClientRect();
+  element.classList.add(className);
+  const timeout = window.setTimeout(() => {
+    element.classList.remove(className);
+    timers.delete(className);
+    if (timers.size === 0) {
+      flashTimers.delete(element);
+    }
+  }, duration);
+  timers.set(className, timeout);
+  flashTimers.set(element, timers);
+}
 
 function randomBetween(min, max) {
   return Math.random() * (max - min) + min;
@@ -228,6 +258,19 @@ function updateSanity(delta, options = {}) {
     const tone = delta > 0 ? "success" : delta < -9 ? "danger" : delta < 0 ? "warning" : "neutral";
     const formatted = delta > 0 ? `+${Math.round(delta)}` : `${Math.round(delta)}`;
     logEvent(`${options.log} (${formatted} sanity)`, tone);
+    const magnitude = Math.abs(delta);
+    if (delta > 0) {
+      flashElement(sanityFill, "is-heal", 900);
+      if (!options.silentFx) {
+        playSfx(magnitude >= 12 ? "safe" : "heal");
+      }
+    } else if (delta < 0) {
+      const className = magnitude >= 12 ? "is-crash" : "is-hit";
+      flashElement(sanityFill, className, magnitude >= 12 ? 1100 : 850);
+      if (!options.silentFx) {
+        playSfx(magnitude >= 12 ? "crash" : "sting");
+      }
+    }
   }
   if (previous !== state.sanity) {
     renderSanity();
@@ -259,6 +302,12 @@ function renderSanity() {
     fearState === "lucid" ? "Lucid Drift" : fearState === "distorted" ? "Warped Focus" : "Fracture Threshold";
   fearStateLabel.textContent = fearLabel;
   fearNote.textContent = note;
+  if (state.fearState !== fearState) {
+    flashElement(document.body, "is-fear-shift", 1000);
+    flashElement(fearStateLabel, "is-flash", 900);
+    flashElement(fearNote, "is-flash", 900);
+    state.fearState = fearState;
+  }
 }
 
 function resetEnvironment() {
@@ -270,6 +319,10 @@ function resetEnvironment() {
       ? "Ceiling seams crawl sideways, opening new corridors you do not remember."
       : "The wallpaper peels backward, revealing a corridor that was never there.";
   environmentOverlay.style.background = zone.overlay;
+  flashElement(environmentOverlay, "is-pulse", 1000);
+  if (environmentVisual) {
+    flashElement(environmentVisual, "is-glow", 1000);
+  }
   renderEnvironmentGrid();
 }
 
@@ -290,6 +343,7 @@ function renderEnvironmentGrid(theme = "neutral") {
     frag.appendChild(tile);
   }
   environmentGrid.appendChild(frag);
+  flashElement(environmentGrid, "is-reshuffle", 900);
 }
 
 function renderHud() {
@@ -298,6 +352,9 @@ function renderHud() {
   confrontCount.textContent = String(state.confronted);
   safeCount.textContent = String(state.safeZones);
   confrontNote.textContent = state.confronted > 0 ? "Your stare scorches the nightmare." : "Face phantoms for surges.";
+  state.lastSigils = state.sigils;
+  state.lastConfronted = state.confronted;
+  state.lastSafeZones = state.safeZones;
 }
 
 function resetState() {
@@ -317,6 +374,12 @@ function resetState() {
   state.confrontation = null;
   state.chase = null;
   state.elapsedMs = 0;
+  state.fearState = "lucid";
+  state.lastSigils = 0;
+  state.lastConfronted = 0;
+  state.lastSafeZones = 0;
+  delete document.body.dataset.manifestation;
+  delete document.body.dataset.chase;
   renderHud();
   resetEnvironment();
   decisionOptions.innerHTML = "";
@@ -348,6 +411,8 @@ function startRun() {
   startButton.disabled = true;
   resetButton.disabled = false;
   logEvent("You steady your breath and step into the maze.");
+  playSfx("start");
+  flashElement(document.body, "is-run-start", 1000);
   renderOptions();
   startTicker();
   ensureAudio();
@@ -417,7 +482,236 @@ function ensureAudio() {
   lfoGain.connect(pulse.frequency);
   lfo.start();
 
-  state.audio = { context, master, muted: false, nodes: [lowOsc, pulse, lfo], subGains: [lowGain, pulseGain] };
+  const noiseBuffer = context.createBuffer(1, Math.floor(context.sampleRate * 0.6), context.sampleRate);
+  const channelData = noiseBuffer.getChannelData(0);
+  for (let index = 0; index < channelData.length; index += 1) {
+    const fade = 1 - index / channelData.length;
+    channelData[index] = (Math.random() * 2 - 1) * fade;
+  }
+
+  state.audio = {
+    context,
+    master,
+    muted: false,
+    nodes: [lowOsc, pulse, lfo],
+    subGains: [lowGain, pulseGain],
+    noiseBuffer,
+  };
+}
+
+function playSfx(type) {
+  ensureAudio();
+  if (!state.audio || state.audio.muted) {
+    return;
+  }
+  const { context, master, noiseBuffer } = state.audio;
+  const now = context.currentTime;
+  const gain = context.createGain();
+  gain.gain.setValueAtTime(0.0001, now);
+  gain.connect(master);
+  const stops = [];
+  let maxStop = now + 0.3;
+
+  const scheduleStop = (node, stopTime) => {
+    stops.push({ node, stopTime });
+    if (stopTime > maxStop) {
+      maxStop = stopTime;
+    }
+  };
+
+  const shape = (attack, peak, decay) => {
+    gain.gain.cancelScheduledValues(now);
+    gain.gain.setValueAtTime(0.0001, now);
+    gain.gain.exponentialRampToValueAtTime(Math.max(peak, 0.0002), now + attack);
+    gain.gain.exponentialRampToValueAtTime(0.0001, now + attack + decay);
+    const envelopeEnd = now + attack + decay;
+    if (envelopeEnd > maxStop) {
+      maxStop = envelopeEnd;
+    }
+  };
+
+  switch (type) {
+    case "sigil": {
+      const osc = context.createOscillator();
+      osc.type = "sine";
+      osc.frequency.setValueAtTime(220, now);
+      osc.frequency.exponentialRampToValueAtTime(680, now + 0.45);
+      osc.connect(gain);
+      osc.start(now);
+      const stopTime = now + 0.66;
+      osc.stop(stopTime);
+      scheduleStop(osc, stopTime);
+      shape(0.05, 0.08, 0.55);
+      break;
+    }
+    case "heal":
+    case "safe": {
+      const osc = context.createOscillator();
+      osc.type = "triangle";
+      osc.frequency.setValueAtTime(260, now);
+      osc.frequency.linearRampToValueAtTime(420, now + 0.32);
+      osc.connect(gain);
+      osc.start(now);
+      const stopTime = now + 0.4;
+      osc.stop(stopTime);
+      scheduleStop(osc, stopTime);
+      shape(0.04, type === "safe" ? 0.07 : 0.05, 0.35);
+      break;
+    }
+    case "sting": {
+      const osc = context.createOscillator();
+      osc.type = "sawtooth";
+      osc.frequency.setValueAtTime(420, now);
+      osc.frequency.exponentialRampToValueAtTime(140, now + 0.24);
+      osc.connect(gain);
+      osc.start(now);
+      const stopTime = now + 0.26;
+      osc.stop(stopTime);
+      scheduleStop(osc, stopTime);
+      shape(0.01, 0.05, 0.24);
+      break;
+    }
+    case "crash":
+    case "fail": {
+      const osc = context.createOscillator();
+      osc.type = "sawtooth";
+      osc.frequency.setValueAtTime(180, now);
+      osc.frequency.exponentialRampToValueAtTime(40, now + 0.6);
+      osc.connect(gain);
+      osc.start(now);
+      const stopTime = now + 0.7;
+      osc.stop(stopTime);
+      scheduleStop(osc, stopTime);
+      if (noiseBuffer) {
+        const noise = context.createBufferSource();
+        noise.buffer = noiseBuffer;
+        noise.playbackRate.setValueAtTime(0.55, now);
+        noise.connect(gain);
+        noise.start(now);
+        const noiseStop = now + 0.6;
+        noise.stop(noiseStop);
+        scheduleStop(noise, noiseStop);
+      }
+      shape(0.02, type === "crash" ? 0.09 : 0.07, 0.65);
+      break;
+    }
+    case "manifestation": {
+      const osc = context.createOscillator();
+      osc.type = "triangle";
+      osc.frequency.setValueAtTime(90, now);
+      osc.frequency.exponentialRampToValueAtTime(45, now + 0.9);
+      osc.connect(gain);
+      osc.start(now);
+      const stopTime = now + 1;
+      osc.stop(stopTime);
+      scheduleStop(osc, stopTime);
+      if (noiseBuffer) {
+        const noise = context.createBufferSource();
+        noise.buffer = noiseBuffer;
+        noise.playbackRate.setValueAtTime(0.4, now);
+        noise.connect(gain);
+        noise.start(now);
+        const noiseStop = now + 0.9;
+        noise.stop(noiseStop);
+        scheduleStop(noise, noiseStop);
+      }
+      shape(0.08, 0.1, 0.9);
+      break;
+    }
+    case "chase": {
+      if (noiseBuffer) {
+        const noise = context.createBufferSource();
+        noise.buffer = noiseBuffer;
+        noise.playbackRate.setValueAtTime(1.2, now);
+        noise.connect(gain);
+        noise.start(now);
+        const noiseStop = now + 0.5;
+        noise.stop(noiseStop);
+        scheduleStop(noise, noiseStop);
+      }
+      const osc = context.createOscillator();
+      osc.type = "square";
+      osc.frequency.setValueAtTime(320, now);
+      osc.frequency.linearRampToValueAtTime(120, now + 0.4);
+      osc.connect(gain);
+      osc.start(now);
+      const stopTime = now + 0.45;
+      osc.stop(stopTime);
+      scheduleStop(osc, stopTime);
+      shape(0.01, 0.12, 0.45);
+      break;
+    }
+    case "resist": {
+      const osc = context.createOscillator();
+      osc.type = "sine";
+      osc.frequency.setValueAtTime(180, now);
+      osc.frequency.linearRampToValueAtTime(360, now + 0.18);
+      osc.connect(gain);
+      osc.start(now);
+      const stopTime = now + 0.2;
+      osc.stop(stopTime);
+      scheduleStop(osc, stopTime);
+      shape(0.01, 0.05, 0.18);
+      break;
+    }
+    case "seal":
+    case "exit": {
+      const osc = context.createOscillator();
+      osc.type = "sine";
+      osc.frequency.setValueAtTime(320, now);
+      osc.frequency.exponentialRampToValueAtTime(880, now + 0.5);
+      osc.connect(gain);
+      osc.start(now);
+      const stopTime = now + 0.6;
+      osc.stop(stopTime);
+      scheduleStop(osc, stopTime);
+      shape(0.04, type === "exit" ? 0.12 : 0.08, 0.55);
+      break;
+    }
+    case "start": {
+      const osc = context.createOscillator();
+      osc.type = "triangle";
+      osc.frequency.setValueAtTime(200, now);
+      osc.frequency.linearRampToValueAtTime(300, now + 0.4);
+      osc.connect(gain);
+      osc.start(now);
+      const stopTime = now + 0.45;
+      osc.stop(stopTime);
+      scheduleStop(osc, stopTime);
+      shape(0.03, 0.06, 0.4);
+      break;
+    }
+    default: {
+      window.setTimeout(() => {
+        try {
+          gain.disconnect();
+        } catch (error) {
+          // ignore
+        }
+      }, 0);
+      return;
+    }
+  }
+
+  stops.forEach(({ node, stopTime }) => {
+    const delay = Math.max(0, (stopTime - now) * 1000 + 120);
+    window.setTimeout(() => {
+      try {
+        node.disconnect();
+      } catch (error) {
+        // ignore
+      }
+    }, delay);
+  });
+
+  const gainDelay = Math.max(0, (maxStop - now) * 1000 + 160);
+  window.setTimeout(() => {
+    try {
+      gain.disconnect();
+    } catch (error) {
+      // ignore
+    }
+  }, gainDelay);
 }
 
 function toggleAudio() {
@@ -522,10 +816,15 @@ function createSafeRoomOption() {
       if (roll < 0.55) {
         state.safeZones += 1;
         renderEnvironmentGrid("safe");
-        updateSanity(10, { log: "You find a flicker of warmth and breathe." });
+        safeCount.textContent = String(state.safeZones);
+        state.lastSafeZones = state.safeZones;
+        flashElement(safeCount, "is-flash", 900);
+        playSfx("safe");
+        updateSanity(10, { log: "You find a flicker of warmth and breathe.", silentFx: true });
       } else {
         renderEnvironmentGrid("threat");
-        updateSanity(-5, { log: "The fort collapses into knives." });
+        playSfx("sting");
+        updateSanity(-5, { log: "The fort collapses into knives.", silentFx: true });
         state.threat += 0.25;
       }
       state.routeInstability = Math.max(0, state.routeInstability - 0.25);
@@ -591,6 +890,10 @@ function maybeGainSigil(chance, message) {
   if (Math.random() < chance) {
     state.sigils += 1;
     sigilCount.textContent = `${state.sigils} / ${REQUIRED_SIGILS}`;
+    flashElement(sigilCount, "is-flash", 900);
+    flashElement(environmentOverlay, "is-sigil", 1400);
+    playSfx("sigil");
+    state.lastSigils = state.sigils;
     logEvent(message ?? "A new sigil sears into your vision.");
     if (state.sigils >= REQUIRED_SIGILS) {
       triggerExitDoor();
@@ -602,6 +905,8 @@ function triggerExitDoor() {
   state.awaitingExit = true;
   decisionTitle.textContent = "Wake Threshold";
   logEvent("Four sigils glow at once—the wake door is unlocked.");
+  flashElement(decisionOptions, "is-flare", 1000);
+  playSfx("seal");
   renderExitOptions();
 }
 
@@ -628,6 +933,11 @@ function openManifestation(manifestation) {
   confrontationTimer.textContent = "";
   manifestationOverlay.hidden = false;
   disableDecisions();
+  document.body.dataset.manifestation = manifestation.theme;
+  flashElement(manifestationOverlay, "is-open", 900);
+  flashElement(environmentOverlay, "is-threat", 1200);
+  flashElement(document.body, "is-manifest", 1200);
+  playSfx("manifestation");
 }
 
 function disableDecisions() {
@@ -727,13 +1037,19 @@ function resolveConfrontation(success, message) {
   state.confrontation = null;
   manifestationOverlay.hidden = true;
   enableDecisions();
+  delete document.body.dataset.manifestation;
   if (success) {
     state.confronted += 1;
-    updateSanity(manifest.confrontBonus, { log: message });
+    updateSanity(manifest.confrontBonus, { log: message, silentFx: true });
+    flashElement(confrontCount, "is-flash", 900);
+    flashElement(environmentOverlay, "is-pulse", 1000);
+    playSfx("seal");
     particleField.emitBurst?.(0.8);
     maybeGainSigil(0.6, "The conquered fear crumbles into a fresh sigil.");
   } else {
-    updateSanity(-manifest.confrontPenalty, { log: message, severity: "danger" });
+    updateSanity(-manifest.confrontPenalty, { log: message, severity: "danger", silentFx: true });
+    flashElement(document.body, "is-shiver", 1000);
+    playSfx("crash");
     state.routeInstability += 0.6;
     state.threat += 0.4;
   }
@@ -746,7 +1062,9 @@ function evadeManifestation() {
     return;
   }
   const manifest = state.manifestation;
-  updateSanity(-manifest.evadeDrain, { log: "You back away, letting the fear own the room." });
+  updateSanity(-manifest.evadeDrain, { log: "You back away, letting the fear own the room.", silentFx: true });
+  playSfx("sting");
+  flashElement(document.body, "is-shiver", 900);
   state.slowDrain += manifest.lingerDrain;
   scheduleSlowDrainFade(manifest.lingerDrain);
   state.routeInstability += 0.45;
@@ -754,6 +1072,7 @@ function evadeManifestation() {
   state.manifestation = null;
   manifestationOverlay.hidden = true;
   enableDecisions();
+  delete document.body.dataset.manifestation;
   renderOptions();
 }
 
@@ -784,12 +1103,16 @@ function startChase() {
   chaseNote.textContent = "0 / 5 bursts";
   chaseOverlay.hidden = false;
   disableDecisions();
-  updateSanity(-12, { log: "Freddy rakes across your sanity." });
+  updateSanity(-12, { log: "Freddy rakes across your sanity.", silentFx: true });
+  document.body.dataset.chase = "active";
+  flashElement(chaseOverlay, "is-surge", 900);
+  flashElement(document.body, "is-chase", 1200);
+  playSfx("chase");
   const timer = window.setInterval(() => {
     if (!state.chase) {
       return;
     }
-    updateSanity(-5, { log: "Claws tear new seams in the maze." });
+    updateSanity(-5, { log: "Claws tear new seams in the maze.", silentFx: true });
     if (!state.active) {
       stopChase();
     }
@@ -806,7 +1129,10 @@ function resistChase() {
   chaseFill.style.width = `${Math.min(progressPercent, 100)}%`;
   chaseNote.textContent = `${state.chase.progress} / ${state.chase.required} bursts`;
   particleField.emitSparkle?.(0.5);
-  updateSanity(2, { log: "You wrench free of the claws." });
+  flashElement(chaseFill, "is-progress", 700);
+  flashElement(chaseOverlay, "is-surge", 700);
+  updateSanity(2, { log: "You wrench free of the claws.", silentFx: true });
+  playSfx("resist");
   if (state.chase.progress >= state.chase.required) {
     stopChase(true);
   }
@@ -819,10 +1145,14 @@ function stopChase(victorious = false) {
   chaseOverlay.hidden = true;
   state.chase = null;
   enableDecisions();
+  delete document.body.dataset.chase;
   if (victorious) {
     state.threat = Math.max(0, state.threat - 0.6);
     particleField.emitBurst?.(0.6);
     logEvent("You slam a dream door and hear Freddy howl behind it.");
+    playSfx("seal");
+  } else {
+    playSfx("sting");
   }
   renderOptions();
 }
@@ -841,15 +1171,27 @@ function endRun(success, reason) {
   state.manifestation = null;
   state.confrontation = null;
   state.chase = null;
+  delete document.body.dataset.manifestation;
+  delete document.body.dataset.chase;
   const escaped = success && reason === "exit";
   state.active = false;
-  if (state.audio?.context.state === "running" && state.audio.master.gain.value > 0) {
-    state.audio.master.gain.setTargetAtTime(0, state.audio.context.currentTime, 0.4);
+  const audioActive = state.audio?.context.state === "running" && state.audio.master.gain.value > 0;
+  if (reason !== "reset") {
+    playSfx(escaped ? "exit" : "fail");
+  }
+  if (audioActive) {
+    const now = state.audio.context.currentTime;
+    state.audio.master.gain.setTargetAtTime(state.audio.master.gain.value, now, 0.02);
+    state.audio.master.gain.setTargetAtTime(0.0001, now + 0.2, 0.6);
   }
   if (reason === "reset") {
     return;
   }
   wrapup.hidden = false;
+  flashElement(wrapup, "is-appear", 900);
+  if (wrapupCard) {
+    flashElement(wrapupCard, "is-appear", 900);
+  }
   const sanityValueFinal = Math.round(state.sanity);
   wrapupSanity.textContent = `${sanityValueFinal}%`;
   wrapupFears.textContent = String(state.confronted);
