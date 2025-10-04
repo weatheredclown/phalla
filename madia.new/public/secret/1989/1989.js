@@ -2561,25 +2561,27 @@ const filmByGameId = new Map([
   ["lawnmower-labyrinth", { type: "film", title: "Honey, I Shrunk the Kids" }],
 ]);
 
-function getGameDescription(game) {
+function getBaseDescription(game) {
+  const base = (game.description || "").trim();
+  if (!base) {
+    return "";
+  }
+  const needsPeriod = !/[.!?]$/.test(base);
+  return needsPeriod ? `${base}.` : base;
+}
+
+function getFilmAttribution(game) {
   const info = filmByGameId.get(game.id);
   if (!info) {
-    return game.description;
+    return "";
   }
-
-  const base = game.description.trim();
-  const needsPeriod = base.length > 0 && !/[.!?]$/.test(base);
-  const descriptionWithPunctuation = needsPeriod ? `${base}.` : base;
-
   if (info.type === "film" && info.title) {
-    return `${descriptionWithPunctuation} Based on the film "${info.title}".`;
+    return `Based on the film "${info.title}".`;
   }
-
   if (info.type === "original" && info.note) {
-    return `${descriptionWithPunctuation} ${info.note}`.trim();
+    return info.note.trim();
   }
-
-  return descriptionWithPunctuation;
+  return "";
 }
 
 const grid = document.getElementById("game-grid");
@@ -2591,8 +2593,26 @@ const overlayFrame = document.getElementById("overlay-frame");
 const frame = document.getElementById("game-frame");
 const title = document.getElementById("player-title");
 const description = document.getElementById("player-description");
+const overlayAttribution = document.getElementById("overlay-attribution");
+const overlayFilm = document.getElementById("player-film");
+const overlayRevealButton = document.getElementById("reveal-film-button");
 const fullscreenButton = document.getElementById("fullscreen-toggle");
 const restartButton = document.getElementById("restart-game");
+
+if (overlayRevealButton && overlayFilm) {
+  overlayRevealButton.addEventListener("click", () => {
+    const film = overlayRevealButton.dataset.film;
+    if (film) {
+      overlayFilm.textContent = film;
+    }
+    overlayFilm.hidden = false;
+    overlayRevealButton.hidden = true;
+    overlayRevealButton.setAttribute("aria-expanded", "true");
+    if (overlayAttribution) {
+      overlayAttribution.dataset.revealed = "true";
+    }
+  });
+}
 
 const gameLookup = new Map(games.map((game) => [game.id, game]));
 let lastFocusElement = null;
@@ -2737,7 +2757,34 @@ function createGameCard(game) {
   const thumb = card.querySelector(".game-thumb");
   applyPixelatedThumbnail(thumb, game.thumbnail);
   card.querySelector(".game-title").textContent = game.name;
-  card.querySelector(".game-meta").textContent = getGameDescription(game);
+  const metaElement = card.querySelector(".game-meta");
+  if (metaElement) {
+    metaElement.textContent = getBaseDescription(game);
+  }
+  const attributionContainer = card.querySelector(".game-attribution");
+  const revealButton = card.querySelector(".reveal-button");
+  const filmElement = card.querySelector(".game-film");
+  const filmAttribution = getFilmAttribution(game);
+  if (filmAttribution && attributionContainer && revealButton && filmElement) {
+    const filmElementId = `game-film-${game.id}`;
+    attributionContainer.hidden = false;
+    attributionContainer.dataset.revealed = "false";
+    filmElement.id = filmElementId;
+    filmElement.textContent = "";
+    filmElement.hidden = true;
+    revealButton.hidden = false;
+    revealButton.setAttribute("aria-controls", filmElementId);
+    revealButton.setAttribute("aria-expanded", "false");
+    revealButton.addEventListener("click", () => {
+      filmElement.textContent = filmAttribution;
+      filmElement.hidden = false;
+      attributionContainer.dataset.revealed = "true";
+      revealButton.hidden = true;
+      revealButton.setAttribute("aria-expanded", "true");
+    });
+  } else if (attributionContainer) {
+    attributionContainer.hidden = true;
+  }
   const scoreElement = card.querySelector("[data-high-score]");
   if (scoreElement) {
     const config = getScoreConfig(game.id);
@@ -2802,7 +2849,32 @@ function renderGames() {
 
 function openGame(game) {
   title.textContent = game.name;
-  description.textContent = getGameDescription(game);
+  description.textContent = getBaseDescription(game);
+  const filmAttribution = getFilmAttribution(game);
+  if (overlayAttribution) {
+    if (filmAttribution) {
+      overlayAttribution.hidden = false;
+      overlayAttribution.dataset.revealed = "false";
+    } else {
+      overlayAttribution.hidden = true;
+      overlayAttribution.removeAttribute("data-revealed");
+    }
+  }
+  if (overlayFilm) {
+    overlayFilm.textContent = "";
+    overlayFilm.hidden = true;
+  }
+  if (overlayRevealButton) {
+    if (filmAttribution) {
+      overlayRevealButton.hidden = false;
+      overlayRevealButton.dataset.film = filmAttribution;
+      overlayRevealButton.setAttribute("aria-expanded", "false");
+    } else {
+      overlayRevealButton.hidden = true;
+      overlayRevealButton.removeAttribute("data-film");
+      overlayRevealButton.setAttribute("aria-expanded", "false");
+    }
+  }
   frame.dataset.baseUrl = game.url;
   setRestartButtonEnabled(false);
   frame.src = game.url;
@@ -2914,6 +2986,9 @@ onHighScoreChange(({ gameId, entry }) => {
 });
 
 grid.addEventListener("click", (event) => {
+  if (event.target.closest(".reveal-button")) {
+    return;
+  }
   const button = event.target.closest(".play-button");
   const card = button ? null : event.target.closest(".game-card");
   const sourceElement = button ?? card;
@@ -2931,6 +3006,9 @@ grid.addEventListener("click", (event) => {
 
 grid.addEventListener("keydown", (event) => {
   if (event.defaultPrevented) {
+    return;
+  }
+  if (event.target.closest(".reveal-button")) {
     return;
   }
   const card = event.target.closest(".game-card");
