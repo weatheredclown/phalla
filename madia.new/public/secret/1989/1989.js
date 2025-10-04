@@ -2505,6 +2505,83 @@ const games = [
   }, // Level 15
 ];
 
+const filmByGameId = new Map([
+  ["cooler-chaos", { type: "film", title: "Road House" }],
+  ["three-fugitives", { type: "film", title: "Three Fugitives" }],
+  ["k-mart-countdown", { type: "film", title: "Rain Man" }],
+  ["dojo-duality", { type: "film", title: "The Karate Kid Part III" }],
+  ["heatwave-block-party", { type: "film", title: "Do the Right Thing" }],
+  ["hoverboard-pursuit", { type: "film", title: "Back to the Future Part II" }],
+  ["osaka-motorcycle-dash", { type: "film", title: "Black Rain" }],
+  ["family-flux", { type: "film", title: "Parenthood" }],
+  ["truvys-salon-style", { type: "film", title: "Steel Magnolias" }],
+  ["flapjack-flip-out", { type: "film", title: "Uncle Buck" }],
+  ["frank-drebins-follies", { type: "film", title: "The Naked Gun: From the Files of Police Squad!" }],
+  ["cable-clash", { type: "film", title: "No Holds Barred" }],
+  ["culdesac-curiosity", { type: "film", title: "The 'Burbs" }],
+  ["augmentum", { type: "original", note: "Based on an arcade-original concept while its film pairing is in development." }],
+  ["amore-express", { type: "film", title: "Loverboy" }],
+  ["halo-hustle", { type: "film", title: "All Dogs Go to Heaven" }],
+  ["gates-of-eastside", { type: "film", title: "Lean on Me" }],
+  ["velvet-syncopation", { type: "film", title: "The Fabulous Baker Boys" }],
+  ["grail-trial", { type: "film", title: "Indiana Jones and the Last Crusade" }],
+  ["the-final-barrier", { type: "film", title: "Star Trek V: The Final Frontier" }],
+  ["wardline-breakout", { type: "film", title: "The Dream Team" }],
+  ["dialtone-honor-roll", { type: "film", title: "Bill & Ted's Excellent Adventure" }],
+  ["half-inch-heroes", { type: "film", title: "Honey, I Shrunk the Kids" }],
+  ["boombox-serenade", { type: "film", title: "Say Anything..." }],
+  ["diner-debate", { type: "film", title: "When Harry Met Sally..." }],
+  ["wild-thing-wind-up", { type: "film", title: "Major League" }],
+  ["speed-zone", { type: "film", title: "Speed Zone!" }],
+  ["gilded-partition", { type: "film", title: "The War of the Roses" }],
+  ["tailing-the-trash", { type: "film", title: "Turner & Hooch" }],
+  ["toilet-bomb-disposal", { type: "film", title: "Lethal Weapon 2" }],
+  ["disorient-express", { type: "film", title: "See No Evil, Hear No Evil" }],
+  ["vendetta-convoy", { type: "film", title: "Licence to Kill" }],
+  ["merger-madness", { type: "film", title: "Working Girl" }],
+  ["whispers-garden", { type: "film", title: "Field of Dreams" }],
+  ["kodiak-covenant", { type: "film", title: "The Bear" }],
+  ["nose-for-trouble", { type: "film", title: "K-9" }],
+  ["river-of-slime-escape", { type: "film", title: "Ghostbusters II" }],
+  ["deepcore-descent", { type: "film", title: "The Abyss" }],
+  ["restless-acre-rise", { type: "film", title: "Pet Sematary" }],
+  ["sugar-ray-hustle", { type: "film", title: "Harlem Nights" }],
+  ["personal-ad-trap", { type: "film", title: "Sea of Love" }],
+  ["twenty-five-thousand-bulbs", { type: "film", title: "National Lampoon's Christmas Vacation" }],
+  ["captains-echo", { type: "film", title: "Dead Poets Society" }],
+  ["under-the-sea-scramble", { type: "film", title: "The Little Mermaid" }],
+  ["prototype", { type: "original", note: "Prototype cabinet placeholder awaiting its film tie-in." }],
+  ["paper-trail-blaze", { type: "film", title: "Blaze" }],
+  ["second-star-flight", { type: "film", title: "Peter Pan (1989 re-release)" }],
+  ["voice-box-swap", { type: "film", title: "Look Who's Talking" }],
+  ["freddys-dream-maze", { type: "film", title: "A Nightmare on Elm Street 5: The Dream Child" }],
+  ["framed-breakout", { type: "film", title: "Tango & Cash" }],
+  ["bat-signal-scramble", { type: "film", title: "Batman" }],
+  ["wind-beneath-my-wings", { type: "film", title: "Beaches" }],
+  ["lawnmower-labyrinth", { type: "film", title: "Honey, I Shrunk the Kids" }],
+]);
+
+function getGameDescription(game) {
+  const info = filmByGameId.get(game.id);
+  if (!info) {
+    return game.description;
+  }
+
+  const base = game.description.trim();
+  const needsPeriod = base.length > 0 && !/[.!?]$/.test(base);
+  const descriptionWithPunctuation = needsPeriod ? `${base}.` : base;
+
+  if (info.type === "film" && info.title) {
+    return `${descriptionWithPunctuation} Based on the film "${info.title}".`;
+  }
+
+  if (info.type === "original" && info.note) {
+    return `${descriptionWithPunctuation} ${info.note}`.trim();
+  }
+
+  return descriptionWithPunctuation;
+}
+
 const grid = document.getElementById("game-grid");
 const template = document.getElementById("game-card-template");
 const overlay = document.getElementById("player-overlay");
@@ -2660,7 +2737,7 @@ function createGameCard(game) {
   const thumb = card.querySelector(".game-thumb");
   applyPixelatedThumbnail(thumb, game.thumbnail);
   card.querySelector(".game-title").textContent = game.name;
-  card.querySelector(".game-meta").textContent = game.description;
+  card.querySelector(".game-meta").textContent = getGameDescription(game);
   const scoreElement = card.querySelector("[data-high-score]");
   if (scoreElement) {
     const config = getScoreConfig(game.id);
@@ -2725,7 +2802,7 @@ function renderGames() {
 
 function openGame(game) {
   title.textContent = game.name;
-  description.textContent = game.description;
+  description.textContent = getGameDescription(game);
   frame.dataset.baseUrl = game.url;
   setRestartButtonEnabled(false);
   frame.src = game.url;
