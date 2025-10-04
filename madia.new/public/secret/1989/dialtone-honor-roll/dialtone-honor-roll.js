@@ -32,154 +32,117 @@ const segments = [
   { id: "atrium", name: "Atrium Wing", x: 8, width: 4, y: 16, height: 4 },
 ];
 
-const pieces = [
-  {
-    name: "Socrates",
-    color: "rgba(234,179,8,0.9)",
-    layout: [
-      ".XX",
-      "..X",
-      "..X",
-    ],
-    anchor: { x: 1, y: 0 },
-  },
-  {
-    name: "Sigmund Freud",
-    color: "rgba(139,92,246,0.9)",
-    layout: [
-      "X..",
-      "XXX",
-    ],
-    anchor: { x: 0, y: 0 },
-  },
-  {
-    name: "Napoleon",
-    color: "rgba(248,113,113,0.9)",
-    layout: [
-      "XX",
-      ".X",
-      ".X",
-      ".X",
-    ],
-    anchor: { x: 0, y: 0 },
-  },
-  {
-    name: "Joan of Arc",
-    color: "rgba(248,250,252,0.92)",
-    layout: [
-      ".X",
-      "XX",
-      ".X",
-    ],
-    anchor: { x: 1, y: 0 },
-  },
-  {
-    name: "Billy the Kid",
-    color: "rgba(34,197,94,0.9)",
-    layout: [
-      "XX",
-      "X.",
-      "X.",
-    ],
-    anchor: { x: 0, y: 0 },
-  },
-  {
-    name: "Abraham Lincoln",
-    color: "rgba(59,130,246,0.9)",
-    layout: [
-      ".XX",
-      "XX.",
-    ],
-    anchor: { x: 1, y: 0 },
-  },
+const figureCatalog = {
+  "Socrates": { color: "rgba(234,179,8,0.9)", short: "Socrates" },
+  "Sigmund Freud": { color: "rgba(139,92,246,0.9)", short: "Sigmund" },
+  "Napoleon": { color: "rgba(248,113,113,0.9)", short: "Napoleon" },
+  "Joan of Arc": { color: "rgba(248,250,252,0.92)", short: "Joan" },
+  "Billy the Kid": { color: "rgba(34,197,94,0.9)", short: "Billy" },
+  "Abraham Lincoln": { color: "rgba(59,130,246,0.9)", short: "Lincoln" },
+};
+
+const capsules = [
+  { id: "philosophy", label: "Philosophy Capsule", sequence: ["Sigmund Freud", "Socrates"], drift: "pulse-left" },
+  { id: "rebellion", label: "Rebellion Capsule", sequence: ["Joan of Arc", "Billy the Kid"], drift: "pulse-right" },
+  { id: "leadership", label: "Leadership Capsule", sequence: ["Abraham Lincoln", "Napoleon"], drift: "zigzag" },
+  { id: "expedition", label: "Expedition Capsule", sequence: ["Socrates", "Billy the Kid"], drift: "left" },
+  { id: "debate", label: "Debate Capsule", sequence: ["Sigmund Freud", "Abraham Lincoln"], drift: "right" },
+  { id: "anomaly", label: "Anomaly Capsule", sequence: ["Napoleon", "Joan of Arc"], drift: "none" },
 ];
 
+function createContext(config) {
+  const stacks = config.stacks.map((column) => [...column]);
+  const preview = Array.from({ length: 4 }, () => Array(4).fill(null));
+  stacks.forEach((column, columnIndex) => {
+    column.forEach((name, depth) => {
+      const row = 3 - depth;
+      if (row >= 0 && row < 4) {
+        preview[row][columnIndex] = name;
+      }
+    });
+  });
+  return { ...config, stacks, preview };
+}
+
 const contextDeck = [
-  {
-    id: "philosophy",
-    title: "Philosophy Combo",
-    description: "Anchor Socrates and Sigmund Freud in the Agora Wing pattern.",
+  createContext({
+    id: "philosophy-relay",
+    title: "Philosophy Relay",
+    description: "Stack Socrates beneath Sigmund Freud and escort Billy beside them in the Agora Wing.",
     segment: "agora",
-    anchors: [
-      { name: "Socrates", position: { x: 1, y: 1 } },
-      { name: "Sigmund Freud", position: { x: 2, y: 0 } },
-    ],
-    pattern: [
-      ["Sigmund Freud", "Sigmund Freud", "Sigmund Freud", null],
-      [null, "Socrates", "Socrates", null],
-      [null, null, "Socrates", null],
-      [null, null, null, null],
-    ],
-    reward: 120,
-  },
-  {
-    id: "rebellion",
-    title: "Rebellion Combo",
-    description: "Land Joan of Arc and Billy the Kid in the Salon Wing.",
-    segment: "salon",
-    anchors: [
-      { name: "Joan of Arc", position: { x: 1, y: 0 } },
-      { name: "Billy the Kid", position: { x: 2, y: 1 } },
-    ],
-    pattern: [
-      [null, "Joan of Arc", null, null],
-      ["Billy the Kid", "Joan of Arc", null, null],
-      ["Billy the Kid", null, null, null],
-      [null, null, null, null],
+    stacks: [
+      ["Socrates", "Sigmund Freud"],
+      ["Billy the Kid", "Socrates"],
+      [],
+      [],
     ],
     reward: 140,
-  },
-  {
-    id: "leadership",
-    title: "Leadership Combo",
-    description: "Seat Napoleon and Abraham Lincoln in the Atrium Wing shape.",
-    segment: "atrium",
-    anchors: [
-      { name: "Napoleon", position: { x: 1, y: 0 } },
-      { name: "Abraham Lincoln", position: { x: 2, y: 0 } },
-    ],
-    pattern: [
-      ["Napoleon", "Napoleon", null, null],
-      [null, "Napoleon", "Abraham Lincoln", "Abraham Lincoln"],
-      [null, null, "Abraham Lincoln", null],
-      [null, null, null, null],
-    ],
-    reward: 160,
-  },
-  {
-    id: "expedition",
-    title: "Expedition Combo",
-    description: "Pair Billy the Kid with Socrates back in the Agora Wing.",
+  }),
+  createContext({
+    id: "agora-colloquium",
+    title: "Agora Colloquium",
+    description: "Build alternating Socrates/Sigmund towers and cap the row with Billy's escort.",
     segment: "agora",
-    anchors: [
-      { name: "Billy the Kid", position: { x: 1, y: 1 } },
-      { name: "Socrates", position: { x: 2, y: 0 } },
+    stacks: [
+      ["Socrates", "Sigmund Freud", "Socrates", "Sigmund Freud"],
+      [],
+      ["Billy the Kid", "Socrates"],
+      [],
     ],
-    pattern: [
-      ["Socrates", "Socrates", null, null],
-      ["Billy the Kid", "Socrates", null, null],
-      ["Billy the Kid", null, null, null],
-      [null, null, null, null],
+    reward: 180,
+  }),
+  createContext({
+    id: "salon-revolt",
+    title: "Salon Revolt",
+    description: "Drop Billy & Joan as a pair, then thread Joan's rescue capsule with Napoleon backing her up.",
+    segment: "salon",
+    stacks: [
+      [],
+      ["Billy the Kid", "Joan of Arc"],
+      ["Joan of Arc", "Napoleon"],
+      [],
     ],
     reward: 150,
-  },
-  {
-    id: "debate",
-    title: "Debate Combo",
-    description: "Sigmund Freud joins Abraham Lincoln for an Atrium deep dive.",
-    segment: "atrium",
-    anchors: [
-      { name: "Sigmund Freud", position: { x: 1, y: 0 } },
-      { name: "Abraham Lincoln", position: { x: 2, y: 1 } },
+  }),
+  createContext({
+    id: "salon-crossfire",
+    title: "Salon Crossfire",
+    description: "Double-stack the rebel duo and stabilize the flank with Joan's anomaly escort.",
+    segment: "salon",
+    stacks: [
+      [],
+      ["Billy the Kid", "Joan of Arc", "Billy the Kid", "Joan of Arc"],
+      [],
+      ["Joan of Arc", "Napoleon"],
     ],
-    pattern: [
-      ["Sigmund Freud", "Sigmund Freud", null, null],
-      [null, "Sigmund Freud", "Abraham Lincoln", null],
-      [null, null, "Abraham Lincoln", null],
-      [null, null, null, null],
+    reward: 190,
+  }),
+  createContext({
+    id: "atrium-caucus",
+    title: "Atrium Caucus",
+    description: "Seat Napoleon beneath Lincoln while Sigmund coaches from above in the Atrium Wing.",
+    segment: "atrium",
+    stacks: [
+      ["Napoleon", "Abraham Lincoln"],
+      ["Abraham Lincoln", "Sigmund Freud"],
+      [],
+      [],
     ],
     reward: 170,
-  },
+  }),
+  createContext({
+    id: "atrium-accord",
+    title: "Atrium Accord",
+    description: "Echo the leadership tower twice and then slot the debate duo into the remaining column.",
+    segment: "atrium",
+    stacks: [
+      ["Napoleon", "Abraham Lincoln", "Napoleon", "Abraham Lincoln"],
+      [],
+      ["Abraham Lincoln", "Sigmund Freud"],
+      [],
+    ],
+    reward: 210,
+  }),
 ];
 
 function createMatrix(rows, cols, factory) {
@@ -196,7 +159,7 @@ function createMatrix(rows, cols, factory) {
 
 const board = createMatrix(boardHeight, boardWidth, () => null);
 
-let activePiece = null;
+let activeCapsule = null;
 let bag = [];
 let nextQueue = [];
 let dropTimer = null;
@@ -204,14 +167,13 @@ let isRunning = false;
 let panic = 0;
 let score = 0;
 let contextsCleared = 0;
-let contextIndex = 0;
 let contextQueue = [];
-let lockedPieces = new Map();
-let segmentPieces = new Map();
+let contextDrawPile = [];
+let segmentStacks = new Map();
+let highlightHistory = [];
 let activePath = [];
 let currentPath = [];
 let buildingPath = false;
-let highlightHistory = [];
 
 const boardElement = document.getElementById("time-grid");
 const startButton = document.getElementById("start-run");
@@ -285,7 +247,7 @@ commitRouteButton.addEventListener("click", () => {
   currentPath = [];
   renderPath();
   updateRouteControls();
-  routeStatusLabel.textContent = "Route locked. Incoming anchors will warp when they hit the trail.";
+  routeStatusLabel.textContent = "Route locked. Incoming capsules warp when they hit the trail.";
 });
 
 clearRouteButton.addEventListener("click", () => {
@@ -328,7 +290,7 @@ function startRun() {
   statusBanner.textContent = `Time stream live. Secure ${CONTEXT_GOAL} contexts to ace the presentation.`;
   startRouteButton.disabled = false;
   dropTimer = window.setInterval(() => gameTick(), dropInterval);
-  spawnPiece();
+  spawnCapsule();
   updateRouteControls();
   particleSystem.emitSparkle(0.7);
 }
@@ -356,23 +318,24 @@ function resetState() {
       board[y][x] = null;
     }
   }
-  activePiece = null;
+  activeCapsule = null;
   bag = [];
   nextQueue = [];
   panic = 0;
   score = 0;
   contextsCleared = 0;
-  contextIndex = 0;
+  contextDrawPile = shuffle([...contextDeck]);
   contextQueue = drawContexts();
-  lockedPieces.clear();
-  segmentPieces = new Map();
+  segmentStacks = new Map();
   segments.forEach((segment) => {
-    segmentPieces.set(segment.id, []);
+    const columns = Array.from({ length: segment.width }, () => []);
+    segmentStacks.set(segment.id, columns);
   });
+  highlightHistory = [];
   activePath = [];
   currentPath = [];
   buildingPath = false;
-  highlightHistory = [];
+  nextPieceLabel.textContent = "—";
   renderBoard();
   renderContexts();
   renderPath();
@@ -382,21 +345,24 @@ function resetState() {
 }
 
 function gameTick() {
-  if (!activePiece) {
-    spawnPiece();
+  if (!activeCapsule) {
+    spawnCapsule();
     return;
   }
-  if (!attemptMove(0, 1)) {
-    lockPiece();
+  applyDrift(activeCapsule);
+  const movedDown = attemptMove(0, 1);
+  if (!movedDown) {
+    lockCapsule();
     if (!isRunning) return;
-    spawnPiece();
+    spawnCapsule();
   } else {
-    checkCapture();
+    activeCapsule.steps += 1;
+    warpToRoute();
   }
   renderBoard();
 }
 
-function spawnPiece() {
+function spawnCapsule() {
   if (panic >= panicLimit) {
     stopRun("Timeline collapse. Try again.", { status: "failure", cause: "panic" });
     return;
@@ -404,48 +370,55 @@ function spawnPiece() {
   if (nextQueue.length < 3) {
     refillQueue();
   }
-  const pieceDef = nextQueue.shift();
-  activePiece = {
-    ...pieceDef,
-    x: Math.floor(boardWidth / 2) - Math.floor(pieceDef.layout[0].length / 2),
-    y: -getPieceTopOffset(pieceDef),
+  const capsuleDef = nextQueue.shift();
+  const tokens = capsuleDef.sequence.map((name) => ({
+    name,
+    color: figureCatalog[name].color,
+    short: figureCatalog[name].short,
+  }));
+  activeCapsule = {
     id: crypto.randomUUID(),
+    def: capsuleDef,
+    tokens,
+    x: entryCell.x,
+    y: -tokens.length,
+    steps: 0,
     captured: false,
   };
-  nextPieceLabel.textContent = nextQueue[0] ? nextQueue[0].name : "—";
-  if (!isValidPosition(activePiece, activePiece.x, activePiece.y + 1)) {
-    stopRun("Pieces jammed at entry. Presentation postponed.", { status: "failure", cause: "entry-jam" });
+  nextPieceLabel.textContent = nextQueue[0] ? describeCapsule(nextQueue[0]) : "—";
+  if (!isValidPosition(activeCapsule, activeCapsule.x, activeCapsule.y + 1)) {
+    stopRun("Capsules jammed at entry. Presentation postponed.", { status: "failure", cause: "entry-jam" });
     return;
   }
   renderBoard();
-  addEvent(`${pieceDef.name} entering the stream.`);
+  addEvent(`${describeCapsule(capsuleDef)} syncing into the stream.`);
 }
 
 function refillQueue() {
   if (bag.length === 0) {
-    bag = shuffle([...pieces]);
+    bag = shuffle([...capsules]);
   }
   while (nextQueue.length < 3) {
-    if (bag.length === 0) bag = shuffle([...pieces]);
+    if (bag.length === 0) bag = shuffle([...capsules]);
     nextQueue.push(bag.shift());
   }
-  nextPieceLabel.textContent = nextQueue[0] ? nextQueue[0].name : "—";
+  nextPieceLabel.textContent = nextQueue[0] ? describeCapsule(nextQueue[0]) : "—";
 }
 
 function attemptMove(dx, dy) {
-  if (!activePiece) return false;
-  const newX = activePiece.x + dx;
-  const newY = activePiece.y + dy;
-  if (!isValidPosition(activePiece, newX, newY)) {
+  if (!activeCapsule) return false;
+  const newX = activeCapsule.x + dx;
+  const newY = activeCapsule.y + dy;
+  if (!isValidPosition(activeCapsule, newX, newY)) {
     return false;
   }
-  activePiece.x = newX;
-  activePiece.y = newY;
+  activeCapsule.x = newX;
+  activeCapsule.y = newY;
   return true;
 }
 
 function isValidPosition(piece, x, y) {
-  const cells = getCells(piece, x, y);
+  const cells = getCapsuleCells(piece, x, y);
   return cells.every(({ x: cellX, y: cellY }) => {
     if (cellX < 0 || cellX >= boardWidth || cellY >= boardHeight) return false;
     if (cellY < 0) return true;
@@ -453,105 +426,92 @@ function isValidPosition(piece, x, y) {
   });
 }
 
-function getCells(piece, offsetX, offsetY) {
-  const result = [];
-  for (let row = 0; row < piece.layout.length; row += 1) {
-    for (let col = 0; col < piece.layout[row].length; col += 1) {
-      if (piece.layout[row][col] === "X") {
-        result.push({ x: offsetX + col, y: offsetY + row });
-      }
-    }
-  }
-  return result;
+function getCapsuleCells(piece, offsetX, offsetY) {
+  return piece.tokens.map((token, index) => ({
+    x: offsetX,
+    y: offsetY + index,
+    token,
+  }));
 }
 
-function getPieceTopOffset(piece) {
-  for (let row = 0; row < piece.layout.length; row += 1) {
-    if (piece.layout[row].includes("X")) {
-      return row;
-    }
-  }
-  return 0;
+function getAnchorCell(piece) {
+  return {
+    x: piece.x,
+    y: piece.y + piece.tokens.length - 1,
+  };
 }
 
-function checkCapture() {
-  if (!activePiece || activePiece.captured || activePath.length < 2) return;
-  const anchorX = activePiece.x + activePiece.anchor.x;
-  const anchorY = activePiece.y + activePiece.anchor.y;
-  const onPath = activePath.some((cell) => cell.x === anchorX && cell.y === anchorY);
+function applyDrift(piece) {
+  const { drift } = piece.def;
+  let dx = 0;
+  if (drift === "left") {
+    dx = -1;
+  } else if (drift === "right") {
+    dx = 1;
+  } else if (drift === "pulse-left") {
+    if (piece.steps % 2 === 0) dx = -1;
+  } else if (drift === "pulse-right") {
+    if (piece.steps % 2 === 0) dx = 1;
+  } else if (drift === "zigzag") {
+    dx = piece.steps % 2 === 0 ? -1 : 1;
+  }
+  if (dx !== 0) {
+    attemptMove(dx, 0);
+  }
+}
+
+function warpToRoute() {
+  if (!activeCapsule || activePath.length < 2) return;
+  const anchor = getAnchorCell(activeCapsule);
+  const onPath = activePath.some((cell) => cell.x === anchor.x && cell.y === anchor.y);
   if (!onPath) return;
   const destination = activePath[activePath.length - 1];
-  const newX = destination.x - activePiece.anchor.x;
-  const newY = destination.y - activePiece.anchor.y;
-  if (!isValidPosition(activePiece, newX, newY)) {
+  const targetX = destination.x;
+  const targetY = destination.y - (activeCapsule.tokens.length - 1);
+  if (!isValidPosition(activeCapsule, targetX, targetY)) {
     return;
   }
-  activePiece.x = newX;
-  activePiece.y = newY;
-  activePiece.captured = true;
-  addEvent(`${activePiece.name} warped to ${getSegmentNameForCell(destination)}.`);
+  activeCapsule.x = targetX;
+  activeCapsule.y = targetY;
+  activeCapsule.captured = true;
+  addEvent(`${describeCapsule(activeCapsule.def)} warped to ${getSegmentNameForCell(destination)}.`);
 }
 
-function lockPiece() {
-  if (!activePiece) return;
-  const cells = getCells(activePiece, activePiece.x, activePiece.y);
-  let pieceClipped = false;
-  cells.forEach(({ x, y }) => {
+function lockCapsule() {
+  if (!activeCapsule) return;
+  const cells = getCapsuleCells(activeCapsule, activeCapsule.x, activeCapsule.y);
+  let clipped = false;
+  cells.forEach(({ x, y, token }) => {
     if (y < 0) {
-      pieceClipped = true;
+      clipped = true;
       return;
     }
     board[y][x] = {
-      id: activePiece.id,
-      name: activePiece.name,
-      color: activePiece.color,
+      id: activeCapsule.id,
+      name: token.name,
+      color: token.color,
     };
   });
-  if (pieceClipped) {
+  if (clipped) {
     stopRun("Stream overflowed before delivery. Try again.", { status: "failure", cause: "overflow" });
     return;
   }
-  const segmentId = resolveSegmentForPiece(cells);
-  const anchorPosition = {
-    x: activePiece.x + activePiece.anchor.x,
-    y: activePiece.y + activePiece.anchor.y,
-  };
-  lockedPieces.set(activePiece.id, {
-    id: activePiece.id,
-    name: activePiece.name,
-    segmentId,
-    anchor: anchorPosition,
-    definition: activePiece,
-    cells,
-  });
+  const segmentId = resolveSegmentForCells(cells);
   if (segmentId) {
-    const segmentList = segmentPieces.get(segmentId);
     const segment = segments.find((seg) => seg.id === segmentId);
-    const relativeAnchor = {
-      x: anchorPosition.x - segment.x,
-      y: anchorPosition.y - segment.y,
-    };
-    segmentList.push({
-      pieceId: activePiece.id,
-      name: activePiece.name,
-      anchor: relativeAnchor,
-    });
-    addEvent(`${activePiece.name} secured in the ${segment.name}.`);
+    addEvent(`${describeCapsule(activeCapsule.def)} anchored in the ${segment.name}.`);
   } else {
-    panic += 1;
-    addEvent(`${activePiece.name} drifted off target! Panic rising.`);
-    if (panic >= panicLimit) {
-      updateStatus();
-      stopRun("Panic meter maxed. Oral report doomed.", { status: "failure", cause: "panic" });
-      return;
-    }
+    handlePanic(`${describeCapsule(activeCapsule.def)} drifted off course. Panic rising!`);
   }
+  activeCapsule = null;
+  applyGravity();
+  updateSegmentStacks();
   evaluateContexts();
-  activePiece = null;
   updateStatus();
+  renderBoard();
 }
 
-function resolveSegmentForPiece(cells) {
+function resolveSegmentForCells(cells) {
   for (const segment of segments) {
     const inside = cells.every(({ x, y }) =>
       x >= segment.x &&
@@ -566,67 +526,106 @@ function resolveSegmentForPiece(cells) {
   return null;
 }
 
+function handlePanic(message) {
+  panic += 1;
+  addEvent(message);
+  updateStatus();
+  if (panic >= panicLimit) {
+    stopRun("Panic meter maxed. Oral report doomed.", { status: "failure", cause: "panic" });
+  }
+}
+
+function applyGravity() {
+  for (let x = 0; x < boardWidth; x += 1) {
+    const stack = [];
+    for (let y = boardHeight - 1; y >= 0; y -= 1) {
+      if (board[y][x]) {
+        stack.push(board[y][x]);
+      }
+    }
+    for (let y = boardHeight - 1, index = 0; y >= 0; y -= 1, index += 1) {
+      board[y][x] = stack[index] || null;
+    }
+  }
+}
+
+function updateSegmentStacks() {
+  segmentStacks = new Map();
+  segments.forEach((segment) => {
+    const columns = [];
+    for (let offset = 0; offset < segment.width; offset += 1) {
+      const column = [];
+      for (let depth = 0; depth < segment.height; depth += 1) {
+        const y = segment.y + segment.height - 1 - depth;
+        const cell = board[y][segment.x + offset];
+        if (!cell) {
+          break;
+        }
+        column.push(cell.name);
+      }
+      columns.push(column);
+    }
+    segmentStacks.set(segment.id, columns);
+  });
+}
+
 function evaluateContexts() {
   if (contextQueue.length === 0) return;
   const activeContext = contextQueue[0];
-  const segmentList = segmentPieces.get(activeContext.segment);
-  if (!segmentList || segmentList.length === 0) return;
-  const matchedPieces = [];
-  for (const requirement of activeContext.anchors) {
-    const match = segmentList.find(
-      (piece) =>
-        piece.name === requirement.name &&
-        piece.anchor.x === requirement.position.x &&
-        piece.anchor.y === requirement.position.y
-    );
-    if (!match) {
-      return;
+  const stacks = segmentStacks.get(activeContext.segment);
+  if (!stacks) return;
+  const matches = activeContext.stacks.every((requirement, index) => {
+    const column = stacks[index] || [];
+    if (column.length !== requirement.length) {
+      return false;
     }
-    matchedPieces.push(match);
-  }
-  matchedPieces.forEach((piece) => {
-    removePieceById(piece.pieceId);
+    for (let i = 0; i < requirement.length; i += 1) {
+      if (column[i] !== requirement[i]) {
+        return false;
+      }
+    }
+    return true;
   });
+  if (!matches) {
+    return;
+  }
+  clearContextColumns(activeContext);
   contextQueue.shift();
   contextQueue.push(drawNextContext());
   contextsCleared += 1;
   score += activeContext.reward;
-  addEvent(`${activeContext.title} cleared for ${activeContext.reward} study points!`);
   const segment = segments.find((entry) => entry.id === activeContext.segment);
+  const segmentName = segment ? segment.name : "Timeline Junction";
+  addEvent(`${activeContext.title} locked for ${activeContext.reward} study points!`);
+  const remaining = Math.max(0, CONTEXT_GOAL - contextsCleared);
+  statusBanner.textContent = `${activeContext.title} secured. ${remaining} context${remaining === 1 ? "" : "s"} to go.`;
   highlightHistory.unshift({
     id: activeContext.id,
     title: activeContext.title,
     reward: activeContext.reward,
-    segment: segment ? segment.name : "Timeline Junction",
+    segment: segmentName,
   });
   highlightHistory = highlightHistory.slice(0, 6);
-  renderContexts();
   updateStatus();
+  renderContexts();
   particleSystem.emitBurst(0.9 + Math.min(contextsCleared / CONTEXT_GOAL, 1) * 0.35);
-  const remaining = Math.max(0, CONTEXT_GOAL - contextsCleared);
   if (contextsCleared >= CONTEXT_GOAL) {
     stopRun("Presentation secured. Wyld Stallyns pass with honors!", { status: "success", cause: "goal" });
-    return;
   }
-  statusBanner.textContent = `${activeContext.title} locked. ${remaining} context${remaining === 1 ? "" : "s"} to go.`;
 }
 
-function removePieceById(pieceId) {
-  const pieceInfo = lockedPieces.get(pieceId);
-  if (!pieceInfo) return;
-  pieceInfo.cells.forEach(({ x, y }) => {
-    board[y][x] = null;
-  });
-  lockedPieces.delete(pieceId);
-  if (pieceInfo.segmentId) {
-    const list = segmentPieces.get(pieceInfo.segmentId);
-    if (list) {
-      const index = list.findIndex((entry) => entry.pieceId === pieceId);
-      if (index >= 0) {
-        list.splice(index, 1);
-      }
+function clearContextColumns(context) {
+  const segment = segments.find((entry) => entry.id === context.segment);
+  if (!segment) return;
+  context.stacks.forEach((requirement, columnIndex) => {
+    for (let depth = 0; depth < requirement.length; depth += 1) {
+      const y = segment.y + segment.height - 1 - depth;
+      const x = segment.x + columnIndex;
+      board[y][x] = null;
     }
-  }
+  });
+  applyGravity();
+  updateSegmentStacks();
 }
 
 function drawContexts() {
@@ -638,9 +637,10 @@ function drawContexts() {
 }
 
 function drawNextContext() {
-  const context = contextDeck[contextIndex % contextDeck.length];
-  contextIndex += 1;
-  return context;
+  if (contextDrawPile.length === 0) {
+    contextDrawPile = shuffle([...contextDeck]);
+  }
+  return contextDrawPile.shift();
 }
 
 function renderBoard() {
@@ -671,15 +671,16 @@ function renderBoard() {
   }
   boardElement.innerHTML = "";
   boardElement.appendChild(fragment);
-  if (activePiece) {
-    const cells = getCells(activePiece, activePiece.x, activePiece.y);
-    cells.forEach(({ x, y }) => {
+  if (activeCapsule) {
+    const cells = getCapsuleCells(activeCapsule, activeCapsule.x, activeCapsule.y);
+    cells.forEach(({ x, y, token }) => {
       if (y < 0) return;
       const selector = `.time-cell[data-x="${x}"][data-y="${y}"]`;
       const cell = boardElement.querySelector(selector);
       if (cell) {
         cell.classList.add("is-active");
-        cell.style.setProperty("--piece-color", activePiece.color);
+        cell.style.setProperty("--piece-color", token.color);
+        cell.dataset.previewName = token.name;
       }
     });
   }
@@ -716,14 +717,14 @@ function renderContexts() {
     details.textContent = context.description;
     const pattern = document.createElement("div");
     pattern.className = "context-pattern";
-    context.pattern.forEach((row) => {
-      row.forEach((cell) => {
+    context.preview.forEach((row) => {
+      row.forEach((cellName) => {
         const patternCell = document.createElement("div");
         patternCell.className = "pattern-cell";
-        if (cell) {
+        if (cellName) {
           patternCell.classList.add("is-target");
-          patternCell.dataset.piece = cell;
-          patternCell.textContent = cell.split(" ")[0];
+          patternCell.dataset.piece = cellName;
+          patternCell.textContent = figureCatalog[cellName].short;
         }
         pattern.appendChild(patternCell);
       });
@@ -769,6 +770,10 @@ function getSegmentNameForCell(cell) {
     (seg) => cell.x >= seg.x && cell.x < seg.x + seg.width && cell.y >= seg.y && cell.y < seg.y + seg.height
   );
   return segment ? segment.name : "the time stream";
+}
+
+function describeCapsule(capsule) {
+  return capsule.sequence.map((name) => figureCatalog[name].short).join(" / ");
 }
 
 function shuffle(array) {
@@ -892,13 +897,13 @@ function resolveSummaryNote(status, cause, isRecord) {
   }
   if (status === "failure") {
     if (cause === "panic") {
-      return "Panic meter blew. Clear stray drops faster to calm the crowd.";
+      return "Panic meter blew. Clear stray capsules faster to calm the crowd.";
     }
     if (cause === "entry-jam") {
       return "Entry jammed. Sketch the booth trail earlier to avoid gridlock.";
     }
     if (cause === "overflow") {
-      return "Overflow triggered. Route anchors to an era bay before they stack.";
+      return "Overflow triggered. Route capsules to an era bay before they stack.";
     }
     return "Timeline destabilized. Adjust the route and try again.";
   }
