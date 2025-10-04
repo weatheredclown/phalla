@@ -2278,7 +2278,7 @@ const games = [
     `,
   }, // Level 5
 
-  // Level 7
+  // Level 8
   {
     id: "framed-breakout",
     name: "Framed Breakout",
@@ -2326,7 +2326,7 @@ const games = [
         <rect x="84" y="96" width="36" height="8" rx="4" fill="rgba(56,189,248,0.65)" />
       </svg>
     `,
-  }, // Level 7
+  }, // Level 8
   // Level 15
   {
     id: "bat-signal-scramble",

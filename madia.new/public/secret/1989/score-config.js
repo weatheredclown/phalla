@@ -193,7 +193,7 @@ export const scoreConfigs = {
       return `${chaos} chaos · ${highlightCount} ${highlightLabel}`;
     },
   },
-  // Level 7
+  // Level 8
   "framed-breakout": {
     label: "Escape Prowess",
     empty: "No breakout runs logged yet.",
@@ -203,7 +203,7 @@ export const scoreConfigs = {
       const guardLabel = evaded === 1 ? "guard" : "guards";
       return `${value ?? 0} pts · ${evaded} ${guardLabel}${disguise}`;
     },
-  }, // Level 7
+  }, // Level 8
   "kodiak-covenant": {
     label: "Traps Cleared",
     empty: "No traps cleared yet.",
