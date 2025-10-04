@@ -22,6 +22,11 @@ autoEnhanceFeedback();
 
 const HEROISM_MAX = 100;
 const HEROISM_START = 30;
+const HEROISM_TIER_THRESHOLDS = {
+  steady: 24,
+  charged: 55,
+  surged: 82,
+};
 const TIME_BUDGET = 96;
 const DISTRACTION_TIME = [18, 20, 24];
 const DIRECT_TIME = [8, 10, 12];
@@ -142,6 +147,7 @@ const state = {
   currentArea: 0,
   heroism: 0,
   heroismPeak: 0,
+  heroismTier: "none",
   score: 0,
   guardsEvaded: 0,
   timeBuffer: TIME_BUDGET,
@@ -188,6 +194,27 @@ function playWhoosh() {
   osc.stop(ctx.currentTime + 0.38);
 }
 
+function playDistractionChord() {
+  const ctx = ensureAudio();
+  if (!ctx) {
+    return;
+  }
+  const now = ctx.currentTime;
+  const freqs = [329.63, 415.3, 554.37];
+  freqs.forEach((freq, index) => {
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = "triangle";
+    osc.frequency.setValueAtTime(freq, now + index * 0.03);
+    gain.gain.setValueAtTime(0.0001, now + index * 0.03);
+    gain.gain.exponentialRampToValueAtTime(0.32, now + index * 0.03 + 0.06);
+    gain.gain.exponentialRampToValueAtTime(0.0001, now + index * 0.03 + 0.62);
+    osc.connect(gain).connect(ctx.destination);
+    osc.start(now + index * 0.03);
+    osc.stop(now + index * 0.03 + 0.68);
+  });
+}
+
 function playHeroSting() {
   const ctx = ensureAudio();
   if (!ctx) {
@@ -207,6 +234,25 @@ function playHeroSting() {
     osc.start(now + index * 0.1);
     osc.stop(now + index * 0.1 + 0.52);
   });
+}
+
+function playImpactBoom() {
+  const ctx = ensureAudio();
+  if (!ctx) {
+    return;
+  }
+  const now = ctx.currentTime;
+  const osc = ctx.createOscillator();
+  const gain = ctx.createGain();
+  osc.type = "sawtooth";
+  osc.frequency.setValueAtTime(160, now);
+  osc.frequency.exponentialRampToValueAtTime(48, now + 0.45);
+  gain.gain.setValueAtTime(0.0001, now);
+  gain.gain.linearRampToValueAtTime(0.5, now + 0.05);
+  gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.52);
+  osc.connect(gain).connect(ctx.destination);
+  osc.start(now);
+  osc.stop(now + 0.54);
 }
 
 function playSiren() {
@@ -235,6 +281,46 @@ function playSiren() {
   sweep.stop(now + 0.82);
 }
 
+function playHeroCharge() {
+  const ctx = ensureAudio();
+  if (!ctx) {
+    return;
+  }
+  const now = ctx.currentTime;
+  const osc = ctx.createOscillator();
+  const gain = ctx.createGain();
+  osc.type = "sine";
+  osc.frequency.setValueAtTime(220, now);
+  osc.frequency.exponentialRampToValueAtTime(320, now + 0.4);
+  gain.gain.setValueAtTime(0.0001, now);
+  gain.gain.linearRampToValueAtTime(0.4, now + 0.08);
+  gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.55);
+  osc.connect(gain).connect(ctx.destination);
+  osc.start(now);
+  osc.stop(now + 0.57);
+}
+
+function playHeroSurge() {
+  const ctx = ensureAudio();
+  if (!ctx) {
+    return;
+  }
+  const now = ctx.currentTime;
+  const freqs = [392, 523.25, 659.25, 784];
+  freqs.forEach((freq, index) => {
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = index % 2 === 0 ? "square" : "triangle";
+    osc.frequency.setValueAtTime(freq, now + index * 0.05);
+    gain.gain.setValueAtTime(0.0001, now + index * 0.05);
+    gain.gain.exponentialRampToValueAtTime(0.45, now + index * 0.05 + 0.08);
+    gain.gain.exponentialRampToValueAtTime(0.0001, now + index * 0.05 + 0.75);
+    osc.connect(gain).connect(ctx.destination);
+    osc.start(now + index * 0.05);
+    osc.stop(now + index * 0.05 + 0.78);
+  });
+}
+
 function updateHeroismUI(triggerFlash = false) {
   const clamped = Math.max(0, Math.min(HEROISM_MAX, Math.round(state.heroism)));
   state.heroism = clamped;
@@ -249,11 +335,37 @@ function updateHeroismUI(triggerFlash = false) {
   } else {
     document.body.classList.remove("heroism-drain");
   }
+  let tier = "";
+  if (clamped >= HEROISM_TIER_THRESHOLDS.surged) {
+    tier = "surged";
+  } else if (clamped >= HEROISM_TIER_THRESHOLDS.charged) {
+    tier = "charged";
+  } else if (clamped >= HEROISM_TIER_THRESHOLDS.steady) {
+    tier = "steady";
+  }
+  setHeroismTier(tier);
   if (triggerFlash) {
     document.body.classList.add("caught-flash");
     window.setTimeout(() => {
       document.body.classList.remove("caught-flash");
     }, 520);
+  }
+}
+
+function setHeroismTier(tier) {
+  if (tier === state.heroismTier) {
+    return;
+  }
+  state.heroismTier = tier;
+  if (!tier) {
+    document.body.removeAttribute("data-heroism-tier");
+    return;
+  }
+  document.body.dataset.heroismTier = tier;
+  if (tier === "charged") {
+    playHeroCharge();
+  } else if (tier === "surged") {
+    playHeroSurge();
   }
 }
 
@@ -274,13 +386,24 @@ function setGuardStatus(message) {
 
 function renderEventFeed() {
   eventFeed.innerHTML = "";
-  state.history.slice(0, 6).forEach((entry) => {
+  state.history.slice(0, 6).forEach((entry, index) => {
     const item = document.createElement("li");
     item.textContent = entry.text;
     if (entry.tone) {
       item.dataset.tone = entry.tone;
     }
+    item.style.setProperty("--pop-delay", `${index * 40}ms`);
+    item.addEventListener(
+      "animationend",
+      () => {
+        item.classList.remove("feed-pop");
+      },
+      { once: true }
+    );
     eventFeed.append(item);
+    window.requestAnimationFrame(() => {
+      item.classList.add("feed-pop");
+    });
   });
 }
 
@@ -355,6 +478,7 @@ function resetBoard() {
   state.currentArea = 0;
   state.heroism = 0;
   state.heroismPeak = 0;
+  state.heroismTier = "none";
   state.score = 0;
   state.guardsEvaded = 0;
   state.timeBuffer = TIME_BUDGET;
@@ -362,6 +486,7 @@ function resetBoard() {
   state.directWins = 0;
   state.detectionCount = 0;
   resetHighlights();
+  document.body.removeAttribute("data-heroism-tier");
   updateHeroismUI();
   updateScoreUI();
   updateTimeUI();
@@ -386,6 +511,7 @@ function startRun() {
   state.currentArea = 0;
   state.heroism = HEROISM_START;
   state.heroismPeak = HEROISM_START;
+  state.heroismTier = "none";
   state.score = 0;
   state.guardsEvaded = 0;
   state.timeBuffer = TIME_BUDGET;
@@ -393,6 +519,7 @@ function startRun() {
   state.directWins = 0;
   state.detectionCount = 0;
   resetHighlights();
+  document.body.removeAttribute("data-heroism-tier");
   updateHeroismUI();
   updateScoreUI();
   updateTimeUI();
@@ -481,6 +608,7 @@ function handleDetection(reason) {
   if (ref && ref.statusElement) {
     ref.statusElement.textContent = "Status: Alarm tripped — heroism drained.";
     ref.message = ref.statusElement.textContent;
+    showAreaPulse(ref.card, "alert");
   }
 }
 
@@ -507,6 +635,25 @@ function handleAreaAction(areaId, action) {
   } else {
     openDirectAction(area, areaIndex);
   }
+}
+
+function showAreaPulse(card, variant) {
+  if (!card) {
+    return;
+  }
+  const pulse = document.createElement("span");
+  pulse.className = `area-pulse area-pulse--${variant}`;
+  card.append(pulse);
+  window.requestAnimationFrame(() => {
+    pulse.classList.add("is-active");
+  });
+  pulse.addEventListener(
+    "animationend",
+    () => {
+      pulse.remove();
+    },
+    { once: true }
+  );
 }
 
 function closeModal() {
@@ -552,6 +699,7 @@ function openDistractionPuzzle(area, index) {
 function resolveDistractionSuccess(area, index, highlight) {
   closeModal();
   playWhoosh();
+  playDistractionChord();
   particleField.emitSparkle(1);
   state.score += DISTRACTION_SCORE[index];
   state.heroism = Math.min(HEROISM_MAX, state.heroism + DISTRACTION_HEROISM[index]);
@@ -569,6 +717,7 @@ function resolveDistractionSuccess(area, index, highlight) {
     ref.statusElement.textContent = `Status: Cleared with distraction.`;
     ref.message = ref.statusElement.textContent;
     ref.card.classList.add("is-distracted");
+    showAreaPulse(ref.card, "distraction");
     window.setTimeout(() => {
       ref.card.classList.remove("is-distracted");
     }, 1600);
@@ -578,6 +727,7 @@ function resolveDistractionSuccess(area, index, highlight) {
 
 function resolveDirectSuccess(area, index) {
   closeModal();
+  playImpactBoom();
   playHeroSting();
   document.body.classList.add("slowmo-hit");
   window.setTimeout(() => {
@@ -597,6 +747,7 @@ function resolveDirectSuccess(area, index) {
     ref.statusElement.textContent = "Status: Cleared with direct action heroics.";
     ref.message = ref.statusElement.textContent;
     ref.card.classList.add("is-investigating");
+    showAreaPulse(ref.card, "direct");
     window.setTimeout(() => {
       ref.card.classList.remove("is-investigating");
     }, 900);
