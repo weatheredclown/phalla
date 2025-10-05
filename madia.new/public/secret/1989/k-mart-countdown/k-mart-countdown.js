@@ -73,6 +73,8 @@ const state = {
   revealHandle: 0,
   streakPerfect: 0,
   roundHistory: [],
+  previousDiff: null,
+  accuracyMomentum: 0,
 };
 
 let audioContext = null;
@@ -222,6 +224,8 @@ function beginSession() {
   state.bestMultiplier = 1;
   state.roundHistory = [];
   state.streakPerfect = 0;
+  state.previousDiff = null;
+  state.accuracyMomentum = 0;
   summaryPanel.hidden = true;
   summaryBody.innerHTML = "";
   summaryOverview.textContent = "";
@@ -422,7 +426,31 @@ function finalizeRound(guess) {
   round.guess = Math.max(0, guess);
   const diff = Math.abs(round.guess - round.actual);
   const baseScore = diff < SCORE_TABLE.length ? SCORE_TABLE[diff] : 0;
-  let finalScore = baseScore * round.multiplier;
+  let roundScore = baseScore * round.multiplier;
+  let improvementBonus = 0;
+  let ladderTier = 0;
+  let accuracyTrend = "steady";
+  const previousDiff = state.previousDiff;
+  if (typeof previousDiff === "number") {
+    if (diff < previousDiff) {
+      state.accuracyMomentum = Math.min(state.accuracyMomentum + 1, 5);
+      ladderTier = state.accuracyMomentum;
+      const improvementSteps = previousDiff - diff;
+      const bonusRate = Math.min(0.25, 0.04 * improvementSteps + 0.05 * ladderTier);
+      improvementBonus = Math.round(roundScore * bonusRate);
+      roundScore += improvementBonus;
+      accuracyTrend = "up";
+    } else if (diff > previousDiff) {
+      state.accuracyMomentum = 0;
+      accuracyTrend = "down";
+    } else {
+      state.accuracyMomentum = Math.max(0, state.accuracyMomentum - 1);
+      accuracyTrend = "steady";
+    }
+  } else {
+    state.accuracyMomentum = 0;
+  }
+  let finalScore = Math.round(roundScore);
   let penalized = false;
   if (diff > 0 && round.multiplier >= 3) {
     const penalty = Math.round(300 * round.multiplier);
@@ -435,7 +463,7 @@ function finalizeRound(guess) {
   accuracyReadout.textContent = `±${diff}`;
   updateScore(state.totalScore);
   setPhase("reveal", "Verification", "Verification underway");
-  revealMatches(round, diff, finalScore, penalized);
+  revealMatches(round, diff, finalScore, penalized, improvementBonus, accuracyTrend);
   state.roundHistory.push({
     round: round.index + 1,
     guess: round.guess,
@@ -445,10 +473,22 @@ function finalizeRound(guess) {
     baseScore,
     finalScore,
     penalized,
+    ladderBonus: improvementBonus,
+    ladderTier,
+    accuracyTrend,
   });
+  state.previousDiff = diff;
   logChannel.push(
-    `Round ${round.index + 1}: guessed ${round.guess}, actual ${round.actual}, Δ${diff}.`,
-    diff === 0 ? "success" : penalized ? "danger" : "warning",
+    `Round ${round.index + 1}: guessed ${round.guess}, actual ${round.actual}, Δ${diff}.${
+      improvementBonus > 0 ? ` Ladder bonus +${improvementBonus.toLocaleString()}.` : ""
+    }`,
+    diff === 0
+      ? "success"
+      : penalized
+        ? "danger"
+        : accuracyTrend === "up"
+          ? "success"
+          : "warning",
   );
   if (diff === 0) {
     state.streakPerfect += 1;
@@ -464,13 +504,27 @@ function finalizeRound(guess) {
     if (penalized) {
       bodyElement.classList.add("is-penalty");
       playErrorTone();
-      statusChannel("Fast miss. Penalty assessed to the ledger.", "danger");
+      statusChannel(
+        `Fast miss. Penalty assessed to the ledger.${
+          improvementBonus > 0 ? ` Ladder bonus +${improvementBonus.toLocaleString()} softened the hit.` : ""
+        }`,
+        "danger",
+      );
       window.setTimeout(() => {
         bodyElement.classList.remove("is-penalty");
       }, 900);
     } else {
-      playConfirmTone(round.multiplier);
-      statusChannel("Count logged. Review the recap to tighten accuracy.", "warning");
+      playConfirmTone(round.multiplier + ladderTier * 0.2);
+      if (accuracyTrend === "up" && improvementBonus > 0) {
+        statusChannel(
+          `Sharper read! Accuracy ladder bonus +${improvementBonus.toLocaleString()} awarded.`,
+          "success",
+        );
+      } else if (accuracyTrend === "down") {
+        statusChannel("Accuracy slipped. Ladder reset—steady the count next spill.", "warning");
+      } else {
+        statusChannel("Count logged. Review the recap to tighten accuracy.", "warning");
+      }
     }
   }
   nextRoundButton.disabled = false;
@@ -479,7 +533,7 @@ function finalizeRound(guess) {
   }
 }
 
-function revealMatches(round, diff, finalScore, penalized) {
+function revealMatches(round, diff, finalScore, penalized, ladderBonus, accuracyTrend) {
   matchstickField.classList.remove("is-hidden");
   matchstickField.classList.add("is-visible", "is-counting");
   matchstickField.setAttribute("aria-hidden", "false");
@@ -495,8 +549,13 @@ function revealMatches(round, diff, finalScore, penalized) {
       const ladderMessage = round.index + 1 >= ROUND_PLAN.length
         ? " Ladder complete."
         : " Next round ready.";
+      const improvementMessage = ladderBonus > 0
+        ? ` Accuracy ladder bonus +${ladderBonus.toLocaleString()}.`
+        : accuracyTrend === "down"
+          ? " Accuracy ladder reset."
+          : "";
       statusChannel(
-        `Round ${round.index + 1} scored ${finalScore} pts${penalized ? " with penalty" : ""}.${ladderMessage}`,
+        `Round ${round.index + 1} scored ${finalScore} pts${penalized ? " with penalty" : ""}.${ladderMessage}${improvementMessage}`,
         penalized ? "danger" : diff === 0 ? "success" : "info",
       );
       state.revealHandle = 0;
@@ -538,7 +597,12 @@ function completeSession() {
 function renderSummary() {
   summaryBody.innerHTML = "";
   const bestMultiplier = state.bestMultiplier.toFixed(1);
-  summaryOverview.textContent = `Final score ${state.totalScore} · Best multiplier ×${bestMultiplier}.`;
+  const highestLadder = state.roundHistory.reduce(
+    (max, entry) => Math.max(max, entry.ladderTier || 0),
+    0,
+  );
+  const ladderText = highestLadder > 0 ? ` · Ladder peak T${highestLadder}` : "";
+  summaryOverview.textContent = `Final score ${state.totalScore} · Best multiplier ×${bestMultiplier}${ladderText}.`;
   state.roundHistory.forEach((entry) => {
     const row = document.createElement("tr");
     if (entry.diff === 0) {
@@ -553,6 +617,7 @@ function renderSummary() {
       <td>${entry.actual}</td>
       <td>${entry.diff}</td>
       <td>×${entry.multiplier.toFixed(1)}</td>
+      <td>${entry.ladderBonus > 0 ? `+${entry.ladderBonus.toLocaleString()} (T${entry.ladderTier})` : entry.accuracyTrend === "down" ? "Reset" : "—"}</td>
       <td>${entry.finalScore.toLocaleString()}</td>
     `;
     summaryBody.append(row);
@@ -566,6 +631,8 @@ function resetGame() {
   state.roundHistory = [];
   state.totalScore = 0;
   state.bestMultiplier = 1;
+  state.previousDiff = null;
+  state.accuracyMomentum = 0;
   startButton.disabled = false;
   nextRoundButton.disabled = true;
   guessInput.disabled = true;
