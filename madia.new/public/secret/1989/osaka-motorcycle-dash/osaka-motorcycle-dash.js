@@ -35,6 +35,10 @@ const COLLISION_DAMAGE = 18;
 const DISABLER_COST = 18;
 const DISABLER_RANGE = 150;
 const HALO_PULSE_INTERVAL = 1.1;
+const WARMUP_DURATION = 6;
+const WARMUP_OUT_OF_RANGE_MULTIPLIER = 0.35;
+const WARMUP_COLLISION_MULTIPLIER = 0.55;
+const WARMUP_LOSS_THRESHOLD_BONUS = 2.5;
 
 const chaseField = document.getElementById("chase-field");
 const witnessElement = document.getElementById("witness");
@@ -151,6 +155,7 @@ const state = {
   activePhase: ROUTE[0],
   finale: false,
   reason: "",
+  graceTimer: 0,
 };
 
 function resetState() {
@@ -189,6 +194,7 @@ function resetState() {
   state.activePhase = ROUTE[0];
   state.finale = false;
   state.reason = "";
+  state.graceTimer = WARMUP_DURATION;
   disablerEffects?.replaceChildren?.();
   setSpeedFx(false);
   clearHaloPulse();
@@ -217,6 +223,7 @@ function startChase() {
   state.lastTimestamp = performance.now();
   setStatus("Ride tight. Keep the witness in your halo and bank that boost.", "info");
   log.push("Engines hot. Witness rolling north on Mido-suji.", "info");
+  log.push("Warm-up window active—loss penalties softened while you sync up.", "info");
   requestAnimationFrame(loop);
 }
 
@@ -352,6 +359,9 @@ function updateProximity(delta) {
   const dy = state.player.y - state.witness.y;
   const distance = Math.hypot(dx, dy);
   const ratio = clamp(1 - distance / SAFE_RADIUS, 0, 1);
+  const warmupRatio = getWarmupRatio();
+  const penaltyMultiplier = warmupScale(WARMUP_OUT_OF_RANGE_MULTIPLIER);
+  const lossThreshold = LOSS_OF_CONTACT_LIMIT + WARMUP_LOSS_THRESHOLD_BONUS * warmupRatio;
 
   updateProximityVisual(ratio);
 
@@ -373,12 +383,12 @@ function updateProximity(delta) {
     state.currentStreak = 0;
     nextHaloPulseAt = HALO_PULSE_INTERVAL;
     clearHaloPulse();
-    state.outOfRangeTime += delta;
-    const damage = OUT_OF_RANGE_DAMAGE * delta;
+    state.outOfRangeTime += delta * penaltyMultiplier;
+    const damage = OUT_OF_RANGE_DAMAGE * penaltyMultiplier * delta;
     state.health = Math.max(0, state.health - damage);
     witnessElement.classList.add("out-of-range");
     witnessGlow.style.opacity = "0.35";
-    if (state.outOfRangeTime >= LOSS_OF_CONTACT_LIMIT) {
+    if (state.outOfRangeTime >= lossThreshold) {
       endChase("Loss of contact penalty triggered. Witness vanished into the crowd.", "danger");
       return;
     }
@@ -502,6 +512,7 @@ function updateHazards(delta) {
 
 function updateTimers(delta) {
   const phase = getCurrentPhase();
+  state.graceTimer = Math.max(0, state.graceTimer - delta);
   state.spawnTimers.traffic -= delta;
   state.spawnTimers.gang -= delta;
   state.warningCooldown = Math.max(0, state.warningCooldown - delta);
@@ -579,7 +590,8 @@ function removeHazard(id) {
 }
 
 function applyDamage(message, amount) {
-  state.health = Math.max(0, state.health - amount);
+  const scaledDamage = amount * warmupScale(WARMUP_COLLISION_MULTIPLIER);
+  state.health = Math.max(0, state.health - scaledDamage);
   triggerImpactFx(state.player.x, state.player.y);
   setStatus(message, "danger");
   log.push(message, "danger");
@@ -755,6 +767,22 @@ function clamp(value, min, max) {
 
 function randomBetween(min, max) {
   return Math.random() * (max - min) + min;
+}
+
+function getWarmupRatio() {
+  if (state.graceTimer <= 0) {
+    return 0;
+  }
+  return clamp(state.graceTimer / WARMUP_DURATION, 0, 1);
+}
+
+function warmupScale(minMultiplier) {
+  const ratio = getWarmupRatio();
+  if (ratio <= 0) {
+    return 1;
+  }
+  const safeMin = Number.isFinite(minMultiplier) ? clamp(minMultiplier, 0, 1) : 0;
+  return safeMin + (1 - safeMin) * (1 - ratio);
 }
 
 function getAudioContext() {
