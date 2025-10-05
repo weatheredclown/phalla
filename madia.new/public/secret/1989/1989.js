@@ -2606,6 +2606,7 @@ const filmByGameId = new Map([
   ["paper-trail-blaze", { type: "film", title: "Blaze" }],
   ["second-star-flight", { type: "film", title: "Peter Pan (1989 re-release)" }],
   ["voice-box-swap", { type: "film", title: "Look Who's Talking" }],
+  ["power-glove-prodigy", { type: "film", title: "The Wizard" }],
   ["freddys-dream-maze", { type: "film", title: "A Nightmare on Elm Street 5: The Dream Child" }],
   ["framed-breakout", { type: "film", title: "Tango & Cash" }],
   ["bat-signal-scramble", { type: "film", title: "Batman" }],

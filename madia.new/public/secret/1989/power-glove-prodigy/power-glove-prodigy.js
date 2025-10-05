@@ -35,6 +35,9 @@ const challengeTimer = document.getElementById("challenge-timer");
 const statusLine = document.getElementById("status-line");
 const logList = document.getElementById("event-log");
 const wrapUp = document.getElementById("wrap-up");
+const inspirationSection = document.querySelector(".inspiration");
+const inspirationButton = document.getElementById("inspiration-button");
+const inspirationText = document.getElementById("inspiration-text");
 const wrapUpScore = document.getElementById("summary-score");
 const wrapUpStreak = document.getElementById("summary-streak");
 const wrapUpMultiplier = document.getElementById("summary-multiplier");
@@ -737,5 +740,24 @@ wrapUp.addEventListener("keydown", (event) => {
     hideSummary();
   }
 });
+
+if (inspirationButton && inspirationText) {
+  inspirationButton.addEventListener("click", () => {
+    inspirationText.hidden = false;
+    inspirationButton.hidden = true;
+    inspirationButton.setAttribute("aria-expanded", "true");
+    if (inspirationSection) {
+      inspirationSection.dataset.revealed = "true";
+    }
+    const inspirationMessage = inspirationText.textContent?.trim();
+    if (inspirationMessage) {
+      statusChannel(`Inspiration reveal · ${inspirationMessage}`, "info");
+      logChannel.push(`Inspiration unlocked · ${inspirationMessage}`, "info");
+    } else {
+      statusChannel("Cabinet inspiration revealed.", "info");
+      logChannel.push("Cabinet inspiration revealed.", "info");
+    }
+  });
+}
 
 resetTournament({ keepSummary: true });
