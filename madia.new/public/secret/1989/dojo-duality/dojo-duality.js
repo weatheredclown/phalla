@@ -226,9 +226,6 @@ function movePiece(dx, dy) {
     renderBoard();
     return true;
   }
-  if (dy === 1) {
-    lockPiece();
-  }
   return false;
 }
 
