@@ -508,7 +508,9 @@ function resetGame() {
   resetResources();
   resetLinks();
   renderEventLog();
-  pushEvent("Briefing: Collect sparkstone and gritrock, then forge a Filing Stone to cut the first link.");
+  pushEvent(
+    "Briefing: Collect sparkstone and gritrock while the patrols hound the Fugitive, then forge a Filing Stone to cut the first link."
+  );
   refreshUI();
 }
 
@@ -652,6 +654,8 @@ function advanceAfterMove() {
 
 function movePolice() {
   const occupied = new Set(board.policeUnits.map((unit) => coordKey(unit.position.x, unit.position.y)));
+  const lockedLinks = countLockedLinks();
+  const pursuitTarget = lockedLinks > 0 ? state.fugitive : state.hostage;
 
   board.policeUnits.forEach((unit) => {
     const currentKey = coordKey(unit.position.x, unit.position.y);
@@ -665,7 +669,7 @@ function movePolice() {
         nextPosition = clonePoint(loop[unit.loopIndex]);
       }
     } else {
-      const pursuit = findPursuitStep(unit.position, state.hostage, unit);
+      const pursuit = findPursuitStep(unit.position, pursuitTarget, unit);
       if (pursuit) {
         nextPosition = pursuit;
       }
