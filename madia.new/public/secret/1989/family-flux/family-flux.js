@@ -736,6 +736,7 @@ const scenarioDescription = document.getElementById("scenario-description");
 const panelArt = document.getElementById("panel-art");
 const choiceAButton = document.getElementById("choice-a");
 const choiceBButton = document.getElementById("choice-b");
+const choiceButtons = [choiceAButton, choiceBButton];
 const nextButton = document.getElementById("next-button");
 const wrapUpSection = document.getElementById("wrap-up");
 const wrapSummary = document.getElementById("wrap-summary");
@@ -882,9 +883,18 @@ function advanceScenario() {
 }
 
 function renderChoices(scenario) {
-  const [choiceA, choiceB] = scenario.choices;
-  applyChoiceToButton(choiceAButton, choiceA, "a");
-  applyChoiceToButton(choiceBButton, choiceB, "b");
+  const randomized = shuffleChoices(scenario.choices);
+  const slots = [
+    { button: choiceAButton, slot: "a" },
+    { button: choiceBButton, slot: "b" },
+  ];
+  randomized.forEach((choice, index) => {
+    const target = slots[index];
+    if (!target?.button) {
+      return;
+    }
+    applyChoiceToButton(target.button, choice, target.slot);
+  });
 }
 
 function applyChoiceToButton(button, choice, slot) {
@@ -898,7 +908,35 @@ function applyChoiceToButton(button, choice, slot) {
   button.dataset.tone = "";
   button.querySelector(".choice-label").textContent = choice.label;
   button.querySelector(".choice-detail").textContent = choice.detail;
-  button.querySelector(".choice-risk").textContent = formatRiskText(choice);
+  concealChoice(button, choice);
+}
+
+function shuffleChoices(choices) {
+  const copy = [...choices];
+  for (let i = copy.length - 1; i > 0; i -= 1) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [copy[i], copy[j]] = [copy[j], copy[i]];
+  }
+  return copy;
+}
+
+function concealChoice(button, choice) {
+  button.dataset.revealed = "false";
+  const risk = button.querySelector(".choice-risk");
+  if (risk) {
+    risk.textContent = formatHiddenRiskText(choice);
+  }
+}
+
+function formatHiddenRiskText(choice) {
+  if (choice.variant === "safe") {
+    return "Guaranteed Harmony shift hidden";
+  }
+  if (choice.variant === "gamble") {
+    const oddsPercent = Math.round((choice.odds ?? 0) * 100);
+    return `${oddsPercent}% gamble · Harmony swing hidden`;
+  }
+  return "Harmony swing hidden";
 }
 
 function formatRiskText(choice) {
@@ -916,6 +954,33 @@ function formatRiskText(choice) {
 function formatDelta(delta) {
   const sign = delta > 0 ? "+" : "";
   return `${sign}${delta}`;
+}
+
+function revealChoiceOutcome(button, choice, outcome, variant) {
+  button.dataset.revealed = "true";
+  const risk = button.querySelector(".choice-risk");
+  if (risk) {
+    risk.textContent = formatRevealRiskText(choice, outcome, variant);
+  }
+}
+
+function findChoiceButton(choiceId) {
+  return choiceButtons.find((button) => button?.dataset.choiceId === choiceId) ?? null;
+}
+
+function formatRevealRiskText(choice, outcome, variant) {
+  const deltaLabel = formatDelta(outcome?.delta ?? 0);
+  if (choice.variant === "safe") {
+    return `Revealed: ${deltaLabel} Harmony`;
+  }
+  const base = formatRiskText(choice);
+  let rollLabel = "Resolved";
+  if (variant === "success") {
+    rollLabel = "Rolled success";
+  } else if (variant === "failure") {
+    rollLabel = "Rolled failure";
+  }
+  return `${base} · ${rollLabel} → ${deltaLabel}`;
 }
 
 function handleChoice(slot) {
@@ -959,10 +1024,11 @@ function resolveChoice(choice, { trigger }) {
   if (!outcome) {
     return;
   }
-  const button = scenario.choices[0] === choice ? choiceAButton : choiceBButton;
-  const otherButton = scenario.choices[0] === choice ? choiceBButton : choiceAButton;
+  const button = findChoiceButton(choice.id);
+  const otherButton = choiceButtons.find((candidate) => candidate && candidate !== button) ?? null;
   if (button) {
     button.dataset.tone = outcome.tone ?? tone;
+    revealChoiceOutcome(button, choice, outcome, variant);
   }
   if (otherButton) {
     otherButton.dataset.tone = "";
@@ -1029,7 +1095,7 @@ function tickUnlockQueue() {
 }
 
 function enableChoices(enabled) {
-  [choiceAButton, choiceBButton].forEach((button) => {
+  choiceButtons.forEach((button) => {
     if (!button) {
       return;
     }
