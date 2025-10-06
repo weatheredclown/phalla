@@ -1,6 +1,22 @@
 import { getHighScore, onHighScoreChange } from "./arcade-scores.js";
 import { getScoreConfig } from "./score-config.js";
 
+const BODY_SCROLL_LOCK_CLASS = "arcade-scroll-lock";
+
+function lockBodyScroll() {
+  if (!document.body) {
+    return;
+  }
+  document.body.classList.add(BODY_SCROLL_LOCK_CLASS);
+}
+
+function unlockBodyScroll() {
+  if (!document.body) {
+    return;
+  }
+  document.body.classList.remove(BODY_SCROLL_LOCK_CLASS);
+}
+
 /**
  * Register launchable cabinets here. You can also import { registerGame }
  * elsewhere and call it at runtime for dynamic catalogs.
@@ -2931,6 +2947,7 @@ function openGame(game) {
   frame.dataset.baseUrl = game.url;
   setRestartButtonEnabled(false);
   frame.src = game.url;
+  lockBodyScroll();
   overlay.hidden = false;
   overlay.dataset.activeGame = game.id;
   setFullscreenButtonState(isOverlayFullscreen());
@@ -2947,6 +2964,7 @@ function closeGame() {
   }
   overlay.hidden = true;
   overlay.dataset.activeGame = "";
+  unlockBodyScroll();
   try {
     pendingRestart?.();
   } catch (error) {
