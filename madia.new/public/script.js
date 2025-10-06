@@ -1,4 +1,5 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+import { applyDialogPolyfill } from "./dialog-polyfill.js";
 import {
   getAuth,
   onAuthStateChanged,
@@ -108,6 +109,8 @@ const els = {
   playerDialogError: document.getElementById("playerDialogError"),
   roleSuggestions: document.getElementById("roleSuggestions"),
 };
+
+applyDialogPolyfill();
 
 const ROLE_SUGGESTIONS = [
   "Villager",
