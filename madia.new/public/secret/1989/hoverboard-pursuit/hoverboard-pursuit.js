@@ -20,7 +20,8 @@ const highScore = initHighScoreBanner({
 });
 
 const ghostStorageKey = "hoverboard-pursuit-ghost";
-const laneOffsets = [-140, 0, 140];
+const laneCount = 3;
+let laneOffsets = [-140, 0, 140];
 const hazardTypes = new Set(["traffic", "attack", "hazard", "water"]);
 
 const PHASES = [
@@ -147,6 +148,7 @@ let ghostRecording = [];
 let lastGhostRecord = 0;
 let playerLane = 1;
 const shortcutsTaken = new Set();
+let pendingLaneUpdate = null;
 
 const allObstacles = PHASES.flatMap((phase, index) => {
   const phaseOffset = PHASES.slice(0, index).reduce((acc, item) => acc + item.distance, 0);
@@ -161,6 +163,7 @@ const allObstacles = PHASES.flatMap((phase, index) => {
 const obstacleElements = new Map();
 const processedObstacles = new Set();
 const nearMissedObstacles = new Set();
+let currentGhostLane = 1;
 
 function formatTime(ms) {
   const total = Math.max(0, Math.round(ms));
@@ -183,18 +186,60 @@ function clamp(value, min, max) {
   return Math.min(max, Math.max(min, value));
 }
 
+function computeLaneOffsets() {
+  const width = track?.clientWidth || 0;
+  if (!width) {
+    return [-140, 0, 140];
+  }
+  const laneWidth = width / laneCount;
+  const laneHalfSpan = (laneCount - 1) / 2;
+  return Array.from({ length: laneCount }, (_, index) => {
+    const offset = (index - laneHalfSpan) * laneWidth;
+    return Math.round(offset);
+  });
+}
+
+function applyLaneOffsets() {
+  const offset = laneOffsets[playerLane] ?? 0;
+  playerBoard.style.setProperty("--lane-offset", `${offset}px`);
+  track.dataset.playerLane = String(playerLane);
+  updateGhostBoardLane(currentGhostLane);
+  obstacleElements.forEach(({ element, obstacle }) => {
+    const laneOffset = laneOffsets[obstacle.lane] ?? 0;
+    element.style.setProperty("--lane-offset", `${laneOffset}px`);
+  });
+}
+
+function updateLaneGeometry() {
+  laneOffsets = computeLaneOffsets();
+  playerLane = clamp(playerLane, 0, laneCount - 1);
+  applyLaneOffsets();
+}
+
+function scheduleLaneGeometryUpdate() {
+  if (pendingLaneUpdate !== null) {
+    return;
+  }
+  pendingLaneUpdate = requestAnimationFrame(() => {
+    pendingLaneUpdate = null;
+    updateLaneGeometry();
+  });
+}
+
 function setLane(lane) {
-  const nextLane = clamp(lane, 0, laneOffsets.length - 1);
+  const nextLane = clamp(lane, 0, laneCount - 1);
   if (playerLane === nextLane) {
     return;
   }
   playerLane = nextLane;
-  playerBoard.style.setProperty("--lane-offset", `${laneOffsets[playerLane]}px`);
+  applyLaneOffsets();
   log.push(`Lane shift ➜ ${["Left", "Center", "Right"][playerLane]}`);
 }
 
 function updateGhostBoardLane(lane) {
-  ghostBoard.style.setProperty("--lane-offset", `${laneOffsets[lane]}px`);
+  currentGhostLane = clamp(lane, 0, laneCount - 1);
+  const offset = laneOffsets[currentGhostLane] ?? 0;
+  ghostBoard.style.setProperty("--lane-offset", `${offset}px`);
 }
 
 function grantBoost(amount, reason) {
@@ -382,7 +427,7 @@ function processObstacle(obstacle) {
 }
 
 function spawnObstacles() {
-  obstacleElements.forEach((element) => {
+  obstacleElements.forEach(({ element }) => {
     element.remove();
   });
   obstacleElements.clear();
@@ -394,23 +439,27 @@ function spawnObstacles() {
     element.dataset.type = obstacle.type;
     element.setAttribute("aria-hidden", "true");
     element.textContent = obstacle.label;
-    element.style.setProperty("--lane-offset", `${laneOffsets[obstacle.lane]}px`);
+    element.style.setProperty("--lane-offset", `${laneOffsets[obstacle.lane] ?? 0}px`);
     element.style.setProperty("--z", "-460px");
+    element.style.setProperty("--scale", "0.65");
     track.appendChild(element);
-    obstacleElements.set(obstacle.id, element);
+    obstacleElements.set(obstacle.id, { element, obstacle });
   });
 }
 
 function updateObstacles(deltaSeconds) {
   const totalDistance = phaseStartDistance + phaseProgress;
   allObstacles.forEach((obstacle) => {
-    const element = obstacleElements.get(obstacle.id);
-    if (!element) {
+    const entry = obstacleElements.get(obstacle.id);
+    if (!entry) {
       return;
     }
+    const { element } = entry;
     const distanceAhead = obstacle.globalOffset - totalDistance;
     const z = clamp(distanceAhead * -0.95, -520, 120);
     element.style.setProperty("--z", `${z}px`);
+    const scale = clamp(1.2 - Math.abs(z) / 520, 0.55, 1.1);
+    element.style.setProperty("--scale", scale.toFixed(3));
 
     if (distanceAhead < -80) {
       element.style.opacity = "0";
@@ -418,6 +467,12 @@ function updateObstacles(deltaSeconds) {
       element.style.opacity = "0.4";
     } else {
       element.style.opacity = "1";
+    }
+
+    if (distanceAhead <= 160 && distanceAhead >= -40) {
+      element.dataset.active = "true";
+    } else {
+      element.removeAttribute("data-active");
     }
 
     if (!processedObstacles.has(obstacle.id) && distanceAhead <= 0) {
@@ -485,9 +540,9 @@ function resetRunState() {
   boostMeter.setAttribute("aria-valuenow", "0");
   boostValue.textContent = "0%";
   boostButton.setAttribute("aria-pressed", "false");
-  playerBoard.style.setProperty("--lane-offset", `${laneOffsets[playerLane]}px`);
+  applyLaneOffsets();
   ghostBoard.hidden = true;
-  ghostBoard.style.setProperty("--lane-offset", `${laneOffsets[1]}px`);
+  updateGhostBoardLane(1);
   resetPhaseTimes();
   setStatus("Waiting on the line.");
   if (eventLogList) {
@@ -771,6 +826,9 @@ function handleKeyUp(event) {
 document.addEventListener("keydown", handleKey);
 document.addEventListener("keyup", handleKeyUp);
 
+window.addEventListener("resize", scheduleLaneGeometryUpdate);
+
+updateLaneGeometry();
 resetRunState();
 spawnObstacles();
 
