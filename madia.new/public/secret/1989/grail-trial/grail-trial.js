@@ -1,4 +1,4 @@
-import { initHighScoreBanner, recordHighScore } from "../arcade-scores.js";
+import { initHighScoreBanner } from "../arcade-scores.js";
 import { getScoreConfig } from "../score-config.js";
 import { mountParticleField } from "../particles.js";
 import { autoEnhanceFeedback } from "../feedback.js";
@@ -12,7 +12,7 @@ const particleField = mountParticleField({
 });
 
 const scoreConfig = getScoreConfig("grail-trial");
-initHighScoreBanner({
+const highScore = initHighScoreBanner({
   gameId: "grail-trial",
   label: scoreConfig.label,
   format: scoreConfig.format,
@@ -658,7 +658,7 @@ function finalizeRun() {
     wrapupDialog.focus();
   });
 
-  recordHighScore("grail-trial", finalScore, {
+  highScore.submit(finalScore, {
     totalTimeMs: Math.round(totalTime * 1000),
     trialTimesMs: state.trialTimes.map((value) => Math.round(value * 1000)),
     failures: state.failureCount,
