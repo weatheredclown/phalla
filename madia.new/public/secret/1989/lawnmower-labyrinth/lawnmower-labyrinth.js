@@ -2,6 +2,7 @@ import { initHighScoreBanner } from "../arcade-scores.js";
 import { getScoreConfig } from "../score-config.js";
 import { mountParticleField } from "../particles.js";
 import { autoEnhanceFeedback } from "../feedback.js";
+import { createWrapUpDialog } from "../wrap-up-dialog.js";
 
 const particleField = mountParticleField({
   effects: {
@@ -82,6 +83,9 @@ const eventLog = document.getElementById("event-log");
 const wrapUp = document.getElementById("wrap-up");
 const wrapUpText = document.getElementById("wrap-up-text");
 const replayButton = document.getElementById("replay-button");
+const wrapUpClose = document.getElementById("wrap-up-close");
+
+const wrapUpDialog = createWrapUpDialog(wrapUp);
 
 boardEl.style.gridTemplateColumns = `repeat(${GRID_COLS}, 46px)`;
 
@@ -180,9 +184,17 @@ resetButton.addEventListener("click", () => {
 });
 
 replayButton.addEventListener("click", () => {
+  wrapUpDialog.close({ restoreFocus: false });
   resetRun();
   beginRun();
 });
+
+if (wrapUpClose) {
+  wrapUpClose.addEventListener("click", () => {
+    wrapUpDialog.close();
+    setSessionStatus("Wrap-up dismissed. Plot your next route when ready.", "info");
+  });
+}
 
 dashButton.addEventListener("click", () => {
   performDash();
@@ -256,7 +268,7 @@ function beginRun() {
   controlButtons.forEach((button) => {
     button.disabled = false;
   });
-  wrapUp.hidden = true;
+  wrapUpDialog.close({ restoreFocus: false });
   placeMower();
 }
 
@@ -300,7 +312,7 @@ function resetRun({ preserveLog = false } = {}) {
   controlButtons.forEach((button) => {
     button.disabled = true;
   });
-  wrapUp.hidden = true;
+  wrapUpDialog.close({ restoreFocus: false });
   placePlayer();
   placeMower();
   resetSprinklerCells(false);
@@ -586,7 +598,7 @@ function completeRun() {
     display: `${formatSeconds(finalTime)}s · crumbs ${state.collectedCrumbs.size}`,
   };
   highScore.submit(scoreValue, meta);
-  wrapUp.hidden = false;
+  wrapUpDialog.open({ focus: replayButton });
   wrapUpText.textContent = `Safe Zone reached in ${formatSeconds(finalTime)}s with ${state.collectedCrumbs.size} crumb${
     state.collectedCrumbs.size === 1 ? "" : "s"
   } banked.`;
@@ -617,7 +629,7 @@ function failRun(message) {
   controlButtons.forEach((button) => {
     button.disabled = true;
   });
-  wrapUp.hidden = false;
+  wrapUpDialog.open({ focus: replayButton });
   wrapUpText.textContent = `${message} Try again for a faster time.`;
   setSessionStatus(message, "danger");
   addLog(message, "danger");

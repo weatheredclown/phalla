@@ -2,6 +2,7 @@ import { initHighScoreBanner } from "../arcade-scores.js";
 import { getScoreConfig } from "../score-config.js";
 import { mountParticleField } from "../particles.js";
 import { autoEnhanceFeedback } from "../feedback.js";
+import { createWrapUpDialog } from "../wrap-up-dialog.js";
 
 const GAME_ID = "family-flux";
 const INITIAL_HARMONY = 520;
@@ -742,6 +743,9 @@ const wrapSummary = document.getElementById("wrap-summary");
 const wrapScore = document.getElementById("wrap-score");
 const decisionTree = document.getElementById("decision-tree");
 const replayButton = document.getElementById("replay-button");
+const wrapUpClose = document.getElementById("wrap-up-close");
+
+const wrapUpDialog = createWrapUpDialog(wrapUpSection);
 
 const scoreConfig = getScoreConfig(GAME_ID);
 const highScore = initHighScoreBanner({
@@ -796,7 +800,13 @@ nextButton?.addEventListener("click", () => {
 
 replayButton?.addEventListener("click", () => {
   ensureAudioContext();
+  wrapUpDialog.close({ restoreFocus: false });
   startRun();
+});
+
+wrapUpClose?.addEventListener("click", () => {
+  wrapUpDialog.close();
+  setStatus("Wrap-up dismissed. Queue your next crisis when ready.", "info");
 });
 
 autoEnhanceFeedback({
@@ -817,7 +827,7 @@ function startRun() {
   state.current = null;
   state.awaitingContinue = false;
   scenarioArticle.hidden = false;
-  wrapUpSection.hidden = true;
+  wrapUpDialog.close({ restoreFocus: false });
   resetButton.disabled = false;
   startButton.disabled = true;
   nextButton.disabled = true;
@@ -842,7 +852,7 @@ function resetRun() {
   nextButton.disabled = true;
   enableChoices(false);
   scenarioArticle.hidden = true;
-  wrapUpSection.hidden = true;
+  wrapUpDialog.close({ restoreFocus: false });
   progressReadout.textContent = "No dilemmas active.";
   setStatus("Session reset. Harmony recentered.", "info");
   updateHarmonyDisplay(0, "neutral", { immediate: true });
@@ -1205,7 +1215,7 @@ function concludeRun() {
   renderWrapUp();
 }
 function renderWrapUp() {
-  wrapUpSection.hidden = false;
+  wrapUpDialog.open({ focus: replayButton });
   const finalScore = Math.max(0, Math.round(state.harmony));
   const bestSwing = state.history.reduce((max, entry) => (Math.abs(entry.delta) > Math.abs(max) ? entry.delta : max), 0);
   wrapSummary.textContent = `You navigated ${state.history.length} dilemmas and finished with Harmony ${finalScore}.`;

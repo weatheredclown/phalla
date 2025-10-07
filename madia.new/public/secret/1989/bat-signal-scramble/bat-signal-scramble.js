@@ -2,6 +2,7 @@ import { mountParticleField } from "../particles.js";
 import { initHighScoreBanner, getHighScore } from "../arcade-scores.js";
 import { getScoreConfig } from "../score-config.js";
 import { autoEnhanceFeedback, createLogChannel, createStatusChannel } from "../feedback.js";
+import { createWrapUpDialog } from "../wrap-up-dialog.js";
 
 const particleField = mountParticleField({
   density: 0.0002,
@@ -53,6 +54,8 @@ const routeSummaryEl = document.getElementById("route-summary");
 const routeMapList = document.getElementById("route-map");
 const replayButton = document.getElementById("replay-button");
 const closeWrapUpButton = document.getElementById("close-wrap-up");
+
+const wrapUpDialog = createWrapUpDialog(wrapUp);
 
 autoEnhanceFeedback();
 
@@ -686,7 +689,7 @@ function finishRun() {
     routeMapList.appendChild(item);
   });
 
-  wrapUp.hidden = false;
+  wrapUpDialog.open({ focus: replayButton });
   setStatus("Scramble complete. Review the route and reset when ready.", "success");
 }
 
@@ -738,22 +741,22 @@ function startRun() {
   animationFrame = window.requestAnimationFrame(step);
 }
 
-function closeWrapUp() {
-  wrapUp.hidden = true;
+function closeWrapUp(options = {}) {
+  wrapUpDialog.close(options);
 }
 
 startButton.addEventListener("click", () => {
-  closeWrapUp();
+  closeWrapUp({ restoreFocus: false });
   startRun();
 });
 
 resetButton.addEventListener("click", () => {
-  closeWrapUp();
+  closeWrapUp({ restoreFocus: false });
   resetRun();
 });
 
 replayButton.addEventListener("click", () => {
-  closeWrapUp();
+  closeWrapUp({ restoreFocus: false });
   startRun();
 });
 

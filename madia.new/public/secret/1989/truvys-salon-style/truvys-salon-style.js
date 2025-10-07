@@ -259,7 +259,7 @@ gossipDecline.addEventListener("click", () => {
 });
 
 wrapReplay.addEventListener("click", () => {
-  hideWrapUp();
+  hideWrapUp({ restoreFocus: false });
   startShift();
 });
 
@@ -269,7 +269,7 @@ wrapClose.addEventListener("click", () => {
 });
 
 window.addEventListener("keydown", (event) => {
-  if (wrapUp.hidden === false) {
+  if (wrapUpDialog.isOpen()) {
     return;
   }
   if (event.target instanceof HTMLInputElement || event.target instanceof HTMLTextAreaElement) {
@@ -802,12 +802,11 @@ function showWrapUp() {
   } else {
     wrapNote.textContent = "A little hairspray and you can bounce back next shift.";
   }
-  wrapUp.hidden = false;
-  wrapUp.focus();
+  wrapUpDialog.open({ focus: wrapReplay });
 }
 
-function hideWrapUp() {
-  wrapUp.hidden = true;
+function hideWrapUp({ restoreFocus = true } = {}) {
+  wrapUpDialog.close({ restoreFocus });
 }
 
 function offerGossip() {

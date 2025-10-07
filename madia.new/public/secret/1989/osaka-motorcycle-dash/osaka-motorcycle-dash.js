@@ -2,6 +2,7 @@ import { mountParticleField } from "../particles.js";
 import { initHighScoreBanner } from "../arcade-scores.js";
 import { getScoreConfig } from "../score-config.js";
 import { autoEnhanceFeedback, createLogChannel, createStatusChannel } from "../feedback.js";
+import { createWrapUpDialog } from "../wrap-up-dialog.js";
 
 const particleSystem = mountParticleField({
   density: 0.0002,
@@ -68,6 +69,8 @@ const wrapUpStreak = document.getElementById("wrap-up-streak");
 const wrapUpNote = document.getElementById("wrap-up-note");
 const replayButton = document.getElementById("replay-button");
 const closeWrapUp = document.getElementById("close-wrap-up");
+
+const wrapUpDialog = createWrapUpDialog(wrapUp);
 
 const setStatus = createStatusChannel(statusBar);
 const log = createLogChannel(eventLogElement, { limit: 20 });
@@ -211,7 +214,7 @@ function startChase() {
   if (state.running) {
     return;
   }
-  hideWrapUp();
+  hideWrapUp({ restoreFocus: false });
   resetState();
   state.running = true;
   state.lastTimestamp = performance.now();
@@ -719,8 +722,7 @@ function showWrapUp() {
   wrapUpDisabled.textContent = String(state.disabledCount);
   wrapUpStreak.textContent = `${state.longestStreak.toFixed(1)} s`;
   wrapUpNote.textContent = state.reason || "Stay tight to refill boost and keep the halo stable.";
-  wrapUp.hidden = false;
-  wrapUp.focus?.();
+  wrapUpDialog.open({ focus: replayButton });
   const meta = {
     disabled: state.disabledCount,
     longestStreak: Number(state.longestStreak.toFixed(1)),
@@ -729,8 +731,8 @@ function showWrapUp() {
   particleSystem?.emitSparkle?.(1.2);
 }
 
-function hideWrapUp() {
-  wrapUp.hidden = true;
+function hideWrapUp({ restoreFocus = true } = {}) {
+  wrapUpDialog.close({ restoreFocus });
 }
 
 function positionElement(element, x, y) {
@@ -999,17 +1001,12 @@ disablerButton.addEventListener("click", () => {
 });
 
 replayButton.addEventListener("click", () => {
+  hideWrapUp({ restoreFocus: false });
   startChase();
 });
 
 closeWrapUp.addEventListener("click", () => {
   hideWrapUp();
-});
-
-wrapUp.addEventListener("click", (event) => {
-  if (event.target === wrapUp) {
-    hideWrapUp();
-  }
 });
 
 window.addEventListener("keydown", (event) => {
