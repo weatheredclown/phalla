@@ -2,6 +2,7 @@ import { initHighScoreBanner } from "../arcade-scores.js";
 import { getScoreConfig } from "../score-config.js";
 import { mountParticleField } from "../particles.js";
 import { autoEnhanceFeedback, createLogChannel, createStatusChannel } from "../feedback.js";
+import { createWrapUpDialog } from "../wrap-up-dialog.js";
 
 const GAME_ID = "wild-thing-wind-up";
 const RUN_LIMIT = 5;
@@ -79,6 +80,8 @@ const wrapUpWild = document.getElementById("wrap-up-wild");
 const wrapUpNote = document.getElementById("wrap-up-note");
 const wrapUpReplay = document.getElementById("wrap-up-replay");
 const wrapUpClose = document.getElementById("wrap-up-close");
+
+const wrapUpDialog = createWrapUpDialog(wrapUpRoot);
 
 const TARGET_ZONES = [
   { label: "High Inside", x: 0.32, y: 0.24 },
@@ -160,7 +163,7 @@ function setup() {
   });
 
   wrapUpReplay.addEventListener("click", () => {
-    hideWrapUp();
+    hideWrapUp({ restoreFocus: false });
     startGame();
   });
 
@@ -674,17 +677,14 @@ function concludeGame() {
   } else {
     wrapUpNote.textContent = "Punch out the order again to push your high score even higher.";
   }
-  wrapUpRoot.hidden = false;
-  window.setTimeout(() => {
-    wrapUpReplay.focus();
-  }, 90);
+  wrapUpDialog.open({ focus: wrapUpReplay });
   statusChannel("Skipper signals for the pen. Game over—check the box score.", "warning");
   particleField.emitBurst(1.25, { y: 0.32 });
   playPitchSound("game-over");
 }
 
-function hideWrapUp() {
-  wrapUpRoot.hidden = true;
+function hideWrapUp(options = {}) {
+  wrapUpDialog.close(options);
 }
 
 function callTime() {

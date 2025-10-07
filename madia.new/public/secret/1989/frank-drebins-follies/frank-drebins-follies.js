@@ -2,6 +2,7 @@ import { mountParticleField } from "../particles.js";
 import { initHighScoreBanner } from "../arcade-scores.js";
 import { getScoreConfig } from "../score-config.js";
 import { autoEnhanceFeedback, createLogChannel, createStatusChannel } from "../feedback.js";
+import { createWrapUpDialog } from "../wrap-up-dialog.js";
 
 const particleSystem = mountParticleField({
   density: 0.00022,
@@ -606,6 +607,8 @@ const highlightList = document.getElementById("highlight-list");
 const replayButton = document.getElementById("replay-button");
 const closeWrapUp = document.getElementById("close-wrap-up");
 
+const wrapUpDialog = createWrapUpDialog(wrapUp);
+
 const log = createLogChannel(eventLogList, { limit: 16 });
 const setStatus = createStatusChannel(statusBar, {
   onTone: handleStatusTone,
@@ -630,7 +633,6 @@ let pendingIntervention = null;
 let interventionTimerId = null;
 let wrapUpReason = "";
 let lastReputationTone = "success";
-
 function normalizeTone(tone = "neutral") {
   const key = String(tone).toLowerCase();
   return TONE_ALIASES[key] ?? "neutral";
@@ -663,6 +665,7 @@ function clamp(value, min, max) {
 function formatCurrency(value) {
   return value.toLocaleString("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 0 });
 }
+
 
 function updateChaosDisplay() {
   chaosScoreEl.textContent = chaosRating.toLocaleString();
@@ -961,7 +964,7 @@ function startRun() {
     audio.playShiftStart();
   });
   runActive = true;
-  wrapUp.hidden = true;
+  wrapUpDialog.close({ restoreFocus: false });
   chaosRating = 0;
   reputation = START_REPUTATION;
   scenarioIndex = 0;
@@ -981,7 +984,7 @@ function startRun() {
 function resetRun(options = {}) {
   const { silent = false } = options;
   runActive = false;
-  wrapUp.hidden = true;
+  wrapUpDialog.close({ restoreFocus: false });
   hideIntervention();
   stopPromptTimer();
   if (pendingTimeout) {
@@ -1034,8 +1037,7 @@ function endRun() {
       highlightList.append(entry);
     });
   }
-  wrapUp.hidden = false;
-  wrapUp.focus({ preventScroll: true });
+  wrapUpDialog.open({ focus: replayButton });
   audio.playWrapUp(reputation > 0);
   highScore.submit(chaosRating, {
     highlights: highlightReel.length,
@@ -1053,6 +1055,13 @@ function handlePromptButton() {
 
 function handleKeydown(event) {
   if (event.defaultPrevented) {
+    return;
+  }
+  if (wrapUpDialog.isOpen()) {
+    if (event.key === "Escape") {
+      event.preventDefault();
+      wrapUpDialog.close();
+    }
     return;
   }
   const key = event.key.toLowerCase();
@@ -1293,17 +1302,12 @@ resetButton.addEventListener("click", () => {
 
 promptButton.addEventListener("click", handlePromptButton);
 replayButton.addEventListener("click", () => {
+  wrapUpDialog.close({ restoreFocus: false });
   resetRun();
   startRun();
 });
 closeWrapUp.addEventListener("click", () => {
-  wrapUp.hidden = true;
-});
-
-wrapUp.addEventListener("click", (event) => {
-  if (event.target === wrapUp) {
-    wrapUp.hidden = true;
-  }
+  wrapUpDialog.close();
 });
 
 document.addEventListener("keydown", handleKeydown);

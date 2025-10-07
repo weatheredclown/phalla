@@ -2,6 +2,7 @@ import { mountParticleField } from "../particles.js";
 import { initHighScoreBanner } from "../arcade-scores.js";
 import { getScoreConfig } from "../score-config.js";
 import { autoEnhanceFeedback, createLogChannel, createStatusChannel } from "../feedback.js";
+import { createWrapUpDialog } from "../wrap-up-dialog.js";
 
 const particleField = mountParticleField({
   container: document.getElementById("particle-anchor"),
@@ -40,6 +41,8 @@ const torpedoButton = document.getElementById("torpedo-button");
 const resetButton = document.getElementById("reset-button");
 const replayButton = document.getElementById("replay-button");
 const closeWrapButton = document.getElementById("close-wrap-button");
+
+const wrapUpDialog = createWrapUpDialog(wrapUp);
 const wrapUp = document.getElementById("wrap-up");
 const wrapSummary = document.getElementById("wrap-summary");
 const wrapScore = document.getElementById("wrap-score");
@@ -275,7 +278,7 @@ function resetState() {
   setPhaseIndicator("Awaiting launch clearance.");
   setStatus("Power routed to standby systems.");
   logChannel.push("Simulation reset. Shields nominal.", "info");
-  wrapUp.hidden = true;
+  wrapUpDialog.close({ restoreFocus: false });
   cinematic.hidden = true;
   cockpit.classList.remove("is-phase-2", "is-phase-3");
   updatePowerModeButtons(POWER_MODES.balanced);
@@ -599,7 +602,7 @@ function completeMission(victory) {
   wrapSummary.textContent = victory
     ? "Sentinel shattered. Course clear beyond the Barrier."
     : "Enterprise crippled. The Barrier repels all intruders.";
-  wrapUp.hidden = false;
+  wrapUpDialog.open({ focus: replayButton });
   const meta = {
     accuracy: Math.round(accuracy * 100),
     shields: shieldPercent,
@@ -908,12 +911,12 @@ resetButton.addEventListener("click", () => {
 });
 
 replayButton.addEventListener("click", () => {
-  wrapUp.hidden = true;
+  wrapUpDialog.close({ restoreFocus: false });
   startCinematic();
 });
 
 closeWrapButton.addEventListener("click", () => {
-  wrapUp.hidden = true;
+  wrapUpDialog.close();
 });
 
 modeButtons.forEach((button) => {

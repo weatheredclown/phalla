@@ -2,6 +2,7 @@ import { mountParticleField } from "../particles.js";
 import { initHighScoreBanner } from "../arcade-scores.js";
 import { getScoreConfig } from "../score-config.js";
 import { autoEnhanceFeedback, createLogChannel, createStatusChannel } from "../feedback.js";
+import { createWrapUpDialog } from "../wrap-up-dialog.js";
 
 const particleSystem = mountParticleField({
   density: 0.00018,
@@ -123,6 +124,8 @@ const splitTunnelEl = document.getElementById("split-tunnel");
 const replayButton = document.getElementById("replay-button");
 const ghostButton = document.getElementById("ghost-button");
 const closeWrapUp = document.getElementById("close-wrap-up");
+
+const wrapUpDialog = createWrapUpDialog(wrapUp);
 const wrapUpNote = document.getElementById("wrap-up-note");
 
 const log = createLogChannel(eventLogList, { limit: 18 });
@@ -554,7 +557,7 @@ function resetRunState() {
 
 function startRun({ ghost = false } = {}) {
   resetRunState();
-  wrapUp.setAttribute("hidden", "true");
+  wrapUpDialog.close({ restoreFocus: false });
   useGhost = ghost && Boolean(storedGhost);
   runActive = true;
   totalTime = 0;
@@ -606,7 +609,7 @@ function finishRun() {
   };
   highScore.submit(scoreValue, meta);
 
-  wrapUp.removeAttribute("hidden");
+  wrapUpDialog.open({ focus: replayButton });
 
   const priorBest = storedGhost?.runTime;
   if (ghostRecording.length > 0 && (!Number.isFinite(priorBest) || finalTime < priorBest)) {
@@ -754,7 +757,7 @@ startButton.addEventListener("click", () => {
 resetButton.addEventListener("click", () => {
   resetRunState();
   spawnObstacles();
-  wrapUp.setAttribute("hidden", "true");
+  wrapUpDialog.close({ restoreFocus: false });
 });
 
 boostButton.addEventListener("mousedown", () => {
@@ -783,7 +786,7 @@ laneButtons.forEach((button) => {
 });
 
 replayButton.addEventListener("click", () => {
-  wrapUp.setAttribute("hidden", "true");
+  wrapUpDialog.close({ restoreFocus: false });
   startRun({ ghost: false });
 });
 
@@ -791,12 +794,12 @@ ghostButton.addEventListener("click", () => {
   if (!storedGhost) {
     return;
   }
-  wrapUp.setAttribute("hidden", "true");
+  wrapUpDialog.close({ restoreFocus: false });
   startRun({ ghost: true });
 });
 
 closeWrapUp.addEventListener("click", () => {
-  wrapUp.setAttribute("hidden", "true");
+  wrapUpDialog.close();
 });
 
 function handleKey(event) {

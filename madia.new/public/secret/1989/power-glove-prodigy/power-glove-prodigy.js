@@ -2,6 +2,7 @@ import { initHighScoreBanner } from "../arcade-scores.js";
 import { getScoreConfig } from "../score-config.js";
 import { mountParticleField } from "../particles.js";
 import { autoEnhanceFeedback, createLogChannel, createStatusChannel } from "../feedback.js";
+import { createWrapUpDialog } from "../wrap-up-dialog.js";
 
 const particleField = mountParticleField({
   effects: {
@@ -44,6 +45,8 @@ const wrapUpMultiplier = document.getElementById("summary-multiplier");
 const wrapUpHype = document.getElementById("summary-hype");
 const wrapUpReplay = document.getElementById("wrap-up-replay");
 const wrapUpClose = document.getElementById("wrap-up-close");
+
+const wrapUpDialog = createWrapUpDialog(wrapUp);
 
 autoEnhanceFeedback(document.body);
 const statusChannel = createStatusChannel(statusLine);
@@ -633,13 +636,12 @@ function showSummary() {
   wrapUpStreak.textContent = state.bestStreak.toString();
   wrapUpMultiplier.textContent = `×${state.multiplierPeak.toFixed(1)}`;
   wrapUpHype.textContent = `${Math.round(state.hypePeak)}%`;
-  wrapUp.hidden = false;
+  wrapUpDialog.open({ focus: wrapUpReplay });
   state.summaryOpen = true;
-  wrapUp.focus({ preventScroll: true });
 }
 
-function hideSummary() {
-  wrapUp.hidden = true;
+function hideSummary({ restoreFocus = true } = {}) {
+  wrapUpDialog.close({ restoreFocus });
   state.summaryOpen = false;
 }
 
@@ -726,19 +728,13 @@ resetButton.addEventListener("click", () => {
 });
 
 wrapUpReplay.addEventListener("click", () => {
-  hideSummary();
+  hideSummary({ restoreFocus: false });
   startTournament();
 });
 
 wrapUpClose.addEventListener("click", () => {
   hideSummary();
   statusChannel("Results saved. Fire up another run when ready.", "info");
-});
-
-wrapUp.addEventListener("keydown", (event) => {
-  if (event.key === "Escape") {
-    hideSummary();
-  }
 });
 
 if (inspirationButton && inspirationText) {

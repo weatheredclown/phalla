@@ -2,6 +2,7 @@ import { initHighScoreBanner } from "../arcade-scores.js";
 import { getScoreConfig } from "../score-config.js";
 import { mountParticleField } from "../particles.js";
 import { createStatusChannel, createLogChannel } from "../feedback.js";
+import { createWrapUpDialog } from "../wrap-up-dialog.js";
 
 const particleField = mountParticleField({
   effects: {
@@ -55,6 +56,9 @@ const wrapUpOpponents = document.getElementById("wrap-up-opponents");
 const wrapUpTotalOpponents = document.getElementById("wrap-up-total-opponents");
 const wrapUpNote = document.getElementById("wrap-up-note");
 const wrapUpReplay = document.getElementById("wrap-up-replay");
+const wrapUpClose = document.getElementById("wrap-up-close");
+
+const wrapUpDialog = createWrapUpDialog(wrapUp);
 
 const setStatus = createStatusChannel(statusBar);
 const logChannel = createLogChannel(eventLog, { limit: 12 });
@@ -245,8 +249,16 @@ function initialize() {
   });
 
   wrapUpReplay.addEventListener("click", () => {
+    wrapUpDialog.close({ restoreFocus: false });
     resetSession();
   });
+
+  if (wrapUpClose) {
+    wrapUpClose.addEventListener("click", () => {
+      wrapUpDialog.close();
+      setStatus("Recap closed. Stack your chips and relight the marquee when ready.", "info");
+    });
+  }
 }
 
 function primeRound() {
@@ -559,7 +571,7 @@ function endSession(victory) {
   wrapUpNote.textContent = victory
     ? "Hit the marquee and log the score upstairs."
     : "Keep grinding for that marquee slot.";
-  wrapUp.hidden = false;
+  wrapUpDialog.open({ focus: wrapUpReplay });
   const meta = {
     longestStreak: state.bestPerfectStreak,
     opponents: state.opponentsCleared,
@@ -572,6 +584,7 @@ function endSession(victory) {
 }
 
 function resetSession() {
+  wrapUpDialog.close({ restoreFocus: false });
   state.opponentIndex = 0;
   state.currentOpponent = opponents[0];
   state.playerMoney = 1200;
@@ -589,7 +602,7 @@ function resetSession() {
   state.sessionActive = true;
   state.opponentsCleared = 0;
   state.lastClaim = "";
-  wrapUp.hidden = true;
+  wrapUpDialog.close({ restoreFocus: false });
   wrapUpTotalOpponents.textContent = opponents.length.toString();
   wrapUpOpponents.textContent = "0";
   wrapUpStreak.textContent = "0";
