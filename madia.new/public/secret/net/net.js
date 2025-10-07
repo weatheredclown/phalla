@@ -2,6 +2,15 @@ const STORAGE_KEY = "net-ops-progress";
 
 const nodes = [
   {
+    id: "hopline-diagnostics",
+    layer: "Layer 08 · Backbone Pulse",
+    name: "Hopline Diagnostics",
+    description:
+      "Trace the stubborn uplink with ping and traceroute, then pin prefixes to the right routers before users notice.",
+    url: "./hopline-diagnostics/index.html",
+    thumbnail: "Trace Ops",
+  },
+  {
     id: "root-zone-relay",
     layer: "Layer 07 · DNS Authority",
     name: "Root Zone Relay",
@@ -47,6 +56,15 @@ const nodes = [
     thumbnail: "BGP Map",
   },
   {
+    id: "stream-parser-depot",
+    layer: "Layer 03 · Log Sieve",
+    name: "Stream Parser Depot",
+    description:
+      "Chain the right awk and sed snippets to squeeze a clean incident summary out of the radius logs.",
+    url: "./stream-parser-depot/index.html",
+    thumbnail: "awk|sed",
+  },
+  {
     id: "cache-cascade",
     layer: "Layer 02 · Proxy Works",
     name: "Cache Cascade",
@@ -54,6 +72,24 @@ const nodes = [
       "Tune your Squid cache hierarchy to absorb a surprise traffic storm without melting the leased line.",
     url: "./cache-cascade/index.html",
     thumbnail: "Proxy Flow",
+  },
+  {
+    id: "gopher-groundskeeper",
+    layer: "Layer 02 · Campus Content",
+    name: "Gopher Groundskeeper",
+    description:
+      "Compose a spotless gophermap so the library's beige terminals show the latest banners, catalogs, and zines.",
+    url: "./gopher-groundskeeper/index.html",
+    thumbnail: "Burrow",
+  },
+  {
+    id: "ftp-flightdeck",
+    layer: "Layer 01 · Transfer Bay",
+    name: "FTP Flightdeck",
+    description:
+      "Sequence a flawless FTP session so the nightly build touches down in staging before QA clocks in.",
+    url: "./ftp-flightdeck/index.html",
+    thumbnail: "FTP Ops",
   },
 ];
 
