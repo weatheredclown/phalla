@@ -1,4 +1,5 @@
 const STORAGE_KEY = "net-ops-progress";
+const BODY_SCROLL_LOCK_CLASS = "net-scroll-lock";
 
 const nodes = [
   {
@@ -93,6 +94,22 @@ const nodes = [
   },
 ];
 
+const nodeLookup = new Map(nodes.map((node) => [node.id, node]));
+
+function lockBodyScroll() {
+  if (!document.body) {
+    return;
+  }
+  document.body.classList.add(BODY_SCROLL_LOCK_CLASS);
+}
+
+function unlockBodyScroll() {
+  if (!document.body) {
+    return;
+  }
+  document.body.classList.remove(BODY_SCROLL_LOCK_CLASS);
+}
+
 const loadProgress = () => {
   try {
     const stored = localStorage.getItem(STORAGE_KEY);
@@ -128,9 +145,23 @@ const layerEl = document.getElementById("player-layer");
 const descriptionEl = document.getElementById("player-description");
 const overlayBackdrop = document.getElementById("overlay-backdrop");
 const resetProgressButton = document.getElementById("reset-progress");
+const overlayFrame = document.getElementById("overlay-frame");
 
 const cardIndex = new Map();
-let activeNode = null;
+let lastFocusElement = null;
+let pendingRestart = null;
+
+function setRestartButtonEnabled(enabled) {
+  if (!restartButton) {
+    return;
+  }
+  restartButton.disabled = !enabled;
+  restartButton.setAttribute("aria-disabled", enabled ? "false" : "true");
+}
+
+if (frame) {
+  frame.dataset.baseUrl = "";
+}
 
 const updateStatus = (nodeId, statusData = null) => {
   const entry = cardIndex.get(nodeId);
@@ -190,8 +221,14 @@ const renderGrid = () => {
         status.dataset.offline = "true";
       }
     }
+    if (card) {
+      card.tabIndex = 0;
+      card.setAttribute("role", "button");
+      card.setAttribute("aria-label", `Boot ${node.name}`);
+    }
     if (button) {
-      button.addEventListener("click", () => openNode(node));
+      button.dataset.nodeId = node.id;
+      button.setAttribute("aria-label", `Boot ${node.name}`);
     }
 
     cardIndex.set(node.id, card);
@@ -204,17 +241,18 @@ const openNode = (node) => {
   if (!overlay || !frame) {
     return;
   }
-  activeNode = node;
   titleEl.textContent = node.name;
   layerEl.textContent = node.layer;
   descriptionEl.textContent = node.description;
+  frame.dataset.baseUrl = node.url;
   frame.src = node.url;
-  restartButton.setAttribute("aria-disabled", "true");
-  restartButton.disabled = true;
+  setRestartButtonEnabled(false);
   overlay.hidden = false;
   overlay.dataset.open = "true";
+  overlay.dataset.activeNode = node.id;
+  lockBodyScroll();
   requestAnimationFrame(() => {
-    overlay?.querySelector(".overlay-frame")?.focus({ preventScroll: true });
+    overlayFrame?.focus({ preventScroll: true });
   });
 };
 
@@ -224,30 +262,91 @@ const closeOverlay = () => {
   }
   overlay.hidden = true;
   overlay.removeAttribute("data-open");
+  overlay.removeAttribute("data-active-node");
   frame.src = "about:blank";
-  activeNode = null;
+  try {
+    pendingRestart?.();
+  } catch (error) {
+    console.warn("Failed to cancel pending restart", error);
+  }
+  pendingRestart = null;
+  frame.dataset.baseUrl = "";
+  setRestartButtonEnabled(false);
+  unlockBodyScroll();
+  if (lastFocusElement && document.body.contains(lastFocusElement)) {
+    lastFocusElement.focus({ preventScroll: true });
+  } else {
+    const fallbackButton = grid?.querySelector(".boot-button");
+    fallbackButton?.focus({ preventScroll: true });
+  }
 };
 
 const restartNode = () => {
-  if (!frame || !activeNode) {
+  if (!frame || !overlay || overlay.hidden) {
     return;
   }
-  const currentSrc = frame.src;
-  frame.src = "about:blank";
-  setTimeout(() => {
-    frame.src = currentSrc || activeNode.url;
-  }, 20);
+  const activeNodeId = overlay.dataset.activeNode;
+  if (!activeNodeId) {
+    return;
+  }
+  const baseUrl = frame.dataset.baseUrl || nodeLookup.get(activeNodeId)?.url;
+  if (!baseUrl) {
+    return;
+  }
+  setRestartButtonEnabled(false);
+  try {
+    pendingRestart?.();
+  } catch (error) {
+    console.warn("Failed to clean up previous restart handler", error);
+  }
+  const restoreFocus = document.activeElement === restartButton;
+
+  const handleLoad = () => {
+    frame.removeEventListener("load", handleLoad);
+    pendingRestart = null;
+    if (overlay.hidden) {
+      return;
+    }
+    setRestartButtonEnabled(true);
+    if (restoreFocus) {
+      restartButton?.focus({ preventScroll: true });
+    }
+  };
+
+  pendingRestart = () => {
+    frame.removeEventListener("load", handleLoad);
+    pendingRestart = null;
+  };
+
+  frame.addEventListener("load", handleLoad);
+
+  let reloadTriggered = false;
+  try {
+    if (frame.contentWindow) {
+      frame.contentWindow.location.reload();
+      reloadTriggered = true;
+    }
+  } catch (error) {
+    console.warn("Falling back to src reset for restart", error);
+  }
+
+  if (reloadTriggered) {
+    return;
+  }
+
+  try {
+    const resolvedUrl = new URL(baseUrl, window.location.href);
+    resolvedUrl.searchParams.set("restart", Date.now().toString(36));
+    frame.src = `${resolvedUrl.pathname}${resolvedUrl.search}${resolvedUrl.hash}`;
+  } catch (urlError) {
+    console.warn("Unable to build restart URL", urlError);
+    frame.src = baseUrl;
+  }
 };
 
 closeButton?.addEventListener("click", closeOverlay);
 overlayBackdrop?.addEventListener("click", closeOverlay);
 restartButton?.addEventListener("click", restartNode);
-
-document.addEventListener("keydown", (event) => {
-  if (event.key === "Escape" && !overlay?.hidden) {
-    closeOverlay();
-  }
-});
 
 resetProgressButton?.addEventListener("click", () => {
   Object.keys(progress).forEach((key) => delete progress[key]);
@@ -275,8 +374,70 @@ window.addEventListener("message", (event) => {
   };
   saveProgress(progress);
   updateStatus(nodeId, progress[nodeId]);
-  restartButton.removeAttribute("aria-disabled");
-  restartButton.disabled = false;
+  setRestartButtonEnabled(true);
 });
 
 renderGrid();
+
+grid?.addEventListener("click", (event) => {
+  const button = event.target.closest(".boot-button");
+  const card = event.target.closest(".node-card");
+  const source = button ?? card;
+  if (!source) {
+    return;
+  }
+  const nodeId = source.dataset.nodeId || card?.dataset.nodeId;
+  if (!nodeId) {
+    return;
+  }
+  const node = nodeLookup.get(nodeId);
+  if (!node) {
+    return;
+  }
+  lastFocusElement = source;
+  openNode(node);
+});
+
+grid?.addEventListener("keydown", (event) => {
+  if (event.defaultPrevented) {
+    return;
+  }
+  const card = event.target.closest(".node-card");
+  if (!card) {
+    return;
+  }
+  if (event.key === "Enter" || event.key === " ") {
+    event.preventDefault();
+    const nodeId = card.dataset.nodeId;
+    const node = nodeLookup.get(nodeId);
+    if (!node) {
+      return;
+    }
+    lastFocusElement = card;
+    openNode(node);
+  }
+});
+
+document.addEventListener("keydown", (event) => {
+  if (!overlay || overlay.hidden) {
+    return;
+  }
+  if (event.key === "Escape") {
+    event.preventDefault();
+    closeOverlay();
+    return;
+  }
+  if ((event.key === "r" || event.key === "R") && !event.metaKey && !event.ctrlKey && !event.altKey) {
+    event.preventDefault();
+    restartNode();
+  }
+});
+
+setRestartButtonEnabled(false);
+
+frame?.addEventListener("load", () => {
+  if (overlay?.hidden) {
+    return;
+  }
+  setRestartButtonEnabled(true);
+});
