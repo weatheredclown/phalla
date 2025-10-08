@@ -1,3 +1,7 @@
+import { initFullscreenToggle } from "../fullscreen.js";
+
+initFullscreenToggle();
+
 const form = document.getElementById("kernel-form");
 const board = document.getElementById("status-board");
 const monitor = document.querySelector(".forge-monitor");

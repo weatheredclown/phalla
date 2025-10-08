@@ -1,3 +1,7 @@
+import { initFullscreenToggle } from "../fullscreen.js";
+
+initFullscreenToggle();
+
 const form = document.getElementById("zone-form");
 const board = document.getElementById("status-board");
 const zoneVisual = document.querySelector(".zone-visual");
