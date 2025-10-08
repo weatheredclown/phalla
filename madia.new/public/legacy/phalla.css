@@ -655,3 +655,139 @@ label { cursor: default; }
   font-style: italic;
   color: #cbd5f5;
 }
+
+.dns-game__wrap {
+  padding: 16px;
+  background: #0c1424;
+  border: 1px solid #1b2c4a;
+}
+
+.dns-game__heading {
+  margin: 0;
+  font-size: 22px;
+}
+
+.dns-game__lede {
+  margin: 6px 0 12px;
+  max-width: 720px;
+}
+
+.dns-game__status {
+  margin-bottom: 12px;
+  font-weight: bold;
+  color: #f9a906;
+}
+
+.dns-game__layout {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.dns-game__column {
+  flex: 1 1 260px;
+  min-width: 240px;
+}
+
+.dns-game__column--wide {
+  flex: 1 1 420px;
+}
+
+.dns-game__card {
+  background: #10213d;
+  border: 1px solid #1f3356;
+  padding: 12px;
+  margin-bottom: 12px;
+}
+
+.dns-game__card-title {
+  margin: 0 0 6px;
+  font-size: 16px;
+}
+
+.dns-game__hint {
+  margin: 0 0 10px;
+  font-size: 11px;
+  color: #cbd5f5;
+}
+
+.dns-game__meta {
+  font-size: 12px;
+  margin-bottom: 4px;
+}
+
+.dns-game__narrative {
+  margin: 6px 0 10px;
+  line-height: 1.4;
+}
+
+.dns-game__subtitle {
+  margin: 8px 0 4px;
+  text-transform: uppercase;
+  font-size: 11px;
+  letter-spacing: 0.06em;
+}
+
+.dns-game__goal-list {
+  margin: 0;
+  padding-left: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.dns-game__table {
+  width: 100%;
+  font-size: 11px;
+}
+
+.dns-game__note {
+  display: block;
+  line-height: 1.4;
+}
+
+.dns-game__zone {
+  min-height: 120px;
+}
+
+.dns-game__empty {
+  margin: 0;
+  padding: 8px;
+  background: #092655;
+  border: 1px solid #1b2c4a;
+  font-style: italic;
+  text-align: center;
+}
+
+.dns-game__actions {
+  margin-top: 10px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.dns-game__feedback {
+  min-height: 36px;
+  margin-top: 8px;
+}
+
+.dns-game__feedback-message {
+  padding: 8px;
+  background: #092655;
+  border: 1px solid #1b2c4a;
+  line-height: 1.4;
+}
+
+.dns-game__feedback--success {
+  color: #9df2b6;
+}
+
+.dns-game__feedback--warning {
+  color: #ffe18f;
+}
+
+@media (min-width: 900px) {
+  .dns-game__column {
+    flex: 1 1 calc(50% - 12px);
+  }
+}
