@@ -4,8 +4,15 @@ initFullscreenToggle();
 
 const form = document.getElementById("gopher-form");
 const board = document.getElementById("status-board");
-const visual = document.getElementById("gopher-visual");
-const visualCaption = visual?.querySelector(".visual-caption");
+const preview = document.getElementById("preview-output");
+const progressMeter = document.getElementById("progress-meter");
+const progressFill = progressMeter?.querySelector(".progress-fill");
+const rows = Array.from(document.querySelectorAll(".row"));
+const previewRows = {
+  banner: document.querySelector('[data-preview-row="banner"]'),
+  catalog: document.querySelector('[data-preview-row="catalog"]'),
+  zine: document.querySelector('[data-preview-row="zine"]'),
+};
 
 const expected = {
   "banner-text": "Library Net Welcome",
@@ -23,39 +30,87 @@ const expected = {
 };
 
 const updateBoard = (message, state = "idle") => {
+  if (!board) {
+    return;
+  }
   board.textContent = message;
   board.dataset.state = state;
 };
 
-const visualMessages = {
-  idle: "Gopher tunnels awaiting signage.",
-  processing: "Routing burrow paths…",
-  success: "All tunnels labeled. Visitors guided.",
-  error: "Dead end detected—fix the entries.",
+const formatValue = (value) => {
+  const trimmed = (value || "").trim();
+  return trimmed ? trimmed : "???";
 };
 
-const setVisualState = (state) => {
-  if (!visual) {
-    return;
+const rowFieldMap = {
+  banner: ["banner-type", "banner-text", "banner-selector", "banner-host"],
+  catalog: ["catalog-type", "catalog-text", "catalog-selector", "catalog-host"],
+  zine: ["zine-type", "zine-text", "zine-selector", "zine-host"],
+};
+
+const previewPorts = {
+  banner: "70",
+  catalog: "70",
+  zine: "70",
+};
+
+const updateRowStates = (formData) => {
+  let completeCount = 0;
+  rows.forEach((row) => {
+    const key = row.dataset.row;
+    if (!key) {
+      return;
+    }
+    const fields = rowFieldMap[key];
+    if (!fields) {
+      return;
+    }
+    const values = fields.map((name) => (formData.get(name) || "").trim());
+    const filled = values.some(Boolean);
+    const matches = fields.every((name) => (formData.get(name) || "").trim() === expected[name]);
+    if (matches) {
+      row.dataset.state = "complete";
+      completeCount += 1;
+    } else if (filled) {
+      row.dataset.state = "editing";
+    } else {
+      delete row.dataset.state;
+    }
+    const previewRow = previewRows[key];
+    if (previewRow) {
+      const [typeField, textField, selectorField, hostField] = fields;
+      const type = formatValue(formData.get(typeField));
+      const display = formatValue(formData.get(textField));
+      const selector = formatValue(formData.get(selectorField));
+      const host = formatValue(formData.get(hostField));
+      const port = previewPorts[key] || "70";
+      previewRow.textContent = `${type}${display}\t${selector}\t${host}\t${port}`;
+      previewRow.dataset.state = matches ? "complete" : filled ? "editing" : "empty";
+    }
+  });
+
+  if (progressMeter && progressFill) {
+    const progressValue = completeCount;
+    const progressPercent = completeCount / rows.length;
+    progressFill.style.transform = `scaleX(${progressPercent})`;
+    progressMeter.setAttribute("aria-valuenow", progressValue.toString());
   }
-  visual.dataset.state = state;
-  if (visualCaption && visualMessages[state]) {
-    visualCaption.textContent = visualMessages[state];
+
+  if (preview) {
+    preview.dataset.state = completeCount === rows.length ? "complete" : "editing";
   }
 };
 
 form?.addEventListener("submit", (event) => {
   event.preventDefault();
-  setVisualState("processing");
   const data = new FormData(form);
+  updateRowStates(data);
   const errors = Object.entries(expected).filter(([name, value]) => (data.get(name) || "").trim() !== value);
   if (errors.length) {
     updateBoard("Menu mismatch. Check selector, type, and host fields.", "error");
-    setVisualState("error");
     return;
   }
   updateBoard("Gophermap saved. Terminals update in sync.", "success");
-  setVisualState("success");
   window.parent?.postMessage(
     {
       type: "net:level-complete",
@@ -70,9 +125,14 @@ form?.addEventListener("submit", (event) => {
 });
 
 form?.addEventListener("input", () => {
-  if (board.dataset.state === "success") {
+  if (board?.dataset.state === "success") {
     return;
   }
+  const data = new FormData(form);
+  updateRowStates(data);
   updateBoard("Awaiting menu entries.");
-  setVisualState("idle");
 });
+
+if (form) {
+  updateRowStates(new FormData(form));
+}
