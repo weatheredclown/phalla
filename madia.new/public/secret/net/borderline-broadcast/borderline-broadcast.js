@@ -1,6 +1,7 @@
 const form = document.getElementById("bgp-form");
 const board = document.getElementById("status-board");
-const routeMap = document.querySelector(".route-map");
+const visual = document.getElementById("bgp-visual");
+const visualCaption = visual?.querySelector(".visual-caption");
 
 const expected = {
   "local-pref": "raise",
@@ -11,8 +12,22 @@ const expected = {
 const updateBoard = (message, state = "idle") => {
   board.textContent = message;
   board.dataset.state = state;
-  if (routeMap) {
-    routeMap.dataset.state = state;
+};
+
+const visualMessages = {
+  idle: "Backbone telemetry nominal.",
+  processing: "Propagating policy changes…",
+  success: "Routes converged on the fiber ring.",
+  error: "Instability detected—adjust policy mix.",
+};
+
+const setVisualState = (state) => {
+  if (!visual) {
+    return;
+  }
+  visual.dataset.state = state;
+  if (visualCaption && visualMessages[state]) {
+    visualCaption.textContent = visualMessages[state];
   }
 };
 
@@ -23,28 +38,18 @@ const evaluatePolicy = (formData) => {
   return mismatches;
 };
 
-const refreshRouteMap = (formData) => {
-  if (!routeMap) {
-    return;
-  }
-  const fiberPreferred = (formData.get("local-pref") || "") === "raise";
-  const backupLoud = (formData.get("as-path") || "") !== "double";
-  const dampingReady = (formData.get("community") || "") === "blackhole";
-  routeMap.classList.toggle("route-map--fiber", fiberPreferred);
-  routeMap.classList.toggle("route-map--backup", backupLoud);
-  routeMap.classList.toggle("route-map--dampened", dampingReady);
-};
-
 form?.addEventListener("submit", (event) => {
   event.preventDefault();
+  setVisualState("processing");
   const formData = new FormData(form);
   const mismatches = evaluatePolicy(formData);
-  refreshRouteMap(formData);
   if (mismatches.length) {
     updateBoard(`Route map rejected: fix ${mismatches.join(", ")}.`, "error");
+    setVisualState("error");
     return;
   }
   updateBoard("Policies live. Backbone prefers fiber ring.", "success");
+  setVisualState("success");
   window.parent?.postMessage(
     {
       type: "net:level-complete",
@@ -64,14 +69,11 @@ form?.addEventListener("input", () => {
   }
   const formData = new FormData(form);
   const mismatches = evaluatePolicy(formData);
-  refreshRouteMap(formData);
   if (!mismatches.length) {
     updateBoard("Policy ready. Deploy to routers.");
+    setVisualState("processing");
   } else {
     updateBoard("Session flapping. Apply damping plan…");
+    setVisualState("idle");
   }
 });
-
-if (form) {
-  refreshRouteMap(new FormData(form));
-}

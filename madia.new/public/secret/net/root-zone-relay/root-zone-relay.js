@@ -1,9 +1,7 @@
 const form = document.getElementById("zone-form");
 const board = document.getElementById("status-board");
-const zoneVisual = document.querySelector(".zone-visual");
-const recordChips = new Map(
-  Array.from(document.querySelectorAll(".record-chip")).map((element) => [element.dataset.record, element])
-);
+const visual = document.getElementById("zone-visual");
+const visualCaption = visual?.querySelector(".visual-caption");
 
 const expected = {
   "www-type": "A",
@@ -32,65 +30,23 @@ const normalize = (name, value) => {
 const updateBoard = (message, state = "idle") => {
   board.textContent = message;
   board.dataset.state = state;
-  if (zoneVisual) {
-    zoneVisual.dataset.state = state;
-  }
 };
 
-const recordFields = {
-  www: ["www-type", "www-value", "www-ttl"],
-  mail: ["mail-type", "mail-value", "mail-priority"],
-  root: ["root-type", "root-value"],
+const visualMessages = {
+  idle: "Zone relays listening for updates.",
+  processing: "Replaying journal to secondary servers…",
+  success: "DNS mesh synced. Modems stay green.",
+  error: "Record drift detected—realign entries.",
 };
 
-const formatRecordValue = (record, values) => {
-  if (record === "www") {
-    const [type, value, ttl] = values;
-    if (!type && !value && !ttl) {
-      return "pending";
-    }
-    return `${value || "—"}${ttl ? ` · ${ttl}s` : ""}`;
+const setVisualState = (state) => {
+  if (!visual) {
+    return;
   }
-  if (record === "mail") {
-    const [type, value, priority] = values;
-    if (!type && !value && !priority) {
-      return "pending";
-    }
-    return `${value || "—"}${priority ? ` · pref ${priority}` : ""}`;
+  visual.dataset.state = state;
+  if (visualCaption && visualMessages[state]) {
+    visualCaption.textContent = visualMessages[state];
   }
-  const [, value] = values;
-  return value || "pending";
-};
-
-const updateRecords = (formData, mismatches = []) => {
-  const mismatchLookup = new Set(mismatches);
-  recordChips.forEach((chip, key) => {
-    const fields = recordFields[key];
-    if (!fields) {
-      return;
-    }
-    const rawValues = fields.map((field) => (formData.get(field) || "").trim());
-    const normalizedValues = fields.map((field, index) => normalize(field, rawValues[index]));
-    const typeEl = chip.querySelector('[data-role="type"]');
-    const valueEl = chip.querySelector('[data-role="value"]');
-    if (typeEl) {
-      typeEl.textContent = normalizedValues[0] ? normalizedValues[0].toUpperCase() : "—";
-    }
-    if (valueEl) {
-      valueEl.textContent = formatRecordValue(key, rawValues);
-    }
-    const hasValues = rawValues.every((value) => value);
-    if (board.dataset.state === "success") {
-      chip.dataset.state = "ready";
-      return;
-    }
-    if (!hasValues) {
-      chip.dataset.state = "";
-      return;
-    }
-    const mismatch = fields.some((field) => mismatchLookup.has(field));
-    chip.dataset.state = mismatch ? "error" : "ready";
-  });
 };
 
 const evaluateZone = (formData) => {
@@ -107,17 +63,19 @@ const evaluateZone = (formData) => {
 
 form?.addEventListener("submit", (event) => {
   event.preventDefault();
+  setVisualState("processing");
   const formData = new FormData(form);
   const mismatches = evaluateZone(formData);
-  updateRecords(formData, mismatches);
   if (mismatches.length) {
     updateBoard(
       `Zone reject: ${mismatches.length} field${mismatches.length === 1 ? "" : "s"} misaligned.`,
       "error"
     );
+    setVisualState("error");
     return;
   }
   updateBoard("Zone propagated. Secondary acknowledges serial bump.", "success");
+  setVisualState("success");
   window.parent?.postMessage(
     {
       type: "net:level-complete",
@@ -137,14 +95,11 @@ form?.addEventListener("input", () => {
   }
   const formData = new FormData(form);
   const mismatches = evaluateZone(formData);
-  updateRecords(formData, mismatches);
   if (!mismatches.length) {
     updateBoard("All records align. Ready to push.");
+    setVisualState("processing");
   } else {
     updateBoard("Awaiting alignment…");
+    setVisualState("idle");
   }
 });
-
-if (form) {
-  updateRecords(new FormData(form));
-}
