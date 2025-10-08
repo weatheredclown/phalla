@@ -1,5 +1,6 @@
 const form = document.getElementById("bgp-form");
 const board = document.getElementById("status-board");
+const routeMap = document.querySelector(".route-map");
 
 const expected = {
   "local-pref": "raise",
@@ -10,6 +11,9 @@ const expected = {
 const updateBoard = (message, state = "idle") => {
   board.textContent = message;
   board.dataset.state = state;
+  if (routeMap) {
+    routeMap.dataset.state = state;
+  }
 };
 
 const evaluatePolicy = (formData) => {
@@ -19,10 +23,23 @@ const evaluatePolicy = (formData) => {
   return mismatches;
 };
 
+const refreshRouteMap = (formData) => {
+  if (!routeMap) {
+    return;
+  }
+  const fiberPreferred = (formData.get("local-pref") || "") === "raise";
+  const backupLoud = (formData.get("as-path") || "") !== "double";
+  const dampingReady = (formData.get("community") || "") === "blackhole";
+  routeMap.classList.toggle("route-map--fiber", fiberPreferred);
+  routeMap.classList.toggle("route-map--backup", backupLoud);
+  routeMap.classList.toggle("route-map--dampened", dampingReady);
+};
+
 form?.addEventListener("submit", (event) => {
   event.preventDefault();
   const formData = new FormData(form);
   const mismatches = evaluatePolicy(formData);
+  refreshRouteMap(formData);
   if (mismatches.length) {
     updateBoard(`Route map rejected: fix ${mismatches.join(", ")}.`, "error");
     return;
@@ -47,9 +64,14 @@ form?.addEventListener("input", () => {
   }
   const formData = new FormData(form);
   const mismatches = evaluatePolicy(formData);
+  refreshRouteMap(formData);
   if (!mismatches.length) {
     updateBoard("Policy ready. Deploy to routers.");
   } else {
     updateBoard("Session flapping. Apply damping plan…");
   }
 });
+
+if (form) {
+  refreshRouteMap(new FormData(form));
+}
