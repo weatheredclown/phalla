@@ -4,11 +4,8 @@ initFullscreenToggle();
 
 const form = document.getElementById("ppp-form");
 const board = document.getElementById("status-board");
-const handshakeVisual = document.querySelector(".handshake-visual");
-const signalWave = handshakeVisual?.querySelector(".signal-wave");
-const phaseChips = new Map(
-  Array.from(document.querySelectorAll(".phase-chip")).map((element) => [element.dataset.phase, element])
-);
+const visual = document.getElementById("modem-visual");
+const visualCaption = visual?.querySelector(".visual-caption");
 
 const expectedOrder = {
   carrier: "1",
@@ -17,90 +14,62 @@ const expectedOrder = {
   ipcp: "4",
 };
 
-const expectedPhases = Object.entries(expectedOrder).sort(([, a], [, b]) => Number(a) - Number(b));
-
 const updateBoard = (message, state = "idle") => {
   board.textContent = message;
   board.dataset.state = state;
-  if (handshakeVisual) {
-    handshakeVisual.dataset.state = state;
+};
+
+const visualMessages = {
+  idle: "Carrier tone standing by.",
+  processing: "Negotiating PPP sequence…",
+  success: "Link locked. Syncing newsroom feed.",
+  error: "Handshake jammed. Reorder the phases.",
+};
+
+const setVisualState = (state) => {
+  if (!visual) {
+    return;
+  }
+  visual.dataset.state = state;
+  if (visualCaption && visualMessages[state]) {
+    visualCaption.textContent = visualMessages[state];
   }
 };
 
-const collectValues = (formData) =>
-  Object.fromEntries(Object.keys(expectedOrder).map((key) => [key, formData.get(key) || ""]));
-
-const evaluateOrder = (values) => {
-  const used = new Set();
+const evaluateOrder = (formData) => {
+  const values = Object.fromEntries(Object.keys(expectedOrder).map((key) => [key, formData.get(key) || ""]));
   const duplicates = new Set();
-  Object.values(values).forEach((value) => {
+  const seen = new Map();
+  Object.entries(values).forEach(([key, value]) => {
     if (!value) {
       return;
     }
-    if (used.has(value)) {
+    if (seen.has(value)) {
       duplicates.add(value);
     }
-    used.add(value);
+    seen.set(value, key);
   });
   const mismatches = Object.entries(expectedOrder).filter(([key, value]) => values[key] !== value).map(([key]) => key);
   return { duplicates, mismatches };
 };
 
-const computeProgress = (values, duplicates) => {
-  let progress = 0;
-  for (const [phase, step] of expectedPhases) {
-    const assigned = values[phase];
-    if (!assigned || duplicates.has(assigned) || assigned !== step) {
-      break;
-    }
-    progress += 1;
-  }
-  return progress / expectedPhases.length;
-};
-
-const updateHandshakeVisual = (values, duplicates, mismatches) => {
-  const mismatchSet = new Set(mismatches);
-  phaseChips.forEach((chip, phase) => {
-    const assigned = values[phase];
-    const indexEl = chip.querySelector(".phase-index");
-    if (indexEl) {
-      indexEl.textContent = assigned || expectedOrder[phase];
-    }
-    if (!assigned) {
-      chip.dataset.state = "";
-      return;
-    }
-    if (duplicates.has(assigned)) {
-      chip.dataset.state = "error";
-      return;
-    }
-    if (!mismatchSet.has(phase)) {
-      chip.dataset.state = "active";
-    } else {
-      chip.dataset.state = "pending";
-    }
-  });
-  if (signalWave) {
-    const progressRatio = computeProgress(values, duplicates);
-    signalWave.style.setProperty("--handshake-progress", progressRatio.toString());
-  }
-};
-
 form?.addEventListener("submit", (event) => {
   event.preventDefault();
+  setVisualState("processing");
   const formData = new FormData(form);
-  const values = collectValues(formData);
-  const { duplicates, mismatches } = evaluateOrder(values);
-  updateHandshakeVisual(values, duplicates, mismatches);
+  const { duplicates, mismatches } = evaluateOrder(formData);
   if (duplicates.size) {
     updateBoard(`Modem error: duplicate steps ${Array.from(duplicates).join(", ")}.`, "error");
+    setVisualState("error");
     return;
   }
   if (mismatches.length) {
     updateBoard(`Negotiation failed: adjust ${mismatches.join(", ")}.`, "error");
+    setVisualState("error");
     return;
   }
   updateBoard("PPP link live. newsroom feed synchronized.", "success");
+  setVisualState("success");
   window.parent?.postMessage(
     {
       type: "net:level-complete",
@@ -119,18 +88,12 @@ form?.addEventListener("input", () => {
     return;
   }
   const formData = new FormData(form);
-  const values = collectValues(formData);
-  const { duplicates, mismatches } = evaluateOrder(values);
-  updateHandshakeVisual(values, duplicates, mismatches);
+  const { duplicates, mismatches } = evaluateOrder(formData);
   if (!duplicates.size && !mismatches.length) {
     updateBoard("Sequence locked. Dial when ready.");
+    setVisualState("processing");
   } else {
     updateBoard("Modem idle. Awaiting script…");
+    setVisualState("idle");
   }
 });
-
-if (form) {
-  const values = collectValues(new FormData(form));
-  const { duplicates, mismatches } = evaluateOrder(values);
-  updateHandshakeVisual(values, duplicates, mismatches);
-}
