@@ -4,86 +4,143 @@ initFullscreenToggle();
 
 const form = document.getElementById("kernel-form");
 const board = document.getElementById("status-board");
-const visual = document.getElementById("kernel-visual");
-const visualCaption = visual?.querySelector(".visual-caption");
+const dialLookup = {
+  network: document.querySelector('[data-step="network"]'),
+  drivers: document.querySelector('[data-step="drivers"]'),
+  trim: document.querySelector('[data-step="trim"]'),
+};
+const progressGauge = document.querySelector(".compile-progress");
+const ticker = document.querySelector(".compile-ticker");
+const tickerSteps = ticker
+  ? {
+      network: ticker.querySelector('[data-ticker="network"]'),
+      drivers: ticker.querySelector('[data-ticker="drivers"]'),
+      trim: ticker.querySelector('[data-ticker="trim"]'),
+    }
+  : {};
 
-const REQUIRED_NETWORK = ["forwarding", "firewall"];
-const OPTIONAL_NETWORK = ["ipv6"];
-const REQUIRED_NIC_MODE = "builtin";
-const FORBIDDEN_DRIVERS = ["scsi", "sound"];
+const tickerMessages = {
+  network: {
+    idle: "Routing stack cold",
+    warming: "Routing stack primed",
+    good: "Routing stack online",
+  },
+  drivers: {
+    idle: "Drivers queued",
+    warming: "Driver matrix compiling",
+    good: "Driver matrix ready",
+  },
+  trim: {
+    idle: "Image trim pending",
+    warming: "Stripping modules…",
+    good: "Image trimmed",
+  },
+};
+
+const required = {
+  network: new Set(["forwarding", "firewall"]),
+  drivers: {
+    mode: "builtin",
+    excluded: new Set(["scsi", "sound"]),
+  },
+};
 
 const updateBoard = (message, state = "idle") => {
   board.textContent = message;
   board.dataset.state = state;
 };
 
-const visualMessages = {
-  idle: "Compiler idle at prompt.",
-  processing: "Running make menuconfig…",
-  success: "Kernel forged. Routers will reboot clean.",
-  error: "Build halted. Check toggles.",
-};
-
-const setVisualState = (state) => {
-  if (!visual) {
+const applyDialState = (step, state) => {
+  const dial = dialLookup[step];
+  if (!dial) {
     return;
   }
-  visual.dataset.state = state;
-  if (visualCaption && visualMessages[state]) {
-    visualCaption.textContent = visualMessages[state];
+  dial.dataset.state = state;
+  const tickerStep = tickerSteps[step];
+  if (tickerStep) {
+    tickerStep.textContent = tickerMessages[step][state] || tickerMessages[step].idle;
   }
 };
 
-const evaluateKernel = (formData) => {
-  const network = new Set(formData.getAll("network"));
-  const drivers = new Set(formData.getAll("drivers"));
-  const nicMode = formData.get("nic-mode");
-  const issues = [];
-
-  REQUIRED_NETWORK.forEach((flag) => {
-    if (!network.has(flag)) {
-      issues.push(`Enable ${flag}`);
-    }
-  });
-
-  OPTIONAL_NETWORK.forEach((flag) => {
-    if (network.has(flag)) {
-      issues.push(`Disable ${flag}`);
-    }
-  });
-
-  if (nicMode !== REQUIRED_NIC_MODE) {
-    issues.push("3c59x mode");
+const evaluateNetwork = (values) => {
+  const selected = new Set(values.network || []);
+  let state = "idle";
+  if (selected.size > 0) {
+    state = required.network.every((feature) => selected.has(feature)) ? "good" : "warn";
   }
+  applyDialState("network", state);
+  return state === "good";
+};
 
-  FORBIDDEN_DRIVERS.forEach((flag) => {
-    if (drivers.has(flag)) {
-      issues.push(`Remove ${flag}`);
-    }
-  });
+const evaluateDrivers = (values) => {
+  const modeGood = values.nicMode === required.drivers.mode;
+  const excluded = new Set(values.drivers || []);
+  const hasForbidden = Array.from(required.drivers.excluded).some((flag) => excluded.has(flag));
+  let state = "idle";
+  if (values.nicMode || excluded.size) {
+    state = modeGood && !hasForbidden ? "good" : "warn";
+  }
+  applyDialState("drivers", state);
+  return state === "good";
+};
 
-  return issues;
+const evaluateTrim = (networkGood, driversGood) => {
+  const state = networkGood && driversGood ? "good" : networkGood || driversGood ? "warming" : "idle";
+  applyDialState("trim", state);
+  return state === "good";
+};
+
+const updateGauge = (completed) => {
+  if (!progressGauge) {
+    return;
+  }
+  const ratio = completed / Object.keys(dialLookup).length;
+  progressGauge.dataset.state =
+    completed === 0 ? "idle" : completed === Object.keys(dialLookup).length ? "ready" : "progress";
+  progressGauge.style.setProperty("--progress", String(ratio));
+};
+
+const extractValues = (formData) => ({
+  network: formData.getAll("network"),
+  nicMode: formData.get("nic-mode") || "module",
+  drivers: formData.getAll("drivers"),
+});
+
+const evaluateForm = (formData) => {
+  const values = extractValues(formData);
+  const networkGood = evaluateNetwork(values);
+  const driversGood = evaluateDrivers(values);
+  const trimGood = evaluateTrim(networkGood, driversGood);
+  const completed = [networkGood, driversGood, trimGood].filter(Boolean).length;
+  updateGauge(completed);
+  if (completed === 0) {
+    return "idle";
+  }
+  if (completed === 3) {
+    return "success";
+  }
+  if (!networkGood || !driversGood) {
+    return "warn";
+  }
+  return "progress";
 };
 
 form?.addEventListener("submit", (event) => {
   event.preventDefault();
-  setVisualState("processing");
   const formData = new FormData(form);
-  const issues = evaluateKernel(formData);
-  if (issues.length) {
-    updateBoard(`Build failed: ${issues.join(", ")}.`, "error");
-    setVisualState("error");
+  const status = evaluateForm(formData);
+  if (status !== "success") {
+    updateBoard("Compile aborted. Checklist incomplete.", "error");
     return;
   }
-  updateBoard("Kernel linked. bzImage staged in /boot.", "success");
-  setVisualState("success");
+  updateBoard("Kernel forged. Deploy to router farm.", "success");
   window.parent?.postMessage(
     {
       type: "net:level-complete",
       game: "kernel-forge-20",
       payload: {
-        status: "Router ready",
-        score: 20036,
+        status: "Kernel patched",
+        score: 200,
       },
     },
     "*"
@@ -94,13 +151,18 @@ form?.addEventListener("input", () => {
   if (board.dataset.state === "success") {
     return;
   }
-  const formData = new FormData(form);
-  const issues = evaluateKernel(formData);
-  if (!issues.length) {
-    updateBoard("Config matches memo. make bzImage ready.");
-    setVisualState("processing");
-  } else {
+  const status = evaluateForm(new FormData(form));
+  if (status === "idle") {
     updateBoard("Awaiting config for make menuconfig…");
-    setVisualState("idle");
+  } else if (status === "success") {
+    updateBoard("Kernel forged. Deploy to router farm.", "success");
+  } else if (status === "warn") {
+    updateBoard("Build flags out of spec. Recheck memo.");
+  } else {
+    updateBoard("Configuring kernel options…");
   }
 });
+
+if (form) {
+  evaluateForm(new FormData(form));
+}

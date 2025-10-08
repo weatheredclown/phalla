@@ -7,21 +7,27 @@ const board = document.getElementById("status-board");
 const eventFeed = document.getElementById("event-feed");
 const visual = document.getElementById("bgp-visual");
 const visualCaption = visual?.querySelector(".visual-caption");
-const nodes = {
+const topology = document.querySelector(".topology-display");
+const nodeIndicators = {
   backbone: document.querySelector('[data-node="backbone"]'),
-  fiber: document.querySelector('[data-node="fiber-ring"]'),
-  frame: document.querySelector('[data-node="frame-relay"]'),
+  transit: document.querySelector('[data-node="transit"]'),
+  community: document.querySelector('[data-node="community"]'),
 };
-const links = {
-  primary: document.querySelector('[data-link="primary"]'),
-  backup: document.querySelector('[data-link="backup"]'),
+const linkIndicators = {
+  fiber: document.querySelector('[data-link="fiber"]'),
+  relay: document.querySelector('[data-link="relay"]'),
+  blackhole: document.querySelector('[data-link="blackhole"]'),
 };
+const gauge = document.querySelector(".telemetry-gauge");
+const gaugeValue = document.getElementById("bgp-gauge-value");
+const gaugeMarkers = gauge ? gauge.querySelectorAll(".gauge-marker") : [];
 
 const expected = {
   "local-pref": "raise",
   "as-path": "double",
   community: "blackhole",
 };
+const totalChecks = Object.keys(expected).length;
 
 let lastBoardMessage = "";
 let lastEventSignature = "";
@@ -66,41 +72,50 @@ const applyState = (element, state) => {
   }
 };
 
-const applyTopologyState = (formData) => {
+const deriveState = (value, matches) => {
+  if (!value) {
+    return "idle";
+  }
+  return matches ? "good" : "warn";
+};
+
+const updateTopologyState = (formData) => {
   const localPref = formData.get("local-pref") || "";
   const asPath = formData.get("as-path") || "";
-  const community = formData.get("community") || "";
+  const communityValue = formData.get("community") || "";
 
-  applyState(
-    nodes.backbone,
-    !localPref ? "" : localPref === expected["local-pref"] ? "active" : "warning"
-  );
-  applyState(
-    nodes.fiber,
-    localPref === expected["local-pref"] ? "active" : localPref ? "warning" : ""
-  );
+  const matches = {
+    backbone: localPref === expected["local-pref"],
+    transit: asPath === expected["as-path"],
+    community: communityValue === expected.community,
+  };
+  const matchCount = Object.values(matches).filter(Boolean).length;
+  const ratio = totalChecks ? matchCount / totalChecks : 0;
 
-  if (community === expected.community && asPath === expected["as-path"]) {
-    applyState(nodes.frame, "offline");
-  } else if (!community && !asPath) {
-    applyState(nodes.frame, "");
-  } else {
-    applyState(nodes.frame, "warning");
+  applyState(nodeIndicators.backbone, deriveState(localPref, matches.backbone));
+  applyState(nodeIndicators.transit, deriveState(asPath, matches.transit));
+  applyState(nodeIndicators.community, deriveState(communityValue, matches.community));
+
+  applyState(linkIndicators.fiber, deriveState(localPref, matches.backbone));
+  applyState(linkIndicators.relay, deriveState(asPath, matches.transit));
+  applyState(linkIndicators.blackhole, deriveState(communityValue, matches.community));
+
+  if (topology) {
+    const allGood = matches.backbone && matches.transit && matches.community;
+    topology.dataset.flow = allGood ? "on" : "off";
   }
 
-  const primaryState = !localPref
-    ? "idle"
-    : localPref === expected["local-pref"]
-    ? ""
-    : "congested";
-  applyState(links.primary, primaryState);
-
-  const backupState = !asPath && !community
-    ? ""
-    : asPath === expected["as-path"] && community === expected.community
-    ? "idle"
-    : "congested";
-  applyState(links.backup, backupState);
+  if (gauge) {
+    gauge.style.setProperty("--progress", String(ratio));
+    gauge.dataset.state = matchCount === totalChecks ? "locked" : matchCount > 0 ? "warming" : "idle";
+    gauge.dataset.progress = String(matchCount);
+  }
+  gaugeMarkers.forEach((marker, index) => {
+    marker.dataset.active = index < matchCount ? "on" : "off";
+  });
+  if (gaugeValue) {
+    gaugeValue.textContent = `${Math.round(ratio * 100)}%`;
+  }
 };
 
 const updateBoard = (message, state = "idle", variant = "info") => {
@@ -146,7 +161,7 @@ form?.addEventListener("submit", (event) => {
   event.preventDefault();
   setVisualState("processing");
   const formData = new FormData(form);
-  applyTopologyState(formData);
+  updateTopologyState(formData);
   const mismatches = evaluatePolicy(formData);
   if (mismatches.length) {
     updateBoard(`Route map rejected: fix ${mismatches.join(", ")}.`, "error");
@@ -175,7 +190,7 @@ form?.addEventListener("input", () => {
     return;
   }
   const formData = new FormData(form);
-  applyTopologyState(formData);
+  updateTopologyState(formData);
   const mismatches = evaluatePolicy(formData);
   if (!mismatches.length) {
     updateBoard("Policy ready. Deploy to routers.", "idle", "info");
@@ -189,5 +204,5 @@ form?.addEventListener("input", () => {
 
 if (form) {
   logEvent("Monitoring BGP session for leaks.");
-  applyTopologyState(new FormData(form));
+  updateTopologyState(new FormData(form));
 }

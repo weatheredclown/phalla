@@ -4,15 +4,14 @@ initFullscreenToggle();
 
 const form = document.getElementById("gopher-form");
 const board = document.getElementById("status-board");
-const preview = document.getElementById("preview-output");
-const progressMeter = document.getElementById("progress-meter");
-const progressFill = progressMeter?.querySelector(".progress-fill");
-const rows = Array.from(document.querySelectorAll(".row"));
-const previewRows = {
-  banner: document.querySelector('[data-preview-row="banner"]'),
-  catalog: document.querySelector('[data-preview-row="catalog"]'),
-  zine: document.querySelector('[data-preview-row="zine"]'),
+const preview = document.getElementById("gopher-preview");
+const rowLookup = {
+  banner: document.querySelector('[data-row="banner"]'),
+  catalog: document.querySelector('[data-row="catalog"]'),
+  zine: document.querySelector('[data-row="zine"]'),
 };
+const menuMeter = document.querySelector(".menu-meter");
+const meterPips = menuMeter ? menuMeter.querySelectorAll(".meter-pip") : [];
 
 const expected = {
   "banner-text": "Library Net Welcome",
@@ -29,110 +28,134 @@ const expected = {
   "zine-type": "0",
 };
 
+const toRowKey = (name) => name.split("-")[0];
+
 const updateBoard = (message, state = "idle") => {
-  if (!board) {
-    return;
-  }
   board.textContent = message;
   board.dataset.state = state;
 };
 
-const formatValue = (value) => {
-  const trimmed = (value || "").trim();
-  return trimmed ? trimmed : "???";
+const buildPreviewLine = (type, text, selector, host, port = "70") =>
+  `${type}\t${text || "--"}\t${selector || "--"}\t${host || "--"}\t${port}`;
+
+const updatePreview = (formData) => {
+  if (!preview) {
+    return;
+  }
+  const bannerLine = buildPreviewLine(
+    formData.get("banner-type") || "i",
+    formData.get("banner-text") || "--",
+    formData.get("banner-selector") || "--",
+    formData.get("banner-host") || "--"
+  );
+  const catalogLine = buildPreviewLine(
+    formData.get("catalog-type") || "7",
+    formData.get("catalog-text") || "--",
+    formData.get("catalog-selector") || "--",
+    formData.get("catalog-host") || "--"
+  );
+  const zinePort = formData.get("zine-port") || "70";
+  const zineLine = buildPreviewLine(
+    formData.get("zine-type") || "0",
+    formData.get("zine-text") || "--",
+    formData.get("zine-selector") || "--",
+    formData.get("zine-host") || "--",
+    zinePort
+  );
+  preview.textContent = `${bannerLine}\n${catalogLine}\n${zineLine}`;
 };
 
-const rowFieldMap = {
-  banner: ["banner-type", "banner-text", "banner-selector", "banner-host"],
-  catalog: ["catalog-type", "catalog-text", "catalog-selector", "catalog-host"],
-  zine: ["zine-type", "zine-text", "zine-selector", "zine-host"],
-};
-
-const previewPorts = {
-  banner: "70",
-  catalog: "70",
-  zine: "70",
-};
-
-const updateRowStates = (formData) => {
-  let completeCount = 0;
-  rows.forEach((row) => {
-    const key = row.dataset.row;
-    if (!key) {
-      return;
+const evaluateRow = (formData, prefix) => {
+  const fields = ["text", "selector", "host", "type"];
+  if (prefix === "zine") {
+    fields.push("port");
+  }
+  const mismatches = fields.filter((field) => {
+    const key = `${prefix}-${field}`;
+    const expectedValue = expected[key];
+    if (expectedValue === undefined) {
+      return field !== "port" ? !(formData.get(key) || "").trim() : false;
     }
-    const fields = rowFieldMap[key];
-    if (!fields) {
-      return;
-    }
-    const values = fields.map((name) => (formData.get(name) || "").trim());
-    const filled = values.some(Boolean);
-    const matches = fields.every((name) => (formData.get(name) || "").trim() === expected[name]);
-    if (matches) {
-      row.dataset.state = "complete";
-      completeCount += 1;
-    } else if (filled) {
-      row.dataset.state = "editing";
-    } else {
-      delete row.dataset.state;
-    }
-    const previewRow = previewRows[key];
-    if (previewRow) {
-      const [typeField, textField, selectorField, hostField] = fields;
-      const type = formatValue(formData.get(typeField));
-      const display = formatValue(formData.get(textField));
-      const selector = formatValue(formData.get(selectorField));
-      const host = formatValue(formData.get(hostField));
-      const port = previewPorts[key] || "70";
-      previewRow.textContent = `${type}${display}\t${selector}\t${host}\t${port}`;
-      previewRow.dataset.state = matches ? "complete" : filled ? "editing" : "empty";
-    }
+    return (formData.get(key) || "").trim() !== expectedValue;
   });
+  return mismatches;
+};
 
-  if (progressMeter && progressFill) {
-    const progressValue = completeCount;
-    const progressPercent = completeCount / rows.length;
-    progressFill.style.transform = `scaleX(${progressPercent})`;
-    progressMeter.setAttribute("aria-valuenow", progressValue.toString());
+const applyRowState = (rowName, state) => {
+  const row = rowLookup[rowName];
+  if (!row) {
+    return;
   }
+  row.dataset.state = state;
+};
 
-  if (preview) {
-    preview.dataset.state = completeCount === rows.length ? "complete" : "editing";
+const updateMeter = (rowsFilled) => {
+  const ratio = rowsFilled / Object.keys(rowLookup).length;
+  if (menuMeter) {
+    menuMeter.dataset.state = rowsFilled === 0 ? "idle" : rowsFilled === 3 ? "complete" : "partial";
+    menuMeter.style.setProperty("--progress", String(ratio));
   }
+  meterPips.forEach((pip, index) => {
+    pip.dataset.active = index < rowsFilled ? "on" : "off";
+  });
+};
+
+const handleInput = () => {
+  if (board.dataset.state === "success") {
+    return;
+  }
+  const formData = new FormData(form);
+  updatePreview(formData);
+  let rowsCorrect = 0;
+  Object.keys(rowLookup).forEach((rowName) => {
+    const issues = evaluateRow(formData, rowName);
+    if (!issues.length) {
+      rowsCorrect += 1;
+    }
+    const touched = fieldsFilled(formData, rowName);
+    const state = !touched ? "idle" : issues.length ? "warn" : "good";
+    applyRowState(rowName, state);
+  });
+  updateMeter(rowsCorrect);
+  if (rowsCorrect === Object.keys(rowLookup).length) {
+    updateBoard("Menu ready. Publish to gophermap.");
+  } else {
+    updateBoard("Awaiting menu entries.");
+  }
+};
+
+const fieldsFilled = (formData, prefix) => {
+  const keys = Object.keys(expected).filter((key) => key.startsWith(`${prefix}-`));
+  return keys.some((key) => (formData.get(key) || "").trim().length > 0);
 };
 
 form?.addEventListener("submit", (event) => {
   event.preventDefault();
-  const data = new FormData(form);
-  updateRowStates(data);
-  const errors = Object.entries(expected).filter(([name, value]) => (data.get(name) || "").trim() !== value);
-  if (errors.length) {
-    updateBoard("Menu mismatch. Check selector, type, and host fields.", "error");
+  const formData = new FormData(form);
+  updatePreview(formData);
+  const issues = Object.keys(rowLookup).flatMap((rowName) =>
+    evaluateRow(formData, rowName).map((field) => `${rowName} ${field}`)
+  );
+  if (issues.length) {
+    updateBoard(`Gophermap rejected: fix ${issues.join(", ")}.`, "error");
     return;
   }
-  updateBoard("Gophermap saved. Terminals update in sync.", "success");
+  updateBoard("Entries aligned. Menu pushed to campus net.", "success");
   window.parent?.postMessage(
     {
       type: "net:level-complete",
       game: "gopher-groundskeeper",
       payload: {
-        status: "Burrows indexed",
-        score: 38000,
+        status: "Menu matched",
+        score: 3270,
       },
     },
     "*"
   );
 });
 
-form?.addEventListener("input", () => {
-  if (board?.dataset.state === "success") {
-    return;
-  }
-  const data = new FormData(form);
-  updateRowStates(data);
-  updateBoard("Awaiting menu entries.");
-});
+form?.addEventListener("input", handleInput);
 
 if (form) {
-  updateRowStates(new FormData(form));
+  updatePreview(new FormData(form));
 }
