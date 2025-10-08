@@ -1,5 +1,7 @@
 const form = document.getElementById("zone-form");
 const board = document.getElementById("status-board");
+const visual = document.getElementById("zone-visual");
+const visualCaption = visual?.querySelector(".visual-caption");
 
 const expected = {
   "www-type": "A",
@@ -30,6 +32,23 @@ const updateBoard = (message, state = "idle") => {
   board.dataset.state = state;
 };
 
+const visualMessages = {
+  idle: "Zone relays listening for updates.",
+  processing: "Replaying journal to secondary servers…",
+  success: "DNS mesh synced. Modems stay green.",
+  error: "Record drift detected—realign entries.",
+};
+
+const setVisualState = (state) => {
+  if (!visual) {
+    return;
+  }
+  visual.dataset.state = state;
+  if (visualCaption && visualMessages[state]) {
+    visualCaption.textContent = visualMessages[state];
+  }
+};
+
 const evaluateZone = (formData) => {
   const mismatches = [];
   for (const [name, target] of Object.entries(expected)) {
@@ -44,6 +63,7 @@ const evaluateZone = (formData) => {
 
 form?.addEventListener("submit", (event) => {
   event.preventDefault();
+  setVisualState("processing");
   const formData = new FormData(form);
   const mismatches = evaluateZone(formData);
   if (mismatches.length) {
@@ -51,9 +71,11 @@ form?.addEventListener("submit", (event) => {
       `Zone reject: ${mismatches.length} field${mismatches.length === 1 ? "" : "s"} misaligned.`,
       "error"
     );
+    setVisualState("error");
     return;
   }
   updateBoard("Zone propagated. Secondary acknowledges serial bump.", "success");
+  setVisualState("success");
   window.parent?.postMessage(
     {
       type: "net:level-complete",
@@ -75,7 +97,9 @@ form?.addEventListener("input", () => {
   const mismatches = evaluateZone(formData);
   if (!mismatches.length) {
     updateBoard("All records align. Ready to push.");
+    setVisualState("processing");
   } else {
     updateBoard("Awaiting alignment…");
+    setVisualState("idle");
   }
 });
