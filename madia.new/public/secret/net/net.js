@@ -151,12 +151,90 @@ const cardIndex = new Map();
 let lastFocusElement = null;
 let pendingRestart = null;
 
+const FOCUSABLE_OVERLAY_SELECTORS = [
+  'a[href]:not([tabindex="-1"])',
+  'button:not([disabled]):not([tabindex="-1"])',
+  'textarea:not([disabled]):not([tabindex="-1"])',
+  'input:not([disabled]):not([tabindex="-1"])',
+  'select:not([disabled]):not([tabindex="-1"])',
+  '[tabindex]:not([tabindex="-1"])',
+].join(", ");
+
+let overlayFocusTrapHandler = null;
+
+const getOverlayFocusableElements = () => {
+  if (!overlay || overlay.hidden) {
+    return [];
+  }
+  return Array.from(overlay.querySelectorAll(FOCUSABLE_OVERLAY_SELECTORS)).filter((element) => {
+    if (!(element instanceof HTMLElement)) {
+      return false;
+    }
+    if (element.hasAttribute("inert")) {
+      return false;
+    }
+    if (element.closest('[aria-hidden="true"]')) {
+      return false;
+    }
+    if (element.disabled) {
+      return false;
+    }
+    const rects = element.getClientRects();
+    return rects.length > 0;
+  });
+};
+
+const teardownOverlayFocusTrap = () => {
+  if (!overlay || !overlayFocusTrapHandler) {
+    return;
+  }
+  overlay.removeEventListener("keydown", overlayFocusTrapHandler);
+  overlayFocusTrapHandler = null;
+};
+
+const refreshOverlayFocusTrap = () => {
+  if (!overlay) {
+    return;
+  }
+  teardownOverlayFocusTrap();
+  if (overlay.hidden) {
+    return;
+  }
+  const focusable = getOverlayFocusableElements();
+  if (!focusable.length) {
+    return;
+  }
+  const first = focusable[0];
+  const last = focusable[focusable.length - 1];
+
+  overlayFocusTrapHandler = (event) => {
+    if (event.key !== "Tab" || event.altKey || event.ctrlKey || event.metaKey) {
+      return;
+    }
+    const activeElement = document.activeElement;
+    if (event.shiftKey) {
+      if (activeElement === first || !overlay.contains(activeElement)) {
+        event.preventDefault();
+        last.focus({ preventScroll: true });
+      }
+      return;
+    }
+    if (activeElement === last) {
+      event.preventDefault();
+      first.focus({ preventScroll: true });
+    }
+  };
+
+  overlay.addEventListener("keydown", overlayFocusTrapHandler);
+};
+
 function setRestartButtonEnabled(enabled) {
   if (!restartButton) {
     return;
   }
   restartButton.disabled = !enabled;
   restartButton.setAttribute("aria-disabled", enabled ? "false" : "true");
+  refreshOverlayFocusTrap();
 }
 
 if (frame) {
@@ -251,6 +329,7 @@ const openNode = (node) => {
   overlay.dataset.open = "true";
   overlay.dataset.activeNode = node.id;
   lockBodyScroll();
+  refreshOverlayFocusTrap();
   requestAnimationFrame(() => {
     overlayFrame?.focus({ preventScroll: true });
   });
@@ -260,6 +339,7 @@ const closeOverlay = () => {
   if (!overlay || !frame) {
     return;
   }
+  teardownOverlayFocusTrap();
   overlay.hidden = true;
   overlay.removeAttribute("data-open");
   overlay.removeAttribute("data-active-node");
