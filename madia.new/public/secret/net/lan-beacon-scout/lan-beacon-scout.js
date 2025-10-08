@@ -1,3 +1,7 @@
+import { initFullscreenToggle } from "../fullscreen.js";
+
+initFullscreenToggle();
+
 const rounds = [
   {
     id: "newsroom",
