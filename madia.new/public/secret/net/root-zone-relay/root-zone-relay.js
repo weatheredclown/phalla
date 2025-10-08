@@ -1,5 +1,16 @@
 const form = document.getElementById("zone-form");
 const board = document.getElementById("status-board");
+const tileLookup = {
+  www: document.querySelector('[data-record="www"]'),
+  mail: document.querySelector('[data-record="mail"]'),
+  root: document.querySelector('[data-record="root"]'),
+};
+const zoneVisual = document.querySelector(".zone-visual");
+const propagationMeter = document.querySelector(".propagation-meter");
+const propagationPips = propagationMeter
+  ? propagationMeter.querySelectorAll(".propagation-pip")
+  : [];
+const totalRecords = Object.keys(recordFields).length;
 
 const expected = {
   "www-type": "A",
@@ -12,17 +23,24 @@ const expected = {
   "root-value": "ns1.isp.example.",
 };
 
+const recordFields = {
+  www: ["www-type", "www-value", "www-ttl"],
+  mail: ["mail-type", "mail-value", "mail-priority"],
+  root: ["root-type", "root-value"],
+};
+
 const normalize = (name, value) => {
   if (value == null) {
     return "";
   }
+  const trimmed = value.trim();
   if (name.endsWith("type")) {
-    return value.trim().toUpperCase();
+    return trimmed.toUpperCase();
   }
   if (name.endsWith("ttl") || name.endsWith("priority")) {
-    return String(Number(value));
+    return String(Number(trimmed));
   }
-  return value.trim().toLowerCase();
+  return trimmed.toLowerCase();
 };
 
 const updateBoard = (message, state = "idle") => {
@@ -32,20 +50,64 @@ const updateBoard = (message, state = "idle") => {
 
 const evaluateZone = (formData) => {
   const mismatches = [];
-  for (const [name, target] of Object.entries(expected)) {
-    const inputValue = normalize(name, formData.get(name));
-    const expectedValue = normalize(name, target);
-    if (inputValue !== expectedValue) {
+  Object.entries(expected).forEach(([name, target]) => {
+    if (normalize(name, formData.get(name)) !== normalize(name, target)) {
       mismatches.push(name);
     }
-  }
+  });
   return mismatches;
+};
+
+const updateTiles = (formData) => {
+  let allGood = true;
+  let alignedCount = 0;
+  Object.entries(recordFields).forEach(([record, fields]) => {
+    const tile = tileLookup[record];
+    if (!tile) {
+      return;
+    }
+    const values = fields.map((field) => formData.get(field) || "");
+    const touched = values.some((value) => value.trim().length > 0);
+    const aligned = fields.every(
+      (field) => normalize(field, formData.get(field)) === normalize(field, expected[field])
+    );
+    if (!aligned) {
+      allGood = false;
+    } else {
+      alignedCount += 1;
+    }
+    let state = "idle";
+    if (touched || aligned) {
+      state = aligned ? "good" : "warn";
+    }
+    tile.dataset.state = state;
+  });
+
+  if (zoneVisual) {
+    zoneVisual.dataset.state = allGood ? "aligned" : "draft";
+  }
+
+  if (propagationMeter) {
+    const ratio = totalRecords ? alignedCount / totalRecords : 0;
+    propagationMeter.style.setProperty("--progress", String(ratio));
+    if (alignedCount === totalRecords) {
+      propagationMeter.dataset.state = "ready";
+    } else if (alignedCount > 0) {
+      propagationMeter.dataset.state = "warming";
+    } else {
+      propagationMeter.dataset.state = "idle";
+    }
+  }
+  propagationPips.forEach((pip, index) => {
+    pip.dataset.active = index < alignedCount ? "on" : "off";
+  });
 };
 
 form?.addEventListener("submit", (event) => {
   event.preventDefault();
   const formData = new FormData(form);
   const mismatches = evaluateZone(formData);
+  updateTiles(formData);
   if (mismatches.length) {
     updateBoard(
       `Zone reject: ${mismatches.length} field${mismatches.length === 1 ? "" : "s"} misaligned.`,
@@ -73,9 +135,16 @@ form?.addEventListener("input", () => {
   }
   const formData = new FormData(form);
   const mismatches = evaluateZone(formData);
+  updateTiles(formData);
   if (!mismatches.length) {
     updateBoard("All records align. Ready to push.");
+  } else if (mismatches.length <= 2) {
+    updateBoard("Records warming. Adjust highlighted tiles.");
   } else {
     updateBoard("Awaiting alignment…");
   }
 });
+
+if (form) {
+  updateTiles(new FormData(form));
+}
