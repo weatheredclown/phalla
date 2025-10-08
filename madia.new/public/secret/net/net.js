@@ -39,6 +39,15 @@ const nodes = [
     thumbnail: "make bzImage",
   },
   {
+    id: "nat-handshake-lab",
+    layer: "Layer 05 · Edge Negotiator",
+    name: "NAT Handshake Lab",
+    description:
+      "Shape translation rules so remote crews punch through hotel NAT and keep their tunnels alive.",
+    url: "./nat-handshake-lab/index.html",
+    thumbnail: "NAT Ops",
+  },
+  {
     id: "modem-skunkworks",
     layer: "Layer 04 · Dial-Up Ops",
     name: "Modem Skunkworks",
@@ -46,6 +55,15 @@ const nodes = [
       "Sequence the perfect PPP handshake so the remote newsroom can sync before sunrise.",
     url: "./modem-skunkworks/index.html",
     thumbnail: "PPP Sync",
+  },
+  {
+    id: "lan-beacon-scout",
+    layer: "Layer 04 · LAN Recon",
+    name: "LAN Beacon Scout",
+    description:
+      "Wake snoozing workstations with precision broadcasts before the newsroom floods the helpdesk.",
+    url: "./lan-beacon-scout/index.html",
+    thumbnail: "LAN Scan",
   },
   {
     id: "borderline-broadcast",
