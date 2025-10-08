@@ -146,10 +146,150 @@ const descriptionEl = document.getElementById("player-description");
 const overlayBackdrop = document.getElementById("overlay-backdrop");
 const resetProgressButton = document.getElementById("reset-progress");
 const overlayFrame = document.getElementById("overlay-frame");
+const progressSummary = document.getElementById("progress-summary");
+const progressCountValue = document.getElementById("progress-count-value");
+const progressCountMeta = document.getElementById("progress-count-meta");
+const progressTopScoreValue = document.getElementById("progress-top-score-value");
+const progressTopScoreMeta = document.getElementById("progress-top-score-meta");
+const progressLastRunValue = document.getElementById("progress-last-run-value");
+const progressLastRunMeta = document.getElementById("progress-last-run-meta");
 
 const cardIndex = new Map();
 let lastFocusElement = null;
 let pendingRestart = null;
+
+const numberFormatter = (() => {
+  try {
+    return new Intl.NumberFormat(undefined, { maximumFractionDigits: 0 });
+  } catch (error) {
+    console.warn("Falling back to default score formatting", error);
+    return { format: (value) => String(value) };
+  }
+})();
+
+const timestampFormatter = (() => {
+  try {
+    return new Intl.DateTimeFormat(undefined, { dateStyle: "medium", timeStyle: "short" });
+  } catch (error) {
+    console.warn("Falling back to default timestamp formatting", error);
+    return { format: (date) => (typeof date.toLocaleString === "function" ? date.toLocaleString() : String(date)) };
+  }
+})();
+
+const formatScore = (value) => {
+  if (typeof value !== "number" || Number.isNaN(value)) {
+    return null;
+  }
+  try {
+    return numberFormatter.format(value);
+  } catch (error) {
+    console.warn("Score formatting failed", error);
+    return String(value);
+  }
+};
+
+const formatTimestamp = (value) => {
+  if (!value) {
+    return null;
+  }
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) {
+    return null;
+  }
+  try {
+    return timestampFormatter.format(date);
+  } catch (error) {
+    console.warn("Timestamp formatting failed", error);
+    return typeof date.toLocaleString === "function" ? date.toLocaleString() : date.toString();
+  }
+};
+
+function renderProgressSummary() {
+  if (!progressSummary) {
+    return;
+  }
+
+  const entries = Object.entries(progress)
+    .map(([id, data]) => {
+      if (!data) {
+        return null;
+      }
+      const node = nodeLookup.get(id);
+      if (!node) {
+        return null;
+      }
+      return {
+        id,
+        node,
+        status: data.status ?? null,
+        score: data.score ?? null,
+        timestamp: data.timestamp ?? null,
+      };
+    })
+    .filter(Boolean);
+
+  const total = nodes.length;
+  const completedCount = entries.length;
+  progressSummary.dataset.state = completedCount > 0 ? "active" : "idle";
+
+  if (progressCountValue) {
+    progressCountValue.textContent = `${completedCount} / ${total}`;
+  }
+  if (progressCountMeta) {
+    if (!completedCount) {
+      progressCountMeta.textContent = "No cabinets cleared yet.";
+    } else if (completedCount === total) {
+      progressCountMeta.textContent = "All cabinets humming.";
+    } else {
+      const remaining = total - completedCount;
+      progressCountMeta.textContent = `${remaining} cabinet${remaining === 1 ? "" : "s"} awaiting triage.`;
+    }
+  }
+
+  const scoredEntries = entries.filter((entry) => typeof entry.score === "number" && !Number.isNaN(entry.score));
+  const bestScore = scoredEntries.reduce((best, entry) => {
+    if (!best) {
+      return entry;
+    }
+    return entry.score > best.score ? entry : best;
+  }, null);
+
+  if (progressTopScoreValue) {
+    const formattedScore = bestScore ? formatScore(bestScore.score) : null;
+    progressTopScoreValue.textContent = formattedScore || "—";
+  }
+  if (progressTopScoreMeta) {
+    if (bestScore) {
+      const status = bestScore.status || "Stabilized";
+      progressTopScoreMeta.textContent = `${bestScore.node.name} · ${status}`;
+    } else {
+      progressTopScoreMeta.textContent = "Lock in a run to register throughput.";
+    }
+  }
+
+  const latestEntry = entries.reduce((latest, entry) => {
+    if (!entry.timestamp) {
+      return latest;
+    }
+    if (!latest || (latest.timestamp ?? 0) < entry.timestamp) {
+      return entry;
+    }
+    return latest;
+  }, null);
+
+  if (progressLastRunValue) {
+    const formattedTimestamp = latestEntry ? formatTimestamp(latestEntry.timestamp) : null;
+    progressLastRunValue.textContent = formattedTimestamp || "—";
+  }
+  if (progressLastRunMeta) {
+    if (latestEntry) {
+      const status = latestEntry.status || "Stabilized";
+      progressLastRunMeta.textContent = `${latestEntry.node.name} · ${status}`;
+    } else {
+      progressLastRunMeta.textContent = "Run a cabinet to update the relay log.";
+    }
+  }
+}
 
 function setRestartButtonEnabled(enabled) {
   if (!restartButton) {
@@ -352,6 +492,7 @@ resetProgressButton?.addEventListener("click", () => {
   Object.keys(progress).forEach((key) => delete progress[key]);
   saveProgress(progress);
   nodes.forEach((node) => updateStatus(node.id, null));
+  renderProgressSummary();
 });
 
 window.addEventListener("message", (event) => {
@@ -375,9 +516,11 @@ window.addEventListener("message", (event) => {
   saveProgress(progress);
   updateStatus(nodeId, progress[nodeId]);
   setRestartButtonEnabled(true);
+  renderProgressSummary();
 });
 
 renderGrid();
+renderProgressSummary();
 
 grid?.addEventListener("click", (event) => {
   const button = event.target.closest(".boot-button");
