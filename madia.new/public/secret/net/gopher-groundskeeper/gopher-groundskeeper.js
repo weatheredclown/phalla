@@ -1,5 +1,7 @@
 const form = document.getElementById("gopher-form");
 const board = document.getElementById("status-board");
+const visual = document.getElementById("gopher-visual");
+const visualCaption = visual?.querySelector(".visual-caption");
 
 const expected = {
   "banner-text": "Library Net Welcome",
@@ -21,15 +23,35 @@ const updateBoard = (message, state = "idle") => {
   board.dataset.state = state;
 };
 
+const visualMessages = {
+  idle: "Gopher tunnels awaiting signage.",
+  processing: "Routing burrow paths…",
+  success: "All tunnels labeled. Visitors guided.",
+  error: "Dead end detected—fix the entries.",
+};
+
+const setVisualState = (state) => {
+  if (!visual) {
+    return;
+  }
+  visual.dataset.state = state;
+  if (visualCaption && visualMessages[state]) {
+    visualCaption.textContent = visualMessages[state];
+  }
+};
+
 form?.addEventListener("submit", (event) => {
   event.preventDefault();
+  setVisualState("processing");
   const data = new FormData(form);
   const errors = Object.entries(expected).filter(([name, value]) => (data.get(name) || "").trim() !== value);
   if (errors.length) {
     updateBoard("Menu mismatch. Check selector, type, and host fields.", "error");
+    setVisualState("error");
     return;
   }
   updateBoard("Gophermap saved. Terminals update in sync.", "success");
+  setVisualState("success");
   window.parent?.postMessage(
     {
       type: "net:level-complete",
@@ -48,4 +70,5 @@ form?.addEventListener("input", () => {
     return;
   }
   updateBoard("Awaiting menu entries.");
+  setVisualState("idle");
 });
