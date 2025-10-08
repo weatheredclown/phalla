@@ -1,3 +1,7 @@
+import { initFullscreenToggle } from "../fullscreen.js";
+
+initFullscreenToggle();
+
 const form = document.getElementById("route-form");
 const board = document.getElementById("status-board");
 const topologyMap = document.querySelector(".topology-map");

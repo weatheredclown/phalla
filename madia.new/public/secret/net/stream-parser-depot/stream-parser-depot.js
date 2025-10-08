@@ -1,3 +1,7 @@
+import { initFullscreenToggle } from "../fullscreen.js";
+
+initFullscreenToggle();
+
 const form = document.getElementById("parser-form");
 const board = document.getElementById("status-board");
 const pipelineVisual = document.querySelector(".pipeline-visual");

@@ -1,3 +1,7 @@
+import { initFullscreenToggle } from "../fullscreen.js";
+
+initFullscreenToggle();
+
 const form = document.getElementById("cache-form");
 const board = document.getElementById("status-board");
 const streamVisuals = new Map(

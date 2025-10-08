@@ -1,3 +1,7 @@
+import { initFullscreenToggle } from "../fullscreen.js";
+
+initFullscreenToggle();
+
 const form = document.getElementById("daemon-form");
 const board = document.getElementById("status-board");
 const rack = document.querySelector(".rack-visual");

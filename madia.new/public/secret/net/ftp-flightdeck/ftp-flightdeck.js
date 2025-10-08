@@ -1,3 +1,7 @@
+import { initFullscreenToggle } from "../fullscreen.js";
+
+initFullscreenToggle();
+
 const form = document.getElementById("ftp-form");
 const board = document.getElementById("status-board");
 const flightPath = document.querySelector(".flight-path");

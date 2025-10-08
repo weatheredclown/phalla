@@ -1,3 +1,7 @@
+import { initFullscreenToggle } from "../fullscreen.js";
+
+initFullscreenToggle();
+
 const form = document.getElementById("bgp-form");
 const board = document.getElementById("status-board");
 const routeMap = document.querySelector(".route-map");
