@@ -146,6 +146,7 @@ const descriptionEl = document.getElementById("player-description");
 const overlayBackdrop = document.getElementById("overlay-backdrop");
 const resetProgressButton = document.getElementById("reset-progress");
 const overlayFrame = document.getElementById("overlay-frame");
+const progressSummary = document.getElementById("progress-summary");
 
 const cardIndex = new Map();
 let lastFocusElement = null;
@@ -158,6 +159,39 @@ function setRestartButtonEnabled(enabled) {
   restartButton.disabled = !enabled;
   restartButton.setAttribute("aria-disabled", enabled ? "false" : "true");
 }
+
+const updateProgressSummary = () => {
+  if (!progressSummary) {
+    return;
+  }
+  const total = nodes.length;
+  const completedEntries = Object.entries(progress)
+    .filter(([, entry]) => entry && entry.status)
+    .sort(([, a], [, b]) => {
+      const timestampA = a?.timestamp ?? 0;
+      const timestampB = b?.timestamp ?? 0;
+      return timestampB - timestampA;
+    });
+  const completedCount = completedEntries.length;
+  if (completedCount === 0) {
+    progressSummary.textContent = `Cabinets stabilized: 0 / ${total}. Boot a cabinet to start logging uptime.`;
+    progressSummary.dataset.state = "idle";
+    return;
+  }
+  const [latestNodeId, latestEntry] = completedEntries[0];
+  const latestNode = nodeLookup.get(latestNodeId);
+  const nodeName = latestNode?.name ?? "Unknown cabinet";
+  const statusText = latestEntry?.status || "Stabilized";
+  let scoreFragment = "";
+  const score = latestEntry?.score;
+  if (typeof score === "number" && Number.isFinite(score)) {
+    scoreFragment = ` Score ${score.toLocaleString()}.`;
+  } else if (typeof score === "string" && score.trim()) {
+    scoreFragment = ` Score ${score.trim()}.`;
+  }
+  progressSummary.textContent = `Cabinets stabilized: ${completedCount} / ${total}. Latest: ${nodeName} – ${statusText}.${scoreFragment}`;
+  progressSummary.dataset.state = "active";
+};
 
 if (frame) {
   frame.dataset.baseUrl = "";
@@ -235,6 +269,7 @@ const renderGrid = () => {
     fragment.append(card);
   });
   grid.replaceChildren(fragment);
+  updateProgressSummary();
 };
 
 const openNode = (node) => {
@@ -352,6 +387,7 @@ resetProgressButton?.addEventListener("click", () => {
   Object.keys(progress).forEach((key) => delete progress[key]);
   saveProgress(progress);
   nodes.forEach((node) => updateStatus(node.id, null));
+  updateProgressSummary();
 });
 
 window.addEventListener("message", (event) => {
@@ -375,6 +411,7 @@ window.addEventListener("message", (event) => {
   saveProgress(progress);
   updateStatus(nodeId, progress[nodeId]);
   setRestartButtonEnabled(true);
+  updateProgressSummary();
 });
 
 renderGrid();
