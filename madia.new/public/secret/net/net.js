@@ -21,6 +21,15 @@ const nodes = [
     thumbnail: "NS Lookup",
   },
   {
+    id: "registrar-launch-desk",
+    layer: "Layer 07 · Registrar Ops",
+    name: "Registrar Launch Desk",
+    description:
+      "Stage domain records across three registrars and only push the combos that keep every service resolving.",
+    url: "./registrar-launch-desk/index.html",
+    thumbnail: "DNS Desk",
+  },
+  {
     id: "daemon-handshake",
     layer: "Layer 06 · Web Stack",
     name: "Daemon Handshake",
