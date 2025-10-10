@@ -42,6 +42,16 @@ const progressOutput = document.getElementById("session-progress");
 const sessionCards = new Map(
   Array.from(document.querySelectorAll(".session-card")).map((card) => [card.dataset.session, card])
 );
+const visualCards = new Map(
+  Array.from(document.querySelectorAll(".visual-card")).map((card) => [
+    card.dataset.session,
+    {
+      card,
+      status: card.querySelector(".visual-status"),
+      message: card.querySelector(".visual-message"),
+    },
+  ])
+);
 
 let stability = 100;
 let score = 0;
@@ -62,6 +72,60 @@ const updateHud = () => {
 const setStatus = (message, state = "idle") => {
   statusBoard.textContent = message;
   statusBoard.dataset.state = state;
+};
+
+const setVisualState = (sessionId, state, statusText, messageText) => {
+  const visual = visualCards.get(sessionId);
+  if (!visual) {
+    return;
+  }
+  visual.card.dataset.visualState = state;
+  if (visual.status) {
+    visual.status.textContent = statusText;
+  }
+  if (visual.message) {
+    visual.message.textContent = messageText;
+  }
+};
+
+const describeMismatch = (session, mappingValue, keepaliveValue) => {
+  if (!mappingValue || !keepaliveValue) {
+    return "Awaiting translation policy.";
+  }
+  const mappingMismatch = mappingValue !== session.mapping;
+  const keepaliveMismatch = keepaliveValue !== session.keepalive;
+  if (mappingMismatch && keepaliveMismatch) {
+    return "Translation and keepalive both drift. Expect immediate teardown.";
+  }
+  if (mappingMismatch) {
+    return "Mapping choice bends ports the wrong way. Flow will be blocked.";
+  }
+  return "Keepalive cadence mismatched. Binding will expire mid-flight.";
+};
+
+const updateVisualizer = () => {
+  const formData = form ? new FormData(form) : null;
+  sessions.forEach((session) => {
+    if (locked.has(session.id)) {
+      setVisualState(session.id, "locked", "Locked", `${session.log} Translation pinned.`);
+      return;
+    }
+    const mappingValue = formData?.get(`mapping-${session.id}`) || "";
+    const keepaliveValue = formData?.get(`keepalive-${session.id}`) || "";
+    if (!mappingValue && !keepaliveValue) {
+      setVisualState(session.id, "idle", "Idle", "Awaiting translation policy.");
+      return;
+    }
+    if (!mappingValue || !keepaliveValue) {
+      setVisualState(session.id, "partial", "Incomplete", "Stage both mapping and keepalive to preview stability.");
+      return;
+    }
+    if (mappingValue === session.mapping && keepaliveValue === session.keepalive) {
+      setVisualState(session.id, "preview", "Aligned", "Forecast: stable traversal once committed.");
+    } else {
+      setVisualState(session.id, "mismatch", "At risk", describeMismatch(session, mappingValue, keepaliveValue));
+    }
+  });
 };
 
 const appendLog = (session, sessionScore, attemptsUsed) => {
@@ -91,6 +155,7 @@ const lockSession = (session, sessionScore, attemptsUsed) => {
   if (card) {
     card.dataset.state = "locked";
   }
+  setVisualState(session.id, "locked", "Locked", `${session.log} Stability bonus locked in.`);
   appendLog(session, sessionScore, attemptsUsed);
   updateHud();
   if (locked.size === sessions.length) {
@@ -114,6 +179,9 @@ const markError = (session) => {
   const card = sessionCards.get(session.id);
   if (card && card.dataset.state !== "locked") {
     card.dataset.state = "error";
+  }
+  if (!locked.has(session.id)) {
+    setVisualState(session.id, "failed", "Failed", "Gateway rejected the current policy. Recalibrate your picks.");
   }
 };
 
@@ -208,6 +276,8 @@ form?.addEventListener("input", () => {
   } else {
     setStatus("Drafting translation rules…");
   }
+  updateVisualizer();
 });
 
 updateHud();
+updateVisualizer();
