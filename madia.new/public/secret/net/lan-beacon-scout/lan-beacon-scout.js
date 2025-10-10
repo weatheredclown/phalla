@@ -6,6 +6,7 @@ const rounds = [
   {
     id: "newsroom",
     name: "Newsroom Spine",
+    cidr: "192.168.10.0/24",
     briefing:
       "Cube farm NICs took a voltage dip. Hit the all-ones host address and rely on broadcast name chatter to coax them back.",
     hint: "Desksets live on a /24. Think 255.",
@@ -19,6 +20,7 @@ const rounds = [
   {
     id: "engineering",
     name: "Engineering Lab",
+    cidr: "172.16.8.0/26",
     briefing:
       "Prototype rigs are running a tight /26. They talk fast UDP for their diagnostics channel; flood the right block to wake them.",
     hint: "Fourth subnet of 172.16.8.0 with /26 mask. Broadcast ends in .63.",
@@ -32,6 +34,7 @@ const rounds = [
   {
     id: "archives",
     name: "Archive Annex",
+    cidr: "10.0.5.128/27",
     briefing:
       "Tape robots idle on an odd /27. They only trust ARP refreshes from the wiring closet after hours.",
     hint: "/27 broadcast holds the top 5 bits. Expect .159.",
@@ -58,6 +61,121 @@ const logList = document.getElementById("log-list");
 const mapCards = new Map(
   Array.from(document.querySelectorAll(".map-card")).map((card) => [card.dataset.zone, card])
 );
+
+const METHOD_DISPLAY = [
+  { id: "arp", short: "ARP", label: "Quick ARP Probe" },
+  { id: "udp", short: "UDP", label: "UDP Echo Spray" },
+  { id: "netbios", short: "NB", label: "NetBIOS Name Pulse" },
+];
+
+const createHostBitScope = (round) => {
+  if (!round.cidr) {
+    return null;
+  }
+  const prefix = Number(round.cidr.split("/")[1]);
+  if (!Number.isFinite(prefix)) {
+    return null;
+  }
+  const broadcastOctets = round.broadcast.split(".").map(Number);
+  const lastOctet = broadcastOctets[3] ?? 0;
+  const binary = lastOctet.toString(2).padStart(8, "0");
+  const networkBitsInOctet = Math.max(0, prefix - 24);
+  const hostBits = Math.max(0, 8 - networkBitsInOctet);
+  const hostPattern = binary.slice(networkBitsInOctet);
+
+  const container = document.createElement("div");
+  container.className = "clue-panel__bit-grid bit-grid";
+  container.setAttribute(
+    "aria-label",
+    `Host bit scope shows ${hostBits} host bits active (${hostPattern.split("").join(" ")}) for broadcast ending .${broadcastOctets[3]}.`
+  );
+
+  const label = document.createElement("span");
+  label.className = "bit-grid__label";
+  label.textContent = "Host bit scope";
+  container.appendChild(label);
+
+  const lights = document.createElement("div");
+  lights.className = "bit-grid__lights";
+
+  binary.split("").forEach((bit, index) => {
+    const cell = document.createElement("span");
+    cell.className = "bit-light";
+    cell.textContent = bit;
+    if (index < networkBitsInOctet) {
+      cell.classList.add("bit-light--network");
+    } else {
+      cell.classList.add("bit-light--host");
+      if (bit === "1") {
+        cell.classList.add("bit-light--hot");
+      }
+    }
+    lights.appendChild(cell);
+  });
+
+  container.appendChild(lights);
+
+  const annotation = document.createElement("span");
+  annotation.className = "bit-grid__annotation";
+  annotation.textContent = `${hostBits} host bits → ${broadcastOctets[3]}`;
+  container.appendChild(annotation);
+
+  return container;
+};
+
+const createMethodIndicator = (round) => {
+  const container = document.createElement("div");
+  container.className = "clue-panel__method method-indicators";
+  const activeMethod = METHOD_DISPLAY.find((item) => item.id === round.method);
+  if (activeMethod) {
+    container.setAttribute(
+      "aria-label",
+      `Handshake lights highlight ${activeMethod.label}.`
+    );
+  }
+
+  const label = document.createElement("span");
+  label.className = "method-indicators__label";
+  label.textContent = "Handshake lights";
+  container.appendChild(label);
+
+  const strip = document.createElement("div");
+  strip.className = "method-indicators__lights";
+  METHOD_DISPLAY.forEach((item) => {
+    const light = document.createElement("span");
+    light.className = "method-light";
+    light.dataset.method = item.id;
+    light.textContent = item.short;
+    light.title = item.label;
+    if (item.id === round.method) {
+      light.classList.add("method-light--active");
+    }
+    strip.appendChild(light);
+  });
+  container.appendChild(strip);
+
+  return container;
+};
+
+const initCluePanels = () => {
+  rounds.forEach((round) => {
+    const card = mapCards.get(round.id);
+    if (!card) {
+      return;
+    }
+    if (card.querySelector(".clue-panel")) {
+      return;
+    }
+    const panel = document.createElement("div");
+    panel.className = "clue-panel";
+    const hostScope = createHostBitScope(round);
+    if (hostScope) {
+      panel.appendChild(hostScope);
+    }
+    panel.appendChild(createMethodIndicator(round));
+    card.appendChild(panel);
+  });
+};
 
 let currentRoundIndex = 0;
 let score = 0;
@@ -232,4 +350,5 @@ form?.addEventListener("input", () => {
   }
 });
 
+initCluePanels();
 populateRound();
