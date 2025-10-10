@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>DNS Setup Minigame</title>
+    <link rel="stylesheet" href="/legacy/phalla.css" />
+  </head>
+  <body>
+    <div id="legacyHeader"></div>
+    <div align="center">
+      <div class="page" style="width:98%; text-align:left">
+        <div class="dns-game__wrap">
+          <h1 class="dns-game__heading">DNS Setup Minigame</h1>
+          <p class="dns-game__lede">
+            You just bought a shiny new domain. Work through each scenario, pick the right records,
+            and make sure the registrar signs off on your launch plans.
+          </p>
+          <div class="dns-game__status" id="dnsGameStatus"></div>
+          <div class="dns-game__layout">
+            <section class="dns-game__column" id="dnsScenarioPanel"></section>
+            <section class="dns-game__column dns-game__column--wide">
+              <div class="dns-game__card">
+                <h2 class="dns-game__card-title">Candidate records</h2>
+                <p class="dns-game__hint">
+                  Toggle the checkboxes to load records into your zone. Only the correct combination
+                  keeps everything resolving.
+                </p>
+                <div id="dnsCandidateList"></div>
+              </div>
+              <div class="dns-game__card">
+                <h2 class="dns-game__card-title">Your zone file</h2>
+                <div id="dnsZoneBody" class="dns-game__zone"></div>
+                <div class="dns-game__actions">
+                  <button type="button" class="button" id="dnsResetButton">Reset zone</button>
+                  <button type="button" class="button" id="dnsCheckButton">Check configuration</button>
+                  <button type="button" class="button" id="dnsNextButton" style="display:none;">Next round</button>
+                </div>
+                <div class="dns-game__feedback" id="dnsFeedback" role="status" aria-live="polite"></div>
+              </div>
+            </section>
+          </div>
+        </div>
+      </div>
+    </div>
+    <script type="module" src="/legacy/dns-game.js"></script>
+  </body>
+</html>
