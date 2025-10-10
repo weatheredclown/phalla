@@ -14,57 +14,55 @@ const phaseIndicators = {
 const syncMeter = document.querySelector(".sync-meter");
 const syncDots = syncMeter ? syncMeter.querySelectorAll(".sync-dot") : [];
 
-const expectedOrder = {
-  carrier: "1",
-  lcp: "2",
-  auth: "3",
-  ipcp: "4",
-};
-const totalPhases = Object.keys(expectedOrder).length;
+const phaseDetails = [
+  { id: "carrier", label: "Carrier detect" },
+  { id: "lcp", label: "Link control (LCP)" },
+  { id: "auth", label: "Authentication" },
+  { id: "ipcp", label: "Network control (IPCP)" },
+];
+
+const expectedOrder = new Map(
+  phaseDetails.map((detail, index) => [detail.id, String(index + 1)])
+);
+const totalPhases = phaseDetails.length;
+
+const pool = document.querySelector("[data-role=\"phase-pool\"]");
+const chips = Array.from(document.querySelectorAll(".phase-chip"));
+const slotElements = Array.from(
+  document.querySelectorAll("[data-role=\"phase-slot\"]")
+);
+
+let selectedChip = null;
+let draggingChip = null;
 
 const updateBoard = (message, state = "idle") => {
   board.textContent = message;
   board.dataset.state = state;
 };
 
-const extractValues = (formData) =>
-  Object.fromEntries(
-    Object.keys(expectedOrder).map((key) => [key, formData.get(key) || ""])
+const getPhaseSlots = () => {
+  const assignments = Object.fromEntries(
+    phaseDetails.map((detail) => [detail.id, ""])
   );
-
-const computeDuplicates = (values) => {
-  const seen = new Map();
-  const duplicates = new Set();
-  Object.entries(values).forEach(([phase, slot]) => {
-    if (!slot) {
-      return;
-    }
-    if (seen.has(slot)) {
-      duplicates.add(phase);
-      duplicates.add(seen.get(slot));
-    } else {
-      seen.set(slot, phase);
+  slotElements.forEach((slot) => {
+    const phase = slot.dataset.phase || "";
+    if (phase) {
+      assignments[phase] = slot.dataset.slot || "";
     }
   });
-  return duplicates;
+  return assignments;
 };
 
-const updateWaveVisual = (values, duplicates) => {
+const updateWaveVisual = (assignments) => {
   const states = [];
   Object.entries(phaseIndicators).forEach(([phase, element]) => {
     if (!element) {
       return;
     }
-    const slot = values[phase];
+    const slot = assignments[phase];
     let state = "idle";
     if (slot) {
-      if (duplicates.has(phase)) {
-        state = "warn";
-      } else if (slot === expectedOrder[phase]) {
-        state = "good";
-      } else {
-        state = "ready";
-      }
+      state = slot === expectedOrder.get(phase) ? "good" : "ready";
     }
     element.dataset.state = state;
     states.push(state);
@@ -75,12 +73,9 @@ const updateWaveVisual = (values, duplicates) => {
 
   if (waveVisual) {
     const allGood = states.length && states.every((state) => state === "good");
-    const hasWarn = states.some((state) => state === "warn");
     const hasActive = states.some((state) => state === "ready" || state === "good");
     if (allGood) {
       waveVisual.dataset.state = "live";
-    } else if (hasWarn) {
-      waveVisual.dataset.state = "warn";
     } else if (hasActive) {
       waveVisual.dataset.state = "active";
     } else {
@@ -104,24 +99,305 @@ const updateWaveVisual = (values, duplicates) => {
   });
 };
 
-form?.addEventListener("submit", (event) => {
-  event.preventDefault();
-  const formData = new FormData(form);
-  const values = extractValues(formData);
-  const duplicates = computeDuplicates(values);
-  updateWaveVisual(values, duplicates);
-  if (duplicates.size) {
-    updateBoard(
-      `Modem error: duplicate steps ${Array.from(duplicates).join(", ")}.`,
-      "error"
-    );
+const refreshBoardMessage = (assignments) => {
+  const solved = phaseDetails.every(
+    (detail, index) => assignments[detail.id] === String(index + 1)
+  );
+  if (board.dataset.state === "success" && solved) {
     return;
   }
-  const mismatches = Object.entries(expectedOrder).filter(
-    ([phase, slot]) => values[phase] !== slot
+  if (board.dataset.state === "success" && !solved) {
+    board.dataset.state = "idle";
+  }
+
+  if (selectedChip) {
+    const label = selectedChip.dataset.phaseLabel || selectedChip.textContent.trim();
+    updateBoard(`Route ${label} to a slot.`);
+    return;
+  }
+
+  const filledCount = slotElements.filter((slot) => Boolean(slot.dataset.phase)).length;
+  if (!filledCount) {
+    updateBoard("Modem idle. Awaiting script…");
+    return;
+  }
+
+  const mismatches = phaseDetails.filter((detail, index) => {
+    const expectedSlot = String(index + 1);
+    const actualSlot = assignments[detail.id];
+    return actualSlot && actualSlot !== expectedSlot;
+  });
+
+  if (filledCount < totalPhases) {
+    if (mismatches.length) {
+      updateBoard("Alignment off. Continue tuning.");
+    } else {
+      updateBoard("Negotiation tuning…");
+    }
+    return;
+  }
+
+  if (mismatches.length) {
+    updateBoard("Alignment off. Realign handshake.");
+    return;
+  }
+
+  updateBoard("Sequence locked. Dial when ready.");
+};
+
+const updateState = () => {
+  const assignments = getPhaseSlots();
+  updateWaveVisual(assignments);
+  refreshBoardMessage(assignments);
+};
+
+const setSelectedChip = (chip) => {
+  if (selectedChip && selectedChip !== chip) {
+    selectedChip.dataset.selected = "false";
+    selectedChip.setAttribute("aria-pressed", "false");
+  }
+  selectedChip = chip;
+  if (chip) {
+    chip.dataset.selected = "true";
+    chip.setAttribute("aria-pressed", "true");
+  }
+  refreshBoardMessage(getPhaseSlots());
+};
+
+const clearSlotMetadata = (slot) => {
+  const slotDrop = slot.querySelector("[data-role=\"slot-drop\"]");
+  const placeholder = slot.querySelector("[data-role=\"slot-placeholder\"]");
+  if (slotDrop) {
+    slotDrop.removeAttribute("data-state");
+    slotDrop.setAttribute(
+      "aria-label",
+      `Slot ${slot.dataset.slot || ""} awaiting assignment`
+    );
+  }
+  if (placeholder) {
+    placeholder.hidden = false;
+  }
+  const input = slot.querySelector("[data-role=\"slot-input\"]");
+  if (input) {
+    input.value = "";
+  }
+  slot.dataset.phase = "";
+};
+
+const releaseChip = (chip, { focus = false, silent = false } = {}) => {
+  if (!chip) {
+    return;
+  }
+  const slot = chip.closest("[data-role=\"phase-slot\"]");
+  if (slot) {
+    clearSlotMetadata(slot);
+  }
+  if (selectedChip === chip) {
+    setSelectedChip(null);
+  }
+  chip.dataset.location = "pool";
+  chip.dataset.selected = "false";
+  chip.setAttribute("aria-pressed", "false");
+  pool?.appendChild(chip);
+  if (focus) {
+    chip.focus();
+  }
+  if (!silent) {
+    updateState();
+  }
+};
+
+const assignChipToSlot = (chip, slot) => {
+  if (!chip || !slot) {
+    return;
+  }
+  const slotContent = slot.querySelector("[data-role=\"slot-content\"]");
+  const slotDrop = slot.querySelector("[data-role=\"slot-drop\"]");
+  const placeholder = slot.querySelector("[data-role=\"slot-placeholder\"]");
+
+  if (slotContent) {
+    const occupyingChip = slotContent.querySelector(".phase-chip");
+    if (occupyingChip && occupyingChip !== chip) {
+      releaseChip(occupyingChip, { silent: true });
+    }
+  }
+
+  const previousSlot = chip.closest("[data-role=\"phase-slot\"]");
+  if (previousSlot && previousSlot !== slot) {
+    clearSlotMetadata(previousSlot);
+  }
+
+  if (placeholder) {
+    placeholder.hidden = true;
+  }
+  slotContent?.appendChild(chip);
+  chip.dataset.location = "slot";
+  chip.dataset.selected = "false";
+  chip.setAttribute("aria-pressed", "false");
+  slot.dataset.phase = chip.dataset.phase || "";
+  if (slotDrop) {
+    slotDrop.setAttribute("data-state", "filled");
+    const label = chip.dataset.phaseLabel || chip.textContent.trim();
+    slotDrop.setAttribute(
+      "aria-label",
+      `Slot ${slot.dataset.slot || ""} locked to ${label}. Press Delete to clear.`
+    );
+  }
+  const input = slot.querySelector("[data-role=\"slot-input\"]");
+  if (input) {
+    input.value = chip.dataset.phase || "";
+  }
+  setSelectedChip(null);
+  updateState();
+};
+
+chips.forEach((chip) => {
+  chip.setAttribute("aria-pressed", "false");
+  chip.dataset.location = "pool";
+
+  chip.addEventListener("click", (event) => {
+    event.preventDefault();
+    if (chip.dataset.location === "slot") {
+      releaseChip(chip, { focus: true });
+      return;
+    }
+    if (selectedChip === chip) {
+      setSelectedChip(null);
+    } else {
+      setSelectedChip(chip);
+    }
+  });
+
+  chip.addEventListener("keydown", (event) => {
+    if (event.key === "Enter" || event.key === " ") {
+      event.preventDefault();
+      chip.click();
+    }
+  });
+
+  chip.addEventListener("dragstart", (event) => {
+    draggingChip = chip;
+    chip.dataset.dragging = "true";
+    event.dataTransfer?.setData("text/plain", chip.dataset.phase || "");
+    if (event.dataTransfer) {
+      event.dataTransfer.effectAllowed = "move";
+    }
+  });
+
+  chip.addEventListener("dragend", () => {
+    draggingChip = null;
+    chip.dataset.dragging = "false";
+  });
+});
+
+const getChipFromTransfer = (event) => {
+  const phase = event.dataTransfer?.getData("text/plain");
+  if (draggingChip) {
+    return draggingChip;
+  }
+  if (!phase) {
+    return null;
+  }
+  return chips.find((chip) => chip.dataset.phase === phase) || null;
+};
+
+slotElements.forEach((slot) => {
+  const slotDrop = slot.querySelector("[data-role=\"slot-drop\"]");
+  if (!slotDrop) {
+    return;
+  }
+
+  slotDrop.addEventListener("click", () => {
+    if (selectedChip) {
+      assignChipToSlot(selectedChip, slot);
+      slotDrop.focus();
+      return;
+    }
+    const chipInSlot = slotDrop.querySelector(".phase-chip");
+    if (chipInSlot) {
+      releaseChip(chipInSlot, { focus: true });
+    }
+  });
+
+  slotDrop.addEventListener("keydown", (event) => {
+    if ((event.key === "Enter" || event.key === " ") && selectedChip) {
+      event.preventDefault();
+      assignChipToSlot(selectedChip, slot);
+      return;
+    }
+    if (event.key === "Delete" || event.key === "Backspace") {
+      const chipInSlot = slotDrop.querySelector(".phase-chip");
+      if (chipInSlot) {
+        event.preventDefault();
+        releaseChip(chipInSlot, { focus: true });
+      }
+    }
+  });
+
+  slotDrop.addEventListener("dragover", (event) => {
+    if (!draggingChip) {
+      return;
+    }
+    event.preventDefault();
+    slotDrop.setAttribute("data-drop", "active");
+    if (event.dataTransfer) {
+      event.dataTransfer.dropEffect = "move";
+    }
+  });
+
+  slotDrop.addEventListener("dragleave", () => {
+    slotDrop.removeAttribute("data-drop");
+  });
+
+  slotDrop.addEventListener("drop", (event) => {
+    event.preventDefault();
+    slotDrop.removeAttribute("data-drop");
+    const chip = getChipFromTransfer(event);
+    if (chip) {
+      assignChipToSlot(chip, slot);
+      slotDrop.focus();
+    }
+  });
+});
+
+if (pool) {
+  pool.addEventListener("dragover", (event) => {
+    if (!draggingChip) {
+      return;
+    }
+    event.preventDefault();
+    if (event.dataTransfer) {
+      event.dataTransfer.dropEffect = "move";
+    }
+  });
+
+  pool.addEventListener("drop", (event) => {
+    event.preventDefault();
+    const chip = getChipFromTransfer(event);
+    if (chip) {
+      releaseChip(chip, { focus: true });
+    }
+  });
+}
+
+form?.addEventListener("submit", (event) => {
+  event.preventDefault();
+  const assignments = getPhaseSlots();
+  const emptySlots = slotElements.filter((slot) => !slot.dataset.phase);
+  if (emptySlots.length) {
+    updateBoard("PPP script incomplete: assign all phases.", "error");
+    return;
+  }
+  const mismatches = phaseDetails.filter(
+    (detail, index) => assignments[detail.id] !== String(index + 1)
   );
   if (mismatches.length) {
-    updateBoard(`Negotiation failed: adjust ${mismatches.map(([phase]) => phase).join(", ")}.`, "error");
+    updateBoard(
+      `Negotiation failed: adjust ${mismatches
+        .map((detail) => detail.label)
+        .join(", ")}.`,
+      "error"
+    );
     return;
   }
   updateBoard("PPP link live. newsroom feed synchronized.", "success");
@@ -138,29 +414,4 @@ form?.addEventListener("submit", (event) => {
   );
 });
 
-form?.addEventListener("input", () => {
-  if (board.dataset.state === "success") {
-    return;
-  }
-  const formData = new FormData(form);
-  const values = extractValues(formData);
-  const duplicates = computeDuplicates(values);
-  updateWaveVisual(values, duplicates);
-  const mismatches = Object.entries(expectedOrder).filter(
-    ([phase, slot]) => values[phase] !== slot
-  );
-  if (!duplicates.size && !mismatches.length) {
-    updateBoard("Sequence locked. Dial when ready.");
-  } else if (duplicates.size) {
-    updateBoard("Handshake colliding. Clear duplicates.");
-  } else if (Object.values(values).some(Boolean)) {
-    updateBoard("Negotiation tuning…");
-  } else {
-    updateBoard("Modem idle. Awaiting script…");
-  }
-});
-
-if (form) {
-  const initialValues = extractValues(new FormData(form));
-  updateWaveVisual(initialValues, new Set());
-}
+updateState();
