@@ -48,6 +48,26 @@ const dispatchWidgetEvent = (root, name, detail = {}) => {
   );
 };
 
+const syncHiddenInput = (input, value) => {
+  if (!(input instanceof HTMLInputElement)) {
+    return;
+  }
+  if (input.value === value) {
+    return;
+  }
+  input.value = value;
+  input.dispatchEvent(
+    new Event("input", {
+      bubbles: true,
+    })
+  );
+  input.dispatchEvent(
+    new Event("change", {
+      bubbles: true,
+    })
+  );
+};
+
 /* -------------------------------------------------- */
 /* Neon Select                                         */
 /* -------------------------------------------------- */
@@ -89,7 +109,7 @@ const initNeonSelect = (root) => {
     const value = target.dataset.value || "";
     root.dataset.value = value;
     if (hiddenInput) {
-      hiddenInput.value = value;
+      syncHiddenInput(hiddenInput, value);
     }
     dispatchWidgetEvent(root, "net:select-change", { value });
     if (focus) {
@@ -200,7 +220,7 @@ const initSegmentToggle = (group) => {
     const value = target.dataset.value || "";
     group.dataset.value = value;
     if (hiddenInput) {
-      hiddenInput.value = value;
+      syncHiddenInput(hiddenInput, value);
     }
     dispatchWidgetEvent(group, "net:segment-change", { value });
     if (focus) {
@@ -379,7 +399,7 @@ const initOrbitalDial = (root) => {
     knob.setAttribute("aria-valuetext", `${angle.toFixed(0)} degrees`);
     readout.textContent = `${angle.toFixed(0)}°`;
     if (hiddenInput) {
-      hiddenInput.value = angle.toFixed(0);
+      syncHiddenInput(hiddenInput, angle.toFixed(0));
     }
     if (dispatch) {
       dispatchWidgetEvent(root, "net:orbital-change", { value: angle });
@@ -581,7 +601,7 @@ const initNodeMatrix = (root) => {
     summary.textContent = `Active nodes: ${text}`;
     root.dataset.value = active.join(",");
     if (hiddenInput) {
-      hiddenInput.value = root.dataset.value;
+      syncHiddenInput(hiddenInput, root.dataset.value || "");
     }
     dispatchWidgetEvent(root, "net:matrix-change", { nodes: active });
   };
@@ -657,7 +677,7 @@ const initCipherWheel = (root) => {
     readout.textContent = `Cipher: ${key}`;
     root.dataset.value = key;
     if (hiddenInput) {
-      hiddenInput.value = key;
+      syncHiddenInput(hiddenInput, key);
     }
     dispatchWidgetEvent(root, "net:cipher-change", { key });
   };
@@ -734,7 +754,7 @@ const initFluxKeypad = (root) => {
   const render = (announce = false) => {
     display.textContent = buffer.padEnd(maxLength, "·");
     if (hiddenInput) {
-      hiddenInput.value = buffer;
+      syncHiddenInput(hiddenInput, buffer);
     }
     if (announce) {
       status.textContent = `Code staged: ${buffer || "none"}`;
@@ -819,7 +839,7 @@ const initSequencer = (root) => {
     const pattern = computePattern();
     readout.textContent = `Pattern: ${pattern}`;
     if (hiddenInput) {
-      hiddenInput.value = pattern;
+      syncHiddenInput(hiddenInput, pattern);
     }
     dispatchWidgetEvent(root, "net:sequencer-change", { pattern });
   };
@@ -1098,7 +1118,7 @@ const initConstellationRouter = (root) => {
     root.dataset.value = value;
     readout.textContent = value ? `Route locked to ${value}` : "No route selected";
     if (hiddenInput) {
-      hiddenInput.value = value;
+      syncHiddenInput(hiddenInput, value);
     }
     if (value) {
       dispatchWidgetEvent(root, "net:constellation-change", { value });
@@ -1146,7 +1166,7 @@ const initHoloConsole = (root) => {
     charCount.textContent = `${value.length} / ${max}`;
     status.textContent = value.length ? "Echo online" : "Echo idle";
     if (hiddenInput) {
-      hiddenInput.value = value;
+      syncHiddenInput(hiddenInput, value);
     }
     dispatchWidgetEvent(root, "net:console-change", { value });
   };
@@ -1186,7 +1206,7 @@ const initCryoSwitch = (root) => {
     handle.setAttribute("aria-valuenow", String(safeIndex));
     handle.setAttribute("aria-valuetext", phase.label);
     if (hiddenInput) {
-      hiddenInput.value = String(safeIndex);
+      syncHiddenInput(hiddenInput, String(safeIndex));
     }
     if (announce) {
       status.textContent = phase.status;

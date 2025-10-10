@@ -147,6 +147,23 @@ const extractValues = (formData) =>
     Object.keys(expectedOrder).map((key) => [key, formData.get(key) || ""])
   );
 
+const handleFormEvaluation = () => {
+  const data = new FormData(form);
+  const values = extractValues(data);
+  const duplicates = getDuplicates(values);
+  const state = updateFlightVisual(values, duplicates);
+  if (state === "idle") {
+    updateBoard("Transfer queue idle.");
+  } else if (state === "success") {
+    updateBoard("Payload lined up. Ready for launch.");
+  } else if (state === "warn") {
+    updateBoard("Course deviation detected. Adjust slots.");
+  } else {
+    updateBoard("Transfer queue syncing…");
+  }
+  return { state, duplicates, values };
+};
+
 form?.addEventListener("submit", (event) => {
   event.preventDefault();
   const data = new FormData(form);
@@ -178,28 +195,19 @@ form?.addEventListener("submit", (event) => {
   );
 });
 
-form?.addEventListener("input", () => {
+const handleWidgetChange = () => {
   if (board.dataset.state === "success") {
     return;
   }
-  const data = new FormData(form);
-  const values = extractValues(data);
-  const duplicates = getDuplicates(values);
-  const state = updateFlightVisual(values, duplicates);
-  if (state === "idle") {
-    updateBoard("Transfer queue idle.");
-  } else if (state === "success") {
-    updateBoard("Payload lined up. Ready for launch.");
-  } else if (state === "warn") {
-    updateBoard("Course deviation detected. Adjust slots.");
-  } else {
-    updateBoard("Transfer queue syncing…");
-  }
-});
+  handleFormEvaluation();
+};
+
+form?.addEventListener("net:select-change", handleWidgetChange);
 
 if (form) {
   const initialValues = Object.fromEntries(
     Object.keys(expectedOrder).map((key) => [key, form.elements.namedItem(key)?.value || ""])
   );
   updateFlightVisual(initialValues, new Set());
+  handleFormEvaluation();
 }
