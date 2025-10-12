@@ -55,18 +55,69 @@ const roundDisplay = document.getElementById("round-display");
 const statusBoard = document.getElementById("status-board");
 const form = document.getElementById("sweep-form");
 const briefingCopy = document.getElementById("briefing-copy");
-const broadcastSelect = document.getElementById("broadcast-select");
+const broadcastSelect = document.querySelector('[data-role="broadcast-select"]');
+const broadcastOptions = broadcastSelect
+  ? Array.from(broadcastSelect.querySelectorAll(".neon-select__option"))
+  : [];
+const broadcastInput = form?.elements.namedItem("broadcast");
 const broadcastHint = document.getElementById("broadcast-hint");
 const logList = document.getElementById("log-list");
 const mapCards = new Map(
   Array.from(document.querySelectorAll(".map-card")).map((card) => [card.dataset.zone, card])
 );
+const methodToggle = document.querySelector('[data-role="method-toggle"]');
+const methodOptions = methodToggle
+  ? Array.from(methodToggle.querySelectorAll(".segment-toggle__option"))
+  : [];
+const methodField = form?.elements.namedItem("method");
 
 const METHOD_DISPLAY = [
   { id: "arp", short: "ARP", label: "Quick ARP Probe" },
   { id: "udp", short: "UDP", label: "UDP Echo Spray" },
   { id: "netbios", short: "NB", label: "NetBIOS Name Pulse" },
 ];
+
+const updateBroadcastOptions = (options) => {
+  if (!broadcastOptions.length) {
+    return;
+  }
+  broadcastOptions.slice(1).forEach((button, index) => {
+    const value = options[index] || "";
+    button.dataset.value = value;
+    const title = button.querySelector(".neon-select__option-title");
+    if (title) {
+      title.textContent = value || "—";
+    }
+  });
+};
+
+const resetBroadcastSelect = () => {
+  if (!broadcastSelect) {
+    return;
+  }
+  broadcastSelect.dataset.value = "";
+  broadcastOptions.forEach((button, index) => {
+    button.setAttribute("aria-selected", index === 0 ? "true" : "false");
+    button.setAttribute("tabindex", index === 0 ? "0" : "-1");
+  });
+  if (broadcastInput instanceof HTMLInputElement) {
+    broadcastInput.value = "";
+  }
+};
+
+const resetMethodToggle = () => {
+  if (!methodToggle) {
+    return;
+  }
+  methodToggle.dataset.value = "";
+  methodOptions.forEach((button, index) => {
+    button.setAttribute("aria-checked", index === 0 ? "true" : "false");
+    button.setAttribute("tabindex", index === 0 ? "0" : "-1");
+  });
+  if (methodField instanceof HTMLInputElement) {
+    methodField.value = "";
+  }
+};
 
 const createHostBitScope = (round) => {
   if (!round.cidr) {
@@ -249,20 +300,12 @@ const populateRound = () => {
   }
   attemptsThisRound = 0;
   briefingCopy.textContent = round.briefing;
-  broadcastHint.textContent = round.hint;
-  while (broadcastSelect.options.length > 1) {
-    broadcastSelect.remove(1);
+  if (broadcastHint) {
+    broadcastHint.textContent = round.hint;
   }
-  round.options.forEach((value) => {
-    const option = document.createElement("option");
-    option.value = value;
-    option.textContent = value;
-    broadcastSelect.appendChild(option);
-  });
-  broadcastSelect.value = "";
-  Array.from(form.querySelectorAll('input[name="method"]')).forEach((input) => {
-    input.checked = false;
-  });
+  updateBroadcastOptions(round.options);
+  resetBroadcastSelect();
+  resetMethodToggle();
   activateRoundCard(round);
   setStatus("Link idle. Configure sweep parameters.");
   updateHud();
@@ -296,9 +339,9 @@ form?.addEventListener("submit", (event) => {
   if (!round) {
     return;
   }
-  const selectedBroadcast = broadcastSelect.value;
-  const methodInput = form.querySelector('input[name="method"]:checked');
-  const selectedMethod = methodInput?.value || "";
+  const selectedBroadcast =
+    broadcastInput instanceof HTMLInputElement ? broadcastInput.value : "";
+  const selectedMethod = methodField instanceof HTMLInputElement ? methodField.value : "";
   if (!selectedBroadcast || !selectedMethod) {
     setStatus("Need both broadcast target and method before sending.", "error");
     return;
@@ -336,9 +379,9 @@ form?.addEventListener("input", () => {
   if (!round) {
     return;
   }
-  const selectedBroadcast = broadcastSelect.value;
-  const methodInput = form.querySelector('input[name="method"]:checked');
-  const selectedMethod = methodInput?.value || "";
+  const selectedBroadcast =
+    broadcastInput instanceof HTMLInputElement ? broadcastInput.value : "";
+  const selectedMethod = methodField instanceof HTMLInputElement ? methodField.value : "";
   if (selectedBroadcast === round.broadcast && selectedMethod === round.method) {
     setStatus("Sweep configured. Fire when ready.");
     const card = mapCards.get(round.id);
