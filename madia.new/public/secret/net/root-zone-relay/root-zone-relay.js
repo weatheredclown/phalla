@@ -55,6 +55,11 @@ const controlLookup = {};
 Object.values(recordFields)
   .flat()
   .forEach((field) => {
+    const container = form?.querySelector(`[data-field="${field}"]`);
+    if (container instanceof HTMLElement) {
+      controlLookup[field] = container;
+      return;
+    }
     const control = form?.querySelector(`[name="${field}"]`);
     if (control instanceof HTMLElement) {
       controlLookup[field] = control;
